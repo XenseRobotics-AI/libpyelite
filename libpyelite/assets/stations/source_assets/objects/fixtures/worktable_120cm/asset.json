@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "worktable.120cm",
+  "category": "objects",
+  "display_name": "Worktable 120 cm × 70 cm",
+  "entrypoints": {
+    "default": "urdf/worktable_120cm.urdf"
+  },
+  "units": {
+    "length": "m",
+    "angle": "rad",
+    "mass": "kg"
+  },
+  "authoring": {
+    "mode": "step_generated",
+    "authority": "external_hash_locked_step",
+    "generator": "scripts/import_diagonal_02.py",
+    "derivation": "provenance/step_derivation.json"
+  },
+  "source": {
+    "repository": null,
+    "revision": null,
+    "snapshot": "local_step_file",
+    "license_status": "unconfirmed",
+    "filename": "A3-侧向45度-型材-V2.0.STEP",
+    "sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+    "notes": [
+      "User-provided SolidWorks AP203 STEP; millimetres converted once to metres.",
+      "Original STEP retained externally; supply matching hash to regenerate. No CAD arm meshes imported.",
+      "Visual-only fixed structures: no invented mass, inertia, collision or friction.",
+      "Stand includes source casters and both controller boxes as fixed visual geometry."
+    ]
+  },
+  "review": {
+    "visual": "pending_human",
+    "joint_parameters": "fixed_cad_frames_pending_human",
+    "inertial_parameters": "not_provided",
+    "contacts": "not_validated"
+  },
+  "files": {
+    "meshes/part_00.stl": {
+      "sha256": "a85f4460894d80c66ab1f771fb0e95ed4e212940ce61c2d8d17be4b69a72bc8a",
+      "source": "A3-侧向45度-型材-V2.0.STEP",
+      "source_sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+      "role": "mesh"
+    },
+    "provenance/step_derivation.json": {
+      "sha256": "06e71de9df36c1e049f401f00e664123181a435262c411294a5ea56fb4583160",
+      "source": "A3-侧向45度-型材-V2.0.STEP",
+      "source_sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+      "role": "derivation"
+    },
+    "urdf/worktable_120cm.urdf": {
+      "sha256": "661cedd0f0cf7e8b44205877acec50a6b8c2902f5055978ea49e8471c8ab1d74",
+      "source": "A3-侧向45度-型材-V2.0.STEP",
+      "source_sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+      "role": "urdf"
+    }
+  }
+}

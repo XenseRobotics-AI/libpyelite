@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "id": "assembly.diagonal_07_elite_cs66",
+  "entrypoint": "urdf/diagonal-07-elite-cs66.urdf",
+  "world": "world",
+  "instances": {
+    "left_arm": {
+      "asset_id": "elite.cs66",
+      "variant": "default",
+      "prefix": "left_"
+    },
+    "right_arm": {
+      "asset_id": "elite.cs66",
+      "variant": "default",
+      "prefix": "right_"
+    },
+    "stand": {
+      "asset_id": "elite_cs66.a1_stand",
+      "variant": "default",
+      "prefix": ""
+    },
+    "table": {
+      "asset_id": "worktable.120cm",
+      "variant": "default",
+      "prefix": ""
+    }
+  },
+  "connections": [
+    {
+      "name": "world_to_stand",
+      "parent": "world",
+      "child": "elite_cs66_a1_stand_base",
+      "xyz": "0 0 0",
+      "rpy": "0 0 3.141592653589793"
+    },
+    {
+      "name": "world_to_table",
+      "parent": "world",
+      "child": "worktable_120cm_base",
+      "xyz": "0.700624760246217 -0.0677769600617899 0.000895483271931539",
+      "rpy": "0 0 0"
+    },
+    {
+      "name": "left_arm_attachment",
+      "parent": "right_arm_mount",
+      "child": "left_world",
+      "xyz": "0 0 0",
+      "rpy": "0 0 1.5707963267948966"
+    },
+    {
+      "name": "right_arm_attachment",
+      "parent": "left_arm_mount",
+      "child": "right_world",
+      "xyz": "0 0 0",
+      "rpy": "0 0 -1.5707963267948966"
+    }
+  ],
+  "inputs": {
+    "left_arm": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+    "right_arm": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+    "stand": "323b566c27b60e07e801b900f12e3e74448dfc1a1b601331e0967436fd0b237f",
+    "table": "661cedd0f0cf7e8b44205877acec50a6b8c2902f5055978ea49e8471c8ab1d74"
+  },
+  "source": {
+    "path": "A1-CS66总装.STEP",
+    "sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+    "derivation": "elite_cs66.a1_stand/provenance/step_derivation.json",
+    "notes": "A1 STEP supplies the stand, CAD arm mount positions and table pose; catalog CS66 arms and worktable are reused. The stand is rotated 180 degrees about world Z while the table stays fixed. After that rotation, the controller left/right arms attach to the CAD right/left mount frames respectively. Local Z corrections of +90/-90 degrees align the assembled base rotations with this bench's LeRobot left/right_world_rotation matrices. The initial joint angles are the recipe start positions."
+  },
+  "initial_pose": {
+    "unit": "radian",
+    "values": {
+      "left_arm": [
+        -1.3963,
+        -0.5236,
+        1.5708,
+        -0.5236,
+        1.5708,
+        -0.7854
+      ],
+      "right_arm": [
+        -1.7453,
+        -2.618,
+        -1.5708,
+        -2.618,
+        -1.5708,
+        -0.7854
+      ]
+    },
+    "source": {
+      "repository": "XenseRobotics-AI/lerobot-xense",
+      "revision": "b3451528c6e0e912b9befb7fdb25429c927b9c4e",
+      "path": "recipes/teleop/bi_elite_cs66_rt/diagonal-07-taccap.yaml",
+      "sha256": "d9c2702c685c59bfa3d6a4d2884d50131900222ba6c87767696a4cbb81c9efc3",
+      "fields": {
+        "left_arm": "robot.left_start_position_rad",
+        "right_arm": "robot.right_start_position_rad"
+      }
+    }
+  }
+}

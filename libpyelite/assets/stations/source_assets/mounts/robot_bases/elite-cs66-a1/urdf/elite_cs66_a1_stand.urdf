@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="elite_cs66_a1_stand">
+  <link name="elite_cs66_a1_stand_base">
+    <visual name="part_00">
+      <geometry>
+        <mesh filename="../meshes/part_00.stl" />
+      </geometry>
+      <material name="part_00_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_01">
+      <geometry>
+        <mesh filename="../meshes/part_01.stl" />
+      </geometry>
+      <material name="part_01_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_02">
+      <geometry>
+        <mesh filename="../meshes/part_02.stl" />
+      </geometry>
+      <material name="part_02_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_03">
+      <geometry>
+        <mesh filename="../meshes/part_03.stl" />
+      </geometry>
+      <material name="part_03_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_04">
+      <geometry>
+        <mesh filename="../meshes/part_04.stl" />
+      </geometry>
+      <material name="part_04_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_05">
+      <geometry>
+        <mesh filename="../meshes/part_05.stl" />
+      </geometry>
+      <material name="part_05_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_06">
+      <geometry>
+        <mesh filename="../meshes/part_06.stl" />
+      </geometry>
+      <material name="part_06_color">
+        <color rgba="0.29 0.32 0.36 1" />
+      </material>
+    </visual>
+    <visual name="part_07">
+      <geometry>
+        <mesh filename="../meshes/part_07.stl" />
+      </geometry>
+      <material name="part_07_color">
+        <color rgba="0.29 0.32 0.36 1" />
+      </material>
+    </visual>
+  </link>
+  <link name="left_arm_mount" />
+  <joint name="left_mount_frame" type="fixed">
+    <parent link="elite_cs66_a1_stand_base" />
+    <child link="left_arm_mount" />
+    <origin xyz="0.0797338865783983 0.148329641656007 1.21650208498973" rpy="-0.785398163397443 2.22044604925031e-16 0" />
+  </joint>
+  <link name="right_arm_mount" />
+  <joint name="right_mount_frame" type="fixed">
+    <parent link="elite_cs66_a1_stand_base" />
+    <child link="right_arm_mount" />
+    <origin xyz="0.0797338865783983 -0.283883561779589 1.21650208498973" rpy="0.785398163397453 0 3.88578058618805e-16" />
+  </joint>
+</robot>

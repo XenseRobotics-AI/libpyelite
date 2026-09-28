@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "id": "elite_cs66.a1_stand",
+  "category": "mounts",
+  "display_name": "Elite CS66 A1 stand and controller cabinets",
+  "entrypoints": {
+    "default": "urdf/elite_cs66_a1_stand.urdf"
+  },
+  "units": {
+    "length": "m",
+    "angle": "rad",
+    "mass": "kg"
+  },
+  "authoring": {
+    "mode": "step_generated",
+    "authority": "external_hash_locked_step",
+    "generator": "scripts/import_a1_cs66.py",
+    "derivation": "provenance/step_derivation.json"
+  },
+  "source": {
+    "repository": null,
+    "revision": null,
+    "snapshot": "local_step_file",
+    "license_status": "unconfirmed",
+    "filename": "A1-CS66总装.STEP",
+    "sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+    "notes": [
+      "User-provided SolidWorks AP203 STEP; source length millimetres converted to output metres.",
+      "Original STEP is retained externally and required for regeneration.",
+      "Two catalog elite.cs66 arms and worktable.120cm are reused; their STEP meshes are excluded.",
+      "Stand and controller cabinets are visual only, without estimated mass, inertia, collision or contact parameters."
+    ]
+  },
+  "review": {
+    "visual": "pending_human",
+    "joint_parameters": "fixed_cad_frames_pending_human",
+    "inertial_parameters": "not_provided",
+    "contacts": "not_validated"
+  },
+  "files": {
+    "meshes/part_00.stl": {
+      "sha256": "b551f496c0ee94f18a87c7bcd6efb6d77aae37d023abe5fecbe53c18c4ceee45",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_01.stl": {
+      "sha256": "cf98ecd22863ceb9f750d3499fe3c28198b0d31721033b3e434ac501d034e0ce",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_02.stl": {
+      "sha256": "4b075dda34292e3bca90ae07ec9c813224f480e9d10142502511af67e2091ea9",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_03.stl": {
+      "sha256": "1b55026c01501f53a1ef60f568719c5d1f6c3e0aba68a912fa396c0588b6d774",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_04.stl": {
+      "sha256": "716d0684d3209df5e778ca511894dc78538eb53e086fc943ff142f09f599473b",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_05.stl": {
+      "sha256": "84abca2f74c6a5f75f835610a7bb97da33317ffddc9dfafe3a63ba9603788d89",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_06.stl": {
+      "sha256": "add84ead6e5f8de0a95b5315fbf45c10c560fde18bc13be03a82e5808d870467",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_07.stl": {
+      "sha256": "8519e7af3ce93ae1d59533072f1a3d596f28de3408ab8ac1944b2e20f8f89eae",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "provenance/step_derivation.json": {
+      "sha256": "632427e6c6887d536eeb2f34fe4d728bed0520baabbc275f671f8380db757687",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "derivation"
+    },
+    "urdf/elite_cs66_a1_stand.urdf": {
+      "sha256": "323b566c27b60e07e801b900f12e3e74448dfc1a1b601331e0967436fd0b237f",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "urdf"
+    }
+  }
+}

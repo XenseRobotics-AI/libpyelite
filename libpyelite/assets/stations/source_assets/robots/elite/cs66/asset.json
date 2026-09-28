@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "id": "elite.cs66",
+  "category": "robots",
+  "display_name": "Elite CS66 (6-axis)",
+  "entrypoints": {
+    "default": "urdf/cs66.urdf"
+  },
+  "units": {
+    "length": "m",
+    "angle": "rad",
+    "mass": "kg"
+  },
+  "authoring": {
+    "mode": "xacro_generated",
+    "authority": "provenance/cs66.urdf.xacro",
+    "inputs": "provenance/upstream/{urdf,config/cs66}",
+    "generator": "scripts/generate_elite_cs66.py",
+    "xacro_version": "2.1.1",
+    "notes": [
+      "Original vendor macro and model-specific YAML are authoritative. Edit inputs and regenerate; do not edit generated URDFs.",
+      "Offline package resolution; hardware/control tags disabled; only mesh paths differ between expanded and portable URDF."
+    ]
+  },
+  "source": {
+    "repository": "https://github.com/EliteRobots/Elite_Robots_CS_ROS2_Description",
+    "revision": "edbbfdca9220ce264c99ec51d37440ff4fa13a9a",
+    "snapshot": "pinned_git_blobs_verified",
+    "license_status": "Apache-2.0_source_license_preserved",
+    "notes": [
+      "CS66-specific YAML and 14 original mesh files; not CS66A or EC66.",
+      "Every vendor file was checked against the pinned commit Git blob SHA-1; source SHA-256 is recorded per file.",
+      "Upstream physical_parameters.yaml warns that base mass, inertia and center of gravity might be incorrect; retained unchanged.",
+      "Default kinematics are not per-hardware calibration. No inferred dynamics, limits or collision settings.",
+      "provenance/urdf/cs66.upstream.urdf is our expansion of the vendor macro, not a vendor-shipped URDF."
+    ]
+  },
+  "review": {
+    "visual": "pending_human",
+    "joint_parameters": "unreviewed_source",
+    "inertial_parameters": "unreviewed_source",
+    "contacts": "not_validated"
+  },
+  "files": {
+    "LICENSES/elite_robots_description.txt": {
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "source": "LICENSE",
+      "source_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "role": "license",
+      "source_git_blob_sha1": "d645695673349e3947e8e5ae42332d0ac3164cd7"
+    },
+    "NOTICE.md": {
+      "sha256": "1d8482377adecddd76ff1eefb1f8e330408a3adbb716ac7119a3b3bdd656be92",
+      "source": "xense-description:local_documentation",
+      "source_sha256": "1d8482377adecddd76ff1eefb1f8e330408a3adbb716ac7119a3b3bdd656be92",
+      "role": "documentation"
+    },
+    "README.md": {
+      "sha256": "040954126287944ff98986a2eb638fe8e459f01c5945f8876f3a356a17a59837",
+      "source": "xense-description:local_documentation",
+      "source_sha256": "74c3f642b5f1402f664a1189f0ce32052786c177909a2ffb19d3c9f15b38541d",
+      "role": "documentation",
+      "modification": "Add per-asset mesh/URDF provenance and joint/inertial audit references."
+    },
+    "meshes/cs66/collision/base.stl": {
+      "sha256": "3df9a06bcc0ddab3261080083967353ad11ca9da529dffa4badfb45f37320fd2",
+      "source": "meshes/cs66/collision/base.stl",
+      "source_sha256": "3df9a06bcc0ddab3261080083967353ad11ca9da529dffa4badfb45f37320fd2",
+      "role": "mesh",
+      "source_git_blob_sha1": "62a728f8c031b1e27d7d462d4d4fafedc7e71d8e"
+    },
+    "meshes/cs66/collision/forearm.stl": {
+      "sha256": "b8283da1ce885349f93fdcc5ab0727b46ef74f586672dd791944ab1784352dc4",
+      "source": "meshes/cs66/collision/forearm.stl",
+      "source_sha256": "b8283da1ce885349f93fdcc5ab0727b46ef74f586672dd791944ab1784352dc4",
+      "role": "mesh",
+      "source_git_blob_sha1": "95349e9414851197c31642a6b24a850ae151d809"
+    },
+    "meshes/cs66/collision/shoulder.stl": {
+      "sha256": "f1e5ffd56bd687192cec8992c9c52048e9c91ecfb0516eec32f8d2c411915318",
+      "source": "meshes/cs66/collision/shoulder.stl",
+      "source_sha256": "f1e5ffd56bd687192cec8992c9c52048e9c91ecfb0516eec32f8d2c411915318",
+      "role": "mesh",
+      "source_git_blob_sha1": "c53e0e367e2d1a8a34cc4e350bf3d1086648d164"
+    },
+    "meshes/cs66/collision/upperarm.stl": {
+      "sha256": "d97e73a597603b38aa33c15dbcbdb4510e3cd7efd4dd57f9af6f692903624298",
+      "source": "meshes/cs66/collision/upperarm.stl",
+      "source_sha256": "d97e73a597603b38aa33c15dbcbdb4510e3cd7efd4dd57f9af6f692903624298",
+      "role": "mesh",
+      "source_git_blob_sha1": "9e0b5ffb362c0e8d84002278cd9b74422de06a49"
+    },
+    "meshes/cs66/collision/wrist1.stl": {
+      "sha256": "43128da46d9ba869d496ee484bfbac94f731849622576365673ed4043b740564",
+      "source": "meshes/cs66/collision/wrist1.stl",
+      "source_sha256": "43128da46d9ba869d496ee484bfbac94f731849622576365673ed4043b740564",
+      "role": "mesh",
+      "source_git_blob_sha1": "675ef0101fdd7a947be003a4dcbb2fc00dcd0a70"
+    },
+    "meshes/cs66/collision/wrist2.stl": {
+      "sha256": "d9579adb0c9da22c789294f98d9e4c5dabdf1e9d78cc74bc981d7f84a8049bcc",
+      "source": "meshes/cs66/collision/wrist2.stl",
+      "source_sha256": "d9579adb0c9da22c789294f98d9e4c5dabdf1e9d78cc74bc981d7f84a8049bcc",
+      "role": "mesh",
+      "source_git_blob_sha1": "179b34a87832dbe8a54ad955cee7e4de390d7ed0"
+    },
+    "meshes/cs66/collision/wrist3.stl": {
+      "sha256": "b63da57a47516c29980c2d837a5da2187a76fc23aa50e324d1f73178223a8226",
+      "source": "meshes/cs66/collision/wrist3.stl",
+      "source_sha256": "b63da57a47516c29980c2d837a5da2187a76fc23aa50e324d1f73178223a8226",
+      "role": "mesh",
+      "source_git_blob_sha1": "a39f12ac6940db630092ffe1c3119750bca17afa"
+    },
+    "meshes/cs66/visual/base.dae": {
+      "sha256": "25b07ffaddce55dc8a33e790bfd67b3047dbff0d218fcaef2481dac6727c7b15",
+      "source": "meshes/cs66/visual/base.dae",
+      "source_sha256": "25b07ffaddce55dc8a33e790bfd67b3047dbff0d218fcaef2481dac6727c7b15",
+      "role": "mesh",
+      "source_git_blob_sha1": "402d78ddb818e60ce644bc209eff2e803666dd65"
+    },
+    "meshes/cs66/visual/forearm.dae": {
+      "sha256": "25968284fcea8973cdf6c2b2de92c956644d015e8b49c9d9c1cf3a952334a4e1",
+      "source": "meshes/cs66/visual/forearm.dae",
+      "source_sha256": "25968284fcea8973cdf6c2b2de92c956644d015e8b49c9d9c1cf3a952334a4e1",
+      "role": "mesh",
+      "source_git_blob_sha1": "2d5e98641dc8c461843fd803ad1948cbfcd05016"
+    },
+    "meshes/cs66/visual/shoulder.dae": {
+      "sha256": "c26883039ab5492f211bd80c34f49c20f24146823a7454cce6e1ffc55099c329",
+      "source": "meshes/cs66/visual/shoulder.dae",
+      "source_sha256": "c26883039ab5492f211bd80c34f49c20f24146823a7454cce6e1ffc55099c329",
+      "role": "mesh",
+      "source_git_blob_sha1": "20649e6748f4c8f847fa3ae02c82c913e7a1b7eb"
+    },
+    "meshes/cs66/visual/upperarm.dae": {
+      "sha256": "a1d2c996fd75e2d789dacbd47303f8f8670397c459846dcb962749a1d8eb0011",
+      "source": "meshes/cs66/visual/upperarm.dae",
+      "source_sha256": "a1d2c996fd75e2d789dacbd47303f8f8670397c459846dcb962749a1d8eb0011",
+      "role": "mesh",
+      "source_git_blob_sha1": "bf624fd19a941816bc136238bae8090284b4fa28"
+    },
+    "meshes/cs66/visual/wrist1.dae": {
+      "sha256": "7df986499ae94dd8db47ec31be0232635552501ded9df7441e2770f0604cf3b3",
+      "source": "meshes/cs66/visual/wrist1.dae",
+      "source_sha256": "7df986499ae94dd8db47ec31be0232635552501ded9df7441e2770f0604cf3b3",
+      "role": "mesh",
+      "source_git_blob_sha1": "805e5be617fd304892dd5450835e5afa52b2db9a"
+    },
+    "meshes/cs66/visual/wrist2.dae": {
+      "sha256": "f5cb4d76d514f4c13107093fab42f2945ec91aa1ac3b5803d98262d6bf133afa",
+      "source": "meshes/cs66/visual/wrist2.dae",
+      "source_sha256": "f5cb4d76d514f4c13107093fab42f2945ec91aa1ac3b5803d98262d6bf133afa",
+      "role": "mesh",
+      "source_git_blob_sha1": "12494c157986a6c8de661c97565a55ed332cb0ea"
+    },
+    "meshes/cs66/visual/wrist3.dae": {
+      "sha256": "090fd3c82790a81213383257f4c87a81a318154783c2ff6dbd79c68f1aadf68c",
+      "source": "meshes/cs66/visual/wrist3.dae",
+      "source_sha256": "090fd3c82790a81213383257f4c87a81a318154783c2ff6dbd79c68f1aadf68c",
+      "role": "mesh",
+      "source_git_blob_sha1": "5909e81a25141c6ab11306de6b1e473f676a26e0"
+    },
+    "provenance/cs66.urdf.xacro": {
+      "sha256": "94ab3ea5e09065506be878dd53ca0248e28633bc06969b636772dbe948d6989e",
+      "source": "xense-description:local_standalone_wrapper",
+      "source_sha256": "94ab3ea5e09065506be878dd53ca0248e28633bc06969b636772dbe948d6989e",
+      "role": "generation_recipe"
+    },
+    "provenance/upstream/README.md": {
+      "sha256": "49db8beace929f868864b5e8e424bc9a3da28ea13ec3feaf2f34b9c11d574019",
+      "source": "README.md",
+      "source_sha256": "49db8beace929f868864b5e8e424bc9a3da28ea13ec3feaf2f34b9c11d574019",
+      "role": "source_documentation",
+      "source_git_blob_sha1": "4bc7ced0ebc8d8441ee71fc0c499744fd316d024"
+    },
+    "provenance/upstream/config/cs66/default_kinematics.yaml": {
+      "sha256": "c0f7d616e26d948952e6ee6cc61eb9e847b1d4a5bfee6a30bd8e68f393269ba5",
+      "source": "config/cs66/default_kinematics.yaml",
+      "source_sha256": "c0f7d616e26d948952e6ee6cc61eb9e847b1d4a5bfee6a30bd8e68f393269ba5",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "0049e25e148b640947e08a5557ba97cbb56363d2"
+    },
+    "provenance/upstream/config/cs66/joint_limits.yaml": {
+      "sha256": "7a68750330f13cc1a6df7703ecf9ba3bd316b4ea89d600e1735b997bd36ff5ad",
+      "source": "config/cs66/joint_limits.yaml",
+      "source_sha256": "7a68750330f13cc1a6df7703ecf9ba3bd316b4ea89d600e1735b997bd36ff5ad",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "f192eb5f3aebd9bd8133cc56365c6ff574eaf6c0"
+    },
+    "provenance/upstream/config/cs66/physical_parameters.yaml": {
+      "sha256": "29291c60127a277803c0e907046f8c72afd55ad73609fc0462b6d8c571adc75b",
+      "source": "config/cs66/physical_parameters.yaml",
+      "source_sha256": "29291c60127a277803c0e907046f8c72afd55ad73609fc0462b6d8c571adc75b",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "f52800a449ca8cebca5de465b6fb17bc87bb8599"
+    },
+    "provenance/upstream/config/cs66/visual_parameters.yaml": {
+      "sha256": "201eb217d2a676a3394174c6124f8c84270a2a093bb7d4f34c2686f74689b656",
+      "source": "config/cs66/visual_parameters.yaml",
+      "source_sha256": "201eb217d2a676a3394174c6124f8c84270a2a093bb7d4f34c2686f74689b656",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "3190c07bdb6e6541b2cd7b2f00d029028741a771"
+    },
+    "provenance/upstream/package.xml.txt": {
+      "sha256": "69f11a73829c2094381defc8eb9b73d9bcb66ed5e39d1edd8f3930798cddab40",
+      "source": "package.xml",
+      "source_sha256": "69f11a73829c2094381defc8eb9b73d9bcb66ed5e39d1edd8f3930798cddab40",
+      "role": "source_package_metadata",
+      "source_git_blob_sha1": "ddb70686fb108401fc7135edc7fe9cb02eec3fa4"
+    },
+    "provenance/upstream/urdf/cs_macro.xacro": {
+      "sha256": "5212fbda656105c1c5a0f972af3191ddcb74dac0f4b618e0ed7d1f1433e7c3ec",
+      "source": "urdf/cs_macro.xacro",
+      "source_sha256": "5212fbda656105c1c5a0f972af3191ddcb74dac0f4b618e0ed7d1f1433e7c3ec",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "17ad79f18a7d5d51e393010f6bf44b982632c255"
+    },
+    "provenance/upstream/urdf/inc/cs_common.xacro": {
+      "sha256": "6976c3ad2c0724b13f77a578571b61ae2bba9a8f4df9195ee31e0c5f47f0c281",
+      "source": "urdf/inc/cs_common.xacro",
+      "source_sha256": "6976c3ad2c0724b13f77a578571b61ae2bba9a8f4df9195ee31e0c5f47f0c281",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "a24a0ffb6e272e6567a88d81792e7a4b474ef25c"
+    },
+    "provenance/upstream/urdf/inc/cs_transmissions.xacro": {
+      "sha256": "80071acb8174e1851b83deb5d54493d24fdb8ca33a3830c14430aef9cfd9b59f",
+      "source": "urdf/inc/cs_transmissions.xacro",
+      "source_sha256": "80071acb8174e1851b83deb5d54493d24fdb8ca33a3830c14430aef9cfd9b59f",
+      "role": "authoritative_source",
+      "source_git_blob_sha1": "894be5084afbe2a90889654635ca2bf2d289fab4"
+    },
+    "provenance/urdf/cs66.upstream.urdf": {
+      "sha256": "509cffe16ae4771690495ea024a9e858d1d19bfcdcc2b5d5a1e587bb7d647bb0",
+      "source": "provenance/cs66.urdf.xacro",
+      "source_sha256": "94ab3ea5e09065506be878dd53ca0248e28633bc06969b636772dbe948d6989e",
+      "role": "generated_source_expansion"
+    },
+    "urdf/cs66.urdf": {
+      "sha256": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+      "source": "provenance/urdf/cs66.upstream.urdf",
+      "source_sha256": "509cffe16ae4771690495ea024a9e858d1d19bfcdcc2b5d5a1e587bb7d647bb0",
+      "role": "generated_urdf"
+    }
+  }
+}

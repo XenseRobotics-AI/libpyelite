@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="worktable_120cm">
+  <link name="worktable_120cm_base">
+    <visual name="part_00">
+      <geometry>
+        <mesh filename="../meshes/part_00.stl" />
+      </geometry>
+      <material name="part_00_color">
+        <color rgba="0.72 0.75 0.78 1" />
+      </material>
+    </visual>
+  </link>
+</robot>
