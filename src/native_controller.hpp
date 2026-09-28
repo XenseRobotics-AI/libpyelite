@@ -43,6 +43,8 @@ class NativeDriver {
   NativeStatus status() const;
   void moveJ(const PinkArmVector &q, double duration, int timeout_ms);
   bool writeIdle(int timeout_ms);
+  bool setPayload(double mass, const ELITE::vector3d_t &cog);
+  bool getPrimaryPackage(std::shared_ptr<ELITE::PrimaryPackage> package, int timeout_ms);
  private:
   struct Target {
     PinkPose pose{kIdentityPose};

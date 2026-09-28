@@ -32,6 +32,12 @@ NativeDriver::~NativeDriver() {
 }
 bool NativeDriver::isRobotConnected() { return driver_->isRobotConnected(); }
 bool NativeDriver::sendExternalControlScript() { return driver_->sendExternalControlScript(); }
+bool NativeDriver::setPayload(double mass, const ELITE::vector3d_t &cog) {
+  return driver_->setPayload(mass,cog);
+}
+bool NativeDriver::getPrimaryPackage(std::shared_ptr<ELITE::PrimaryPackage> package, int timeout_ms) {
+  return driver_->getPrimaryPackage(std::move(package),timeout_ms);
+}
 bool NativeDriver::writeIdle(int ms) {
   if(running_) throw std::logic_error("Native sender owns the reverse socket");
   return driver_->writeIdle(ms);

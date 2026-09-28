@@ -11,6 +11,7 @@ from ._native import (
     DashboardClientInterface,
     EliteDriverConfig,
     IK_BACKEND,
+    KinematicsInfo,
     PinkIKOptions,
     PlannerConfig,
     RtsiIOInterface,

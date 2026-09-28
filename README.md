@@ -12,11 +12,10 @@ the vendor socket write is synchronous and OS/network latency remains relevant.
 
 ## Build
 
-Initialize the SDK submodule (the parent checkout currently registers its nested
-path; .gitmodules also describes it for extraction as a standalone repository):
+Initialize libpyelite and its pinned SDK submodule from the LeRobot checkout:
 
 ```sh
-git submodule update --init third_party/libpyelite/vendor/elite_cs_sdk
+git submodule update --init --recursive third_party/libpyelite
 python -m pip wheel ./third_party/libpyelite --no-deps -w dist
 python -m pip install dist/libpyelite-0.1.0-*.whl
 ```
@@ -25,6 +24,10 @@ Linux, C++17 compiler and CMake are required. Build/runtime Pinocchio is pinned 
 4.1.0 to avoid silently mixing native ABIs. The SDK is linked statically; its
 external-control script and the model/meshes/licenses ship in the wheel.
 No ROS, Gazebo or elite_cs_sdk Python package is needed.
+
+The bridge also exposes SDK `setPayload`, `getPrimaryPackage`, and
+`KinematicsInfo` for LeRobot's payload configuration and optional DH-based
+motion guards. These calls do not replace the native Pink IK planner.
 
 ## Model and limits
 

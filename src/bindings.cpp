@@ -1,5 +1,6 @@
 #include "native_controller.hpp"
 #include <Elite/DashboardClient.hpp>
+#include <Elite/RobotConfPackage.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -7,6 +8,12 @@ namespace py=pybind11;
 using namespace libpyelite;
 using Release=py::call_guard<py::gil_scoped_release>;
 PYBIND11_MODULE(_native,m) {
+  py::class_<ELITE::PrimaryPackage,std::shared_ptr<ELITE::PrimaryPackage>>(m,"PrimaryPackage");
+  py::class_<ELITE::KinematicsInfo,ELITE::PrimaryPackage,std::shared_ptr<ELITE::KinematicsInfo>>(m,"KinematicsInfo")
+    .def(py::init<>())
+    .def_readonly("dh_alpha_",&ELITE::KinematicsInfo::dh_alpha_)
+    .def_readonly("dh_a_",&ELITE::KinematicsInfo::dh_a_)
+    .def_readonly("dh_d_",&ELITE::KinematicsInfo::dh_d_);
   m.attr("IK_BACKEND")=PinkIKModel::backendName();
   py::class_<PinkIKOptions>(m,"PinkIKOptions").def(py::init<>())
 #define OPT(name) .def_readwrite(#name,&PinkIKOptions::name)
@@ -86,6 +93,8 @@ PYBIND11_MODULE(_native,m) {
     .def("stopServo",&NativeDriver::stopServo,Release())
     .def("stopControl",&NativeDriver::stopControl,Release())
     .def("writeIdle",&NativeDriver::writeIdle,Release())
+    .def("setPayload",&NativeDriver::setPayload,Release())
+    .def("getPrimaryPackage",&NativeDriver::getPrimaryPackage,Release())
     .def("moveJ",&NativeDriver::moveJ,Release())
     .def("cancel",&NativeDriver::cancel,Release())
     .def("submit",&NativeDriver::submit,py::arg("pose"),py::arg("duration")=0,Release())

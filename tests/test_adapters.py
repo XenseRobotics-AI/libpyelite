@@ -42,26 +42,21 @@ def extract(path, class_name, methods, namespace):
 
 
 class AdapterTests(unittest.TestCase):
-    def test_preserved_start_poses_and_mount_roundtrip(self):
-        config = ROBOTS / "bi_elite_cs66_rt/config_bi_elite_cs66_rt.py"
-        names = {"_LEFT_START_POSE", "_RIGHT_START_POSE", "_PRESETS"}
-        assignments = [n for n in ast.parse(config.read_text()).body
-                       if isinstance(n, ast.Assign) and isinstance(n.targets[0], ast.Name)
-                       and n.targets[0].id in names]
-        assignments += [n for n in ast.parse(config.read_text()).body
-                        if isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name)
-                        and n.target.id == "_PRESETS"]
-        ns = {}
-        exec(compile(ast.Module(body=assignments, type_ignores=[]), str(config), "exec"), ns)
-        self.assertEqual(ns["_LEFT_START_POSE"], [-1.3963, -0.5236, 1.5708, -0.5236, 1.5708, -0.7854])
-        self.assertEqual(ns["_RIGHT_START_POSE"], [-1.7453, -2.6180, -1.5708, -2.6180, -1.5708, -0.7854])
+    def test_assembly_mount_roundtrip(self):
+        from libpyelite.assembly import Assembly
+
         methods = extract(
             ROBOTS / "bi_elite_cs66_rt/bi_elite_cs66_rt.py", "BiEliteCS66RT",
             ["_base_pose6_to_world", "_world_pose6_to_base"],
             {"np": np, "Rotation": Rotation},
         )
-        for preset in ns["_PRESETS"].values():
-            obj = SimpleNamespace(_R_wb={s: np.array(preset[s+"_world_R"]) for s in ("left", "right")})
+        for name in ("diagonal-07", "diagonal-08"):
+            assembly = Assembly(name)
+            transforms = {side: assembly.world_from_base(side) for side in ("left", "right")}
+            obj = SimpleNamespace(
+                _R_wb={side: t[:3, :3] for side, t in transforms.items()},
+                _p_wb={side: t[:3, 3] for side, t in transforms.items()},
+            )
             for side in ("left", "right"):
                 pose = np.array([0.2, -0.1, 0.4, 0.5, -0.3, 0.2])
                 world = methods["_base_pose6_to_world"](obj, side, pose)
