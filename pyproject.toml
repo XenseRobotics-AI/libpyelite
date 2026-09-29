@@ -12,6 +12,7 @@ dependencies = ["pin==4.1.0", "numpy>=1.24"]
 
 [tool.scikit-build]
 cmake.build-type = "Release"
+cmake.define.ELITE_ROS2_BUILD = "OFF"
 wheel.packages = ["libpyelite"]
 build.tool-args = ["-j2"]
 sdist.include = ["vendor/elite_cs_sdk/**"]

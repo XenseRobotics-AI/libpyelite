@@ -15,7 +15,13 @@ set(ELITE_COMPILE_KIN_PLUGIN OFF CACHE BOOL "" FORCE)
 set(ELITE_COMPILE_TESTS OFF CACHE BOOL "" FORCE)
 set(ELITE_COMPILE_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ELITE_INSTALL OFF CACHE BOOL "" FORCE)
+# libpyelite is a standalone Python/C++ wheel.  The parent conda environment
+# may contain ROS 2 for other hardware SDKs, but this package must never enter
+# the vendor SDK's optional ament/ROS build path.
 set(ELITE_ROS2_BUILD OFF CACHE BOOL "" FORCE)
+# Prevent the vendor CMakeLists.txt from auto-enabling ELITE_ROS2_BUILD merely
+# because ament_cmake happens to be discoverable in the active environment.
+set(CMAKE_DISABLE_FIND_PACKAGE_ament_cmake TRUE CACHE BOOL "" FORCE)
 set(CMAKE_DISABLE_FIND_PACKAGE_libssh TRUE)
 add_subdirectory(vendor/elite_cs_sdk EXCLUDE_FROM_ALL)
 target_link_libraries(elite_cs_series_sdk_STATIC PRIVATE Boost::boost Boost::filesystem)
