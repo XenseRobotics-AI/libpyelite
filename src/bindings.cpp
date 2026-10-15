@@ -61,7 +61,7 @@ PYBIND11_MODULE(_native,m) {
     DC(robot_ip) DC(local_ip) DC(script_file_path) DC(headless_mode)
     DC(reverse_port) DC(script_sender_port) DC(trajectory_port) DC(script_command_port)
     DC(servoj_time) DC(servoj_lookahead_time) DC(servoj_gain) DC(stopj_acc)
-    DC(model_path) DC(tool) DC(ik) DC(planner) DC(command_timeout_ms)
+    DC(model_path) DC(tool) DC(ik) DC(planner) DC(command_timeout_ms) DC(max_consecutive_write_failures)
     DC(feedback_timeout) DC(planner_timeout) DC(fk_position_tolerance) DC(fk_orientation_tolerance);
 #undef DC
   py::class_<NativeStatus>(m,"NativeStatus")

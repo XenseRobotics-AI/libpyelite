@@ -24,6 +24,7 @@ NativeDriver::NativeDriver(DriverConfig config)
       config_.fk_position_tolerance,config_.fk_orientation_tolerance})
     if(!std::isfinite(v)||v<=0) throw std::invalid_argument("Invalid native timeout or FK tolerance");
   if(config_.command_timeout_ms<=0) throw std::invalid_argument("Invalid command timeout");
+  if(config_.max_consecutive_write_failures<1) throw std::invalid_argument("Invalid write failure tolerance");
   driver_=std::make_unique<ELITE::EliteDriver>(config_);
 }
 NativeDriver::~NativeDriver() {
@@ -170,6 +171,7 @@ void NativeDriver::sendLoop() noexcept {
   auto next=Clock::now(); double last_stamp=rtsi_->getTimestamp(),fresh=now();
   PinkArmVector last_sent;
   { std::lock_guard<std::mutex> lock(mutex_); last_sent=status_.commanded_q; }
+  int failed_writes=0;
   const auto velocity=planner_.model().velocityLimits();
   const auto lower=planner_.model().lowerLimits(),upper=planner_.model().upperLimits();
   try {
@@ -200,7 +202,11 @@ void NativeDriver::sendLoop() noexcept {
         ok=driver_->writeServoj(q,config_.command_timeout_ms,false);
         if(ok) last_sent=q;
       }
-      if(!ok) throw std::runtime_error("Elite reverse socket write failed");
+      // A failed period leaves last_sent unchanged, so the next one re-steps from it.
+      failed_writes=ok?0:failed_writes+1;
+      if(failed_writes>=config_.max_consecutive_write_failures)
+        throw std::runtime_error("Elite reverse socket write failed "+std::to_string(failed_writes)+
+          " consecutive periods");
       waitTick(next,config_.servoj_time);
     }
   } catch(const std::exception &e) { fail(e.what()); }

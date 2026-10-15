@@ -47,6 +47,8 @@ class ModelTests(unittest.TestCase):
 
     def test_defaults(self):
         self.assertEqual(PinkIKOptions().max_iterations, 500)
+        # One failed write faults unless the adapter widens the tolerance.
+        self.assertEqual(_native.EliteDriverConfig().max_consecutive_write_failures, 1)
 
     def test_fk_ik_roundtrip_and_small_motion_both_starts(self):
         for q in (LEFT, RIGHT):

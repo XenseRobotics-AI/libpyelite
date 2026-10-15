@@ -14,6 +14,9 @@ struct DriverConfig : ELITE::EliteDriverConfig {
   PinkIKOptions ik;
   PlannerConfig planner;
   int command_timeout_ms{500};
+  // Reverse-socket writes fail transiently right after the external control
+  // script comes up; fault only after this many consecutive failed periods.
+  int max_consecutive_write_failures{1};
   double feedback_timeout{0.1};
   double planner_timeout{0.1};
   double fk_position_tolerance{0.005};
