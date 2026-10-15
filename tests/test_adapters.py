@@ -1,6 +1,8 @@
 """Execute the adapter methods without importing optional camera/gripper SDKs."""
 import ast
 from pathlib import Path
+import threading
+import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock
@@ -69,7 +71,7 @@ class AdapterTests(unittest.TestCase):
         methods = extract(
             ROBOTS / "bi_elite_cs66_rt/bi_elite_cs66_rt.py", "BiEliteCS66RT",
             ["_send_arm_action"],
-            {"np": np, "Any": object, "BiEliteCS66RTControlMode": mode,
+            {"np": np, "Any": object, "BiEliteCS66RTControlMode": mode, "time": time,
              "_pose6_to_matrix": lambda p: np.array(_native.pose_from_rotvec(p)).reshape(4, 4)},
         )
         status = SimpleNamespace(reset_active=False)
@@ -82,6 +84,7 @@ class AdapterTests(unittest.TestCase):
             config=SimpleNamespace(control_mode="cartesian"),
             _raise_servo_error_if_any=Mock(), _cartesian_action_to_tcp_pose=Mock(return_value=pose),
             _trace_send_action=Mock(), _last_tcp_command={}, _external_command_received={},
+            _servo_lock={"left": threading.Lock()}, _last_submit_time={},
             _base_pose6_to_world=lambda side, p: p,
             _tcp_rotvec_to_feature_values=lambda side, p: {"left_tcp.x": float(p[0])},
         )
