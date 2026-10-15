@@ -14,7 +14,7 @@
   "authoring": {
     "mode": "step_generated",
     "authority": "external_hash_locked_step",
-    "generator": "scripts/import_diagonal_02.py",
+    "generator": "scripts/importers/import_diagonal_02.py",
     "derivation": "provenance/step_derivation.json"
   },
   "source": {

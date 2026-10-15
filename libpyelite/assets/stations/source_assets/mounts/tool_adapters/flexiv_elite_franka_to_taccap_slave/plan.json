@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "status": "mesh_registered",
+  "mappings": [
+    {
+      "arm": "flexiv_rizon4",
+      "tool": "taccap_slave"
+    },
+    {
+      "arm": "flexiv_rizon4r",
+      "tool": "taccap_slave"
+    },
+    {
+      "arm": "flexiv_rizon4s",
+      "tool": "taccap_slave"
+    },
+    {
+      "arm": "tianji_left",
+      "tool": "taccap_slave"
+    },
+    {
+      "arm": "tianji_right",
+      "tool": "taccap_slave"
+    },
+    {
+      "arm": "elite_cs66",
+      "tool": "taccap_slave"
+    },
+    {
+      "arm": "franka_panda",
+      "tool": "taccap_slave"
+    }
+  ],
+  "target_assemblies": [
+    "assembly.forward_01_flexiv_rizon4s",
+    "assembly.forward_04_flexiv_rizon4r",
+    "assembly.forward_05_flexiv_rizon4r",
+    "assembly.diagonal_02_flexiv_rizon4",
+    "assembly.diagonal_07_elite_cs66",
+    "assembly.diagonal_08_elite_cs66",
+    "assembly.tianji_m6ccs",
+    "forward4s.dual_arm",
+    "forward44r.dual_arm",
+    "tianji.dual_arm"
+  ],
+  "cad_source": null,
+  "arm_to_adapter_transform": null,
+  "adapter_to_tool_transform": {
+    "xyz": "0 0 0.012",
+    "rpy": "0 0 0"
+  },
+  "interface_assumption": "User-identified original TacCap Asm_link mount, extracted with source +Z 12 mm tool transform; arm-specific flange clocking/compatibility remains pending verification. Existing Tianji mappings are candidates only.",
+  "asset_id": "xense.flexiv_elite_franka_to_taccap_slave",
+  "mesh_source": {
+    "path": "meshes/Asm_link.STL",
+    "sha256": "60b7f8c6c93211532d8fd419533dd904216314554bd5794c166b3dd8594f48bc"
+  },
+  "installed_assemblies": [],
+  "candidate_assemblies": [
+    "assembly.diagonal_02_flexiv_rizon4_taccap",
+    "assembly.forward_01_flexiv_rizon4s_taccap",
+    "assembly.forward_04_flexiv_rizon4r_taccap",
+    "assembly.forward_05_flexiv_rizon4r_taccap",
+    "assembly.diagonal_07_elite_cs66_taccap",
+    "assembly.diagonal_08_elite_cs66_taccap"
+  ]
+}

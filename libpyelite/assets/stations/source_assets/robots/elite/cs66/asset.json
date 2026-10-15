@@ -15,7 +15,7 @@
     "mode": "xacro_generated",
     "authority": "provenance/cs66.urdf.xacro",
     "inputs": "provenance/upstream/{urdf,config/cs66}",
-    "generator": "scripts/generate_elite_cs66.py",
+    "generator": "scripts/generators/generate_elite_cs66.py",
     "xacro_version": "2.1.1",
     "notes": [
       "Original vendor macro and model-specific YAML are authoritative. Edit inputs and regenerate; do not edit generated URDFs.",
@@ -32,14 +32,16 @@
       "Every vendor file was checked against the pinned commit Git blob SHA-1; source SHA-256 is recorded per file.",
       "Upstream physical_parameters.yaml warns that base mass, inertia and center of gravity might be incorrect; retained unchanged.",
       "Default kinematics are not per-hardware calibration. No inferred dynamics, limits or collision settings.",
-      "provenance/urdf/cs66.upstream.urdf is our expansion of the vendor macro, not a vendor-shipped URDF."
+      "provenance/urdf/cs66.upstream.urdf is our expansion of the vendor macro, not a vendor-shipped URDF.",
+      "2026-10-12 cross-check: vendor model vs product page differs in mass, J3 range and joint speeds; DH d6 differs from default wrist offset by 3 mm. See provenance/official_source_conflicts.json; preserved official numeric inputs."
     ]
   },
   "review": {
     "visual": "pending_human",
-    "joint_parameters": "unreviewed_source",
+    "joint_parameters": "unreviewed_source; official_model_vs_product_specs_and_terminal_DH_offset_conflicts_pending_vendor_confirmation",
     "inertial_parameters": "unreviewed_source",
-    "contacts": "not_validated"
+    "contacts": "not_validated",
+    "official_source": "pinned_official_inputs_verified; runtime_derivations_documented; hardware_accuracy_unconfirmed"
   },
   "files": {
     "LICENSES/elite_robots_description.txt": {
@@ -56,7 +58,7 @@
       "role": "documentation"
     },
     "README.md": {
-      "sha256": "040954126287944ff98986a2eb638fe8e459f01c5945f8876f3a356a17a59837",
+      "sha256": "00ce32804f5b590137a9358c966411ba5cd14019c8eb45ec7a3eff3cd23cd1e5",
       "source": "xense-description:local_documentation",
       "source_sha256": "74c3f642b5f1402f664a1189f0ce32052786c177909a2ffb19d3c9f15b38541d",
       "role": "documentation",
@@ -240,6 +242,18 @@
       "source": "provenance/urdf/cs66.upstream.urdf",
       "source_sha256": "509cffe16ae4771690495ea024a9e858d1d19bfcdcc2b5d5a1e587bb7d647bb0",
       "role": "generated_urdf"
+    },
+    "provenance/official_source_check.json": {
+      "sha256": "bdd4736337ac653e01f052f01286cc8e6faa4290f89dde9b062b11066276d5c7",
+      "source": "xense-description:official_source_audit_2026-10-12",
+      "source_sha256": "bdd4736337ac653e01f052f01286cc8e6faa4290f89dde9b062b11066276d5c7",
+      "role": "source_audit"
+    },
+    "provenance/official_source_conflicts.json": {
+      "source": "xense-description:local_source_audit_2026-10-12",
+      "source_sha256": "6d5ba9bc8750c2e4f2d82c8036ec732901ee6468c9d9ac48b529b30288d2a750",
+      "role": "source_audit",
+      "sha256": "6d5ba9bc8750c2e4f2d82c8036ec732901ee6468c9d9ac48b529b30288d2a750"
     }
   }
 }

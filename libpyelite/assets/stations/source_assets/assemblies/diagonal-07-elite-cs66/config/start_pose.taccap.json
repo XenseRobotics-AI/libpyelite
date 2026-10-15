@@ -1,0 +1,40 @@
+{
+  "unit": "radian",
+  "values": {
+    "left_arm": [
+      -1.3963,
+      -0.5236,
+      1.5708,
+      -0.5236,
+      1.5708,
+      -0.7854
+    ],
+    "right_arm": [
+      -1.7453,
+      -2.618,
+      -1.5708,
+      -2.618,
+      -1.5708,
+      -0.7854
+    ],
+    "left_gripper": [
+      0.5047492196767601
+    ],
+    "right_gripper": [
+      0.5047492196767601
+    ]
+  },
+  "source": {
+    "repository": "XenseRobotics-AI/lerobot-xense",
+    "revision": "b3451528c6e0e912b9befb7fdb25429c927b9c4e",
+    "path": "recipes/teleop/bi_elite_cs66_rt/diagonal-07-taccap.yaml",
+    "sha256": "d9c2702c685c59bfa3d6a4d2884d50131900222ba6c87767696a4cbb81c9efc3",
+    "fields": {
+      "left_arm": "robot.left_start_position_rad",
+      "right_arm": "robot.right_start_position_rad",
+      "left_gripper": "xense.taccap_slave:default / taccap_right_finger_joint / limit.upper",
+      "right_gripper": "xense.taccap_slave:default / taccap_right_finger_joint / limit.upper"
+    },
+    "note": "Keep this Elite platform arm values in radians, with no baked offset. Add two source-maximum-opening drivers and preserve -1 mimic followers. Gripper source URDF SHA-256: 09f69c734bb85f88779006bd41295aee4664347c558b998c00f48a24c49c4c3b"
+  }
+}

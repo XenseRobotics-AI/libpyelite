@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<robot name="assembly_diagonal_08_elite_cs66">
+<robot name="assembly_diagonal_07_elite_cs66_taccap">
   <link name="world" />
   <link name="left_world" />
   <link name="left_base_link" />
@@ -170,49 +170,49 @@
   <joint name="left_shoulder_pan_joint" type="revolute">
     <parent link="left_base_link_inertia" />
     <child link="left_shoulder_link" />
-    <origin rpy="0 -0 -1.3963000000000001" xyz="0 0 0.1625" />
+    <origin rpy="0 0 0" xyz="0 0 0.1625" />
     <axis xyz="0 0 1" />
-    <limit effort="150.0" lower="-4.8868853071795861" upper="7.6794853071795863" velocity="3.141592653589793" />
+    <limit effort="150.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="left_shoulder_lift_joint" type="revolute">
     <parent link="left_shoulder_link" />
     <child link="left_upperarm_link" />
-    <origin rpy="1.5707963265580633 0.52359999999999995 -1.184169252091432e-10" xyz="0 0 0" />
+    <origin rpy="1.570796326589793 0 0" xyz="0 0 0" />
     <axis xyz="0 0 1" />
-    <limit effort="150.0" lower="-5.7595853071795862" upper="6.8067853071795863" velocity="3.141592653589793" />
+    <limit effort="150.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="left_elbow_joint" type="revolute">
     <parent link="left_upperarm_link" />
     <child link="left_forearm_link" />
-    <origin rpy="0 -0 1.5708" xyz="-0.427 0 0" />
+    <origin rpy="0 0 0" xyz="-0.427 0 0" />
     <axis xyz="0 0 1" />
-    <limit effort="150.0" lower="-4.7123926535897933" upper="1.5707926535897931" velocity="3.141592653589793" />
+    <limit effort="150.0" lower="-3.141592653589793" upper="3.141592653589793" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="left_wrist_1_joint" type="revolute">
     <parent link="left_forearm_link" />
     <child link="left_wrist_1_link" />
-    <origin rpy="0 -0 -0.52359999999999995" xyz="-0.3905 0 0.1475" />
+    <origin rpy="0 0 0" xyz="-0.3905 0 0.1475" />
     <axis xyz="0 0 1" />
-    <limit effort="28.0" lower="-5.7595853071795862" upper="6.8067853071795863" velocity="3.141592653589793" />
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="left_wrist_2_joint" type="revolute">
     <parent link="left_wrist_1_link" />
     <child link="left_wrist_2_link" />
-    <origin rpy="-1.5707404890333243 -1.5707926535897876 3.1415368158282213" xyz="0 -0.0965 0" />
+    <origin rpy="1.570796326589793 0 0" xyz="0 -0.0965 0" />
     <axis xyz="0 0 1" />
-    <limit effort="28.0" lower="-7.8539853071795864" upper="4.712385307179586" velocity="3.141592653589793" />
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="left_wrist_3_joint" type="revolute">
     <parent link="left_wrist_2_link" />
     <child link="left_wrist_3_link" />
-    <origin rpy="-1.5707963265048359 -0.78539999999999999 -2.0510430436880494e-10" xyz="0 0.095 0" />
+    <origin rpy="-1.570796326589793 0 0" xyz="0 0.095 0" />
     <axis xyz="0 0 1" />
-    <limit effort="28.0" lower="-5.4977853071795861" upper="7.0685853071795863" velocity="3.141592653589793" />
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <link name="left_ft_frame" />
@@ -408,49 +408,49 @@
   <joint name="right_shoulder_pan_joint" type="revolute">
     <parent link="right_base_link_inertia" />
     <child link="right_shoulder_link" />
-    <origin rpy="0 -0 -1.7453000000000001" xyz="0 0 0.1625" />
+    <origin rpy="0 0 0" xyz="0 0 0.1625" />
     <axis xyz="0 0 1" />
-    <limit effort="150.0" lower="-4.5378853071795859" upper="8.0284853071795865" velocity="3.141592653589793" />
+    <limit effort="150.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="right_shoulder_lift_joint" type="revolute">
     <parent link="right_shoulder_link" />
     <child link="right_upperarm_link" />
-    <origin rpy="-1.5707963265580642 0.52359265358979334 -3.1415926534713785" xyz="0 0 0" />
+    <origin rpy="1.570796326589793 0 0" xyz="0 0 0" />
     <axis xyz="0 0 1" />
-    <limit effort="150.0" lower="-3.6651853071795863" upper="8.9011853071795866" velocity="3.141592653589793" />
+    <limit effort="150.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="right_elbow_joint" type="revolute">
     <parent link="right_upperarm_link" />
     <child link="right_forearm_link" />
-    <origin rpy="0 -0 -1.5708" xyz="-0.427 0 0" />
+    <origin rpy="0 0 0" xyz="-0.427 0 0" />
     <axis xyz="0 0 1" />
-    <limit effort="150.0" lower="-1.5707926535897931" upper="4.7123926535897933" velocity="3.141592653589793" />
+    <limit effort="150.0" lower="-3.141592653589793" upper="3.141592653589793" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="right_wrist_1_joint" type="revolute">
     <parent link="right_forearm_link" />
     <child link="right_wrist_1_link" />
-    <origin rpy="0 -0 -2.6179999999999999" xyz="-0.3905 0 0.1475" />
+    <origin rpy="0 0 0" xyz="-0.3905 0 0.1475" />
     <axis xyz="0 0 1" />
-    <limit effort="28.0" lower="-3.6651853071795863" upper="8.9011853071795866" velocity="3.141592653589793" />
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="right_wrist_2_joint" type="revolute">
     <parent link="right_wrist_1_link" />
     <child link="right_wrist_2_link" />
-    <origin rpy="-1.5707404890333243 1.5707926535897876 -3.1415368158282213" xyz="0 -0.0965 0" />
+    <origin rpy="1.570796326589793 0 0" xyz="0 -0.0965 0" />
     <axis xyz="0 0 1" />
-    <limit effort="28.0" lower="-4.712385307179586" upper="7.8539853071795864" velocity="3.141592653589793" />
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <joint name="right_wrist_3_joint" type="revolute">
     <parent link="right_wrist_2_link" />
     <child link="right_wrist_3_link" />
-    <origin rpy="-1.5707963265048359 -0.78539999999999999 -2.0510430436880494e-10" xyz="0 0.095 0" />
+    <origin rpy="-1.570796326589793 0 0" xyz="0 0.095 0" />
     <axis xyz="0 0 1" />
-    <limit effort="28.0" lower="-5.4977853071795861" upper="7.0685853071795863" velocity="3.141592653589793" />
+    <limit effort="28.0" lower="-6.283185307179586" upper="6.283185307179586" velocity="3.141592653589793" />
     <dynamics damping="0" friction="0" />
   </joint>
   <link name="right_ft_frame" />
@@ -565,13 +565,263 @@
       </material>
     </visual>
   </link>
+  <material name="left_adapter_taccap_cover_mat">
+    <color rgba="0.89804 0.91765 0.92941 1" />
+  </material>
+  <link name="left_adapter_taccap_mount_link">
+    <visual name="asm_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../mounts/tool_adapters/flexiv_elite_franka_to_taccap_slave/meshes/Asm_link.STL" />
+      </geometry>
+      <material name="left_adapter_taccap_cover_mat" />
+    </visual>
+    <collision name="asm_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../mounts/tool_adapters/flexiv_elite_franka_to_taccap_slave/meshes/Asm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <material name="left_tool_taccap_base_mat">
+    <color rgba="0.75294 0.75294 0.75294 1" />
+  </material>
+  <material name="left_tool_taccap_left_mat">
+    <color rgba="1 1 1 1" />
+  </material>
+  <material name="left_tool_taccap_right_mat">
+    <color rgba="0.60392 0.60392 0.60392 1" />
+  </material>
+  <material name="left_tool_taccap_cover_mat">
+    <color rgba="0.89804 0.91765 0.92941 1" />
+  </material>
+  <link name="left_tool_taccap_base_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.010155 -0.0007499 0.0361" />
+      <mass value="0.415" />
+      <inertia ixx="0.000573" ixy="0" ixz="0" iyy="0.000748" iyz="0" izz="0.000680" />
+    </inertial>
+    <visual name="base_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0.01975 -0.0060769 0.034023" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/base_link.STL" />
+      </geometry>
+      <material name="left_tool_taccap_base_mat" />
+    </visual>
+    <collision name="base_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0.01975 -0.0060769 0.034023" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="left_tool_taccap_left_finger_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.020693 -0.00669 0.074921" />
+      <mass value="0.36678" />
+      <inertia ixx="0.00015235" ixy="2.9254e-07" ixz="-2.4362e-06" iyy="0.00015466" iyz="-6.6715e-06" izz="3.3606e-05" />
+    </inertial>
+    <visual name="left_finger_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_left.STL" />
+      </geometry>
+      <material name="left_tool_taccap_left_mat" />
+    </visual>
+    <collision name="left_finger_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_tool_taccap_left_finger_joint" type="revolute">
+    <parent link="left_tool_taccap_base_link" />
+    <child link="left_tool_taccap_left_finger_link" />
+    <origin rpy="0 0 0" xyz="0.0120336718 0.0199500106 0.0484999712" />
+    <axis xyz="1 0 0" />
+    <limit effort="4" lower="-0.5047492196767601" upper="0" velocity="1" />
+    <dynamics damping="0.08" friction="0.01" />
+    <mimic joint="left_tool_taccap_right_finger_joint" multiplier="-1" offset="0" />
+  </joint>
+  <link name="left_tool_taccap_right_finger_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.020629 0.0066814 0.07491" />
+      <mass value="0.36678" />
+      <inertia ixx="0.00015238" ixy="-2.9549e-07" ixz="-2.4418e-06" iyy="0.0001547" iyz="6.6629e-06" izz="3.3592e-05" />
+    </inertial>
+    <visual name="right_finger_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_right.STL" />
+      </geometry>
+      <material name="left_tool_taccap_right_mat" />
+    </visual>
+    <collision name="right_finger_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="left_tool_taccap_right_finger_joint" type="revolute">
+    <parent link="left_tool_taccap_base_link" />
+    <child link="left_tool_taccap_right_finger_link" />
+    <origin rpy="0 0 0" xyz="0.0120336718 -0.0199499894 0.0484999712" />
+    <axis xyz="1 0 0" />
+    <limit effort="4" lower="0" upper="0.5047492196767601" velocity="1" />
+    <dynamics damping="0.08" friction="0.01" />
+  </joint>
+  <link name="left_tool_taccap_eef_link" />
+  <joint name="left_tool_taccap_eef_joint" type="fixed">
+    <parent link="left_tool_taccap_base_link" />
+    <child link="left_tool_taccap_eef_link" />
+    <origin rpy="0 0 0" xyz="0.036575 0 0.2009217" />
+  </joint>
+  <link name="left_tool_taccap_camera_link" />
+  <joint name="left_tool_taccap_camera_joint" type="fixed">
+    <parent link="left_tool_taccap_base_link" />
+    <child link="left_tool_taccap_camera_link" />
+    <origin rpy="0 0 0" xyz="-0.02275 0 0.06125" />
+  </joint>
+  <link name="left_tool_taccap_camera_optical_link" />
+  <joint name="left_tool_taccap_camera_optical_joint" type="fixed">
+    <parent link="left_tool_taccap_camera_link" />
+    <child link="left_tool_taccap_camera_optical_link" />
+    <origin rpy="0 0 -1.5707963267948966" xyz="0 0 0" />
+  </joint>
+  <material name="right_adapter_taccap_cover_mat">
+    <color rgba="0.89804 0.91765 0.92941 1" />
+  </material>
+  <link name="right_adapter_taccap_mount_link">
+    <visual name="asm_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../mounts/tool_adapters/flexiv_elite_franka_to_taccap_slave/meshes/Asm_link.STL" />
+      </geometry>
+      <material name="right_adapter_taccap_cover_mat" />
+    </visual>
+    <collision name="asm_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../mounts/tool_adapters/flexiv_elite_franka_to_taccap_slave/meshes/Asm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <material name="right_tool_taccap_base_mat">
+    <color rgba="0.75294 0.75294 0.75294 1" />
+  </material>
+  <material name="right_tool_taccap_left_mat">
+    <color rgba="1 1 1 1" />
+  </material>
+  <material name="right_tool_taccap_right_mat">
+    <color rgba="0.60392 0.60392 0.60392 1" />
+  </material>
+  <material name="right_tool_taccap_cover_mat">
+    <color rgba="0.89804 0.91765 0.92941 1" />
+  </material>
+  <link name="right_tool_taccap_base_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.010155 -0.0007499 0.0361" />
+      <mass value="0.415" />
+      <inertia ixx="0.000573" ixy="0" ixz="0" iyy="0.000748" iyz="0" izz="0.000680" />
+    </inertial>
+    <visual name="base_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0.01975 -0.0060769 0.034023" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/base_link.STL" />
+      </geometry>
+      <material name="right_tool_taccap_base_mat" />
+    </visual>
+    <collision name="base_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0.01975 -0.0060769 0.034023" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="right_tool_taccap_left_finger_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.020693 -0.00669 0.074921" />
+      <mass value="0.36678" />
+      <inertia ixx="0.00015235" ixy="2.9254e-07" ixz="-2.4362e-06" iyy="0.00015466" iyz="-6.6715e-06" izz="3.3606e-05" />
+    </inertial>
+    <visual name="left_finger_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_left.STL" />
+      </geometry>
+      <material name="right_tool_taccap_left_mat" />
+    </visual>
+    <collision name="left_finger_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_left.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_tool_taccap_left_finger_joint" type="revolute">
+    <parent link="right_tool_taccap_base_link" />
+    <child link="right_tool_taccap_left_finger_link" />
+    <origin rpy="0 0 0" xyz="0.0120336718 0.0199500106 0.0484999712" />
+    <axis xyz="1 0 0" />
+    <limit effort="4" lower="-0.5047492196767601" upper="0" velocity="1" />
+    <dynamics damping="0.08" friction="0.01" />
+    <mimic joint="right_tool_taccap_right_finger_joint" multiplier="-1" offset="0" />
+  </joint>
+  <link name="right_tool_taccap_right_finger_link">
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.020629 0.0066814 0.07491" />
+      <mass value="0.36678" />
+      <inertia ixx="0.00015238" ixy="-2.9549e-07" ixz="-2.4418e-06" iyy="0.0001547" iyz="6.6629e-06" izz="3.3592e-05" />
+    </inertial>
+    <visual name="right_finger_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_right.STL" />
+      </geometry>
+      <material name="right_tool_taccap_right_mat" />
+    </visual>
+    <collision name="right_finger_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../../../grippers/xense/taccap/slave/body/meshes/grip_right.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_tool_taccap_right_finger_joint" type="revolute">
+    <parent link="right_tool_taccap_base_link" />
+    <child link="right_tool_taccap_right_finger_link" />
+    <origin rpy="0 0 0" xyz="0.0120336718 -0.0199499894 0.0484999712" />
+    <axis xyz="1 0 0" />
+    <limit effort="4" lower="0" upper="0.5047492196767601" velocity="1" />
+    <dynamics damping="0.08" friction="0.01" />
+  </joint>
+  <link name="right_tool_taccap_eef_link" />
+  <joint name="right_tool_taccap_eef_joint" type="fixed">
+    <parent link="right_tool_taccap_base_link" />
+    <child link="right_tool_taccap_eef_link" />
+    <origin rpy="0 0 0" xyz="0.036575 0 0.2009217" />
+  </joint>
+  <link name="right_tool_taccap_camera_link" />
+  <joint name="right_tool_taccap_camera_joint" type="fixed">
+    <parent link="right_tool_taccap_base_link" />
+    <child link="right_tool_taccap_camera_link" />
+    <origin rpy="0 0 0" xyz="-0.02275 0 0.06125" />
+  </joint>
+  <link name="right_tool_taccap_camera_optical_link" />
+  <joint name="right_tool_taccap_camera_optical_joint" type="fixed">
+    <parent link="right_tool_taccap_camera_link" />
+    <child link="right_tool_taccap_camera_optical_link" />
+    <origin rpy="0 0 -1.5707963267948966" xyz="0 0 0" />
+  </joint>
   <joint name="world_to_stand" type="fixed">
     <origin xyz="0 0 0" rpy="0 0 3.141592653589793" />
     <parent link="world" />
     <child link="elite_cs66_a1_stand_base" />
   </joint>
   <joint name="world_to_table" type="fixed">
-    <origin xyz="0.700624760246217 -0.0677769600617899 0.000895483271931539" rpy="0 0 0" />
+    <origin xyz="0.700624760246217 0.067776960061789945 0.000895483271931539" rpy="0 0 0" />
     <parent link="world" />
     <child link="worktable_120cm_base" />
   </joint>
@@ -584,5 +834,25 @@
     <origin xyz="0 0 0" rpy="0 0 -1.5707963267948966" />
     <parent link="left_arm_mount" />
     <child link="right_world" />
+  </joint>
+  <joint name="left_flange_to_taccap_adapter" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="left_flange" />
+    <child link="left_adapter_taccap_mount_link" />
+  </joint>
+  <joint name="left_adapter_to_taccap_base" type="fixed">
+    <origin xyz="0 0 0.012" rpy="0 0 0" />
+    <parent link="left_adapter_taccap_mount_link" />
+    <child link="left_tool_taccap_base_link" />
+  </joint>
+  <joint name="right_flange_to_taccap_adapter" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 -1.5707963267948966" />
+    <parent link="right_flange" />
+    <child link="right_adapter_taccap_mount_link" />
+  </joint>
+  <joint name="right_adapter_to_taccap_base" type="fixed">
+    <origin xyz="0 0 0.012" rpy="0 0 0" />
+    <parent link="right_adapter_taccap_mount_link" />
+    <child link="right_tool_taccap_base_link" />
   </joint>
 </robot>

@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-12",
+  "scope": "Official source conflicts; preserved values, no hardware limit change.",
+  "sources": {
+    "description": "https://github.com/EliteRobots/Elite_Robots_CS_ROS2_Description/tree/edbbfdca9220ce264c99ec51d37440ff4fa13a9a",
+    "driver": "https://github.com/Elite-Robots/Elite_Robots_CS_ROS2_Driver/tree/3e9e8ca8c9a56b5a5965d15ba4ddd751addd7c33",
+    "product_page": "https://www.eliterobots.com/cobots/cs66"
+  },
+  "issues": [
+    {
+      "field": "declared_mass_sum_kg",
+      "model": 19.14027,
+      "product_page": 20.0,
+      "difference_kg": 0.85973
+    },
+    {
+      "field": "J1_J2_velocity_degree_s",
+      "model": 180,
+      "product_page": 150
+    },
+    {
+      "field": "J3_position_degree",
+      "model": [
+        -180,
+        180
+      ],
+      "product_page": [
+        -360,
+        360
+      ]
+    },
+    {
+      "field": "J4_J5_J6_velocity_degree_s",
+      "model": 180,
+      "product_page": 230
+    },
+    {
+      "field": "terminal_wrist_offset_m",
+      "physical_parameters_DH_d6": 0.092,
+      "default_kinematics_wrist_3_y": 0.095,
+      "difference_m": 0.003,
+      "status": "frame_correspondence_and_revision_pending_vendor_confirmation; do_not_mix_FK_sources"
+    },
+    {
+      "field": "base_inertia",
+      "status": "vendor_warning_mass_COM_inertia_might_be_incorrect"
+    },
+    {
+      "field": "acceleration_limits",
+      "status": "not_publicly_available"
+    },
+    {
+      "field": "per_unit_calibration",
+      "status": "not_supplied"
+    }
+  ]
+}

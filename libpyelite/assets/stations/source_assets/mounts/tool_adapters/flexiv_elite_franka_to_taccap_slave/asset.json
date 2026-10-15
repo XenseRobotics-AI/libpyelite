@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "id": "xense.flexiv_elite_franka_to_taccap_slave",
+  "category": "mounts",
+  "display_name": "Flexiv / Elite / Franka to TacCap Slave adapter",
+  "entrypoints": {
+    "default": "urdf/flexiv_elite_franka_to_taccap_slave.urdf"
+  },
+  "units": {
+    "length": "m",
+    "angle": "rad",
+    "mass": "kg"
+  },
+  "authoring": {
+    "mode": "urdf_derived",
+    "authority": "provenance/urdf/taccap_g1_slave_with_mount.urdf + meshes/Asm_link.STL + provenance/derivation.json",
+    "generator": "scripts/generators/generate_taccap_flange_adapter.py",
+    "mass_properties": "config/mass.json"
+  },
+  "source": {
+    "repository": "XenseRobotics-AI/robosuite-xense",
+    "revision": "865e81be89706f8d1d25ba83119c1d0f3de8d4e9",
+    "snapshot": "local_working_tree_xense.taccap_slave_with_mount_2026-10-10",
+    "license_status": "unconfirmed_see_notice",
+    "sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+    "notes": [
+      "User identified taccap_mount_link as the requested adapter. Extracted from current URDF; original STL bytes and source URDFs retained.",
+      "Uniform 6061-T6 density and mass estimate explicitly requested; COM/inertia deferred, no URDF inertial authored.",
+      "Robot-side frame and +Z 12 mm tool transform retained; arm-specific compatibility and clocking pending."
+    ]
+  },
+  "review": {
+    "visual": "pending_human",
+    "joint_parameters": "fixed_tool_transform_preserved_from_source; arm_installation_unverified",
+    "inertial_parameters": "mesh_volume_times_user_specified_6061_T6_density; COM_and_inertia_deferred",
+    "contacts": "source_collision_mesh_preserved_not_validated"
+  },
+  "files": {
+    "LICENSES/robosuite.txt": {
+      "sha256": "177978cbece0a4c454c2aaec5b3f145b39270814874c43109da9e829c39d9cba",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "177978cbece0a4c454c2aaec5b3f145b39270814874c43109da9e829c39d9cba",
+      "role": "license"
+    },
+    "NOTICE.md": {
+      "sha256": "c0ee19b9f2d719506accef796b72ed411764035325e1364e6b43c3f5f24adb2e",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "documentation"
+    },
+    "README.md": {
+      "sha256": "630a72c9520cd037287e1fb3e0ee3effeebe2b08f35a913e336f69f16e2eaf9e",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "documentation"
+    },
+    "config/mass.json": {
+      "sha256": "7b0e95f3afc83b99e6520b4ff025cc783d8beac82028530cb0183bfe8af395bf",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "estimated_mass"
+    },
+    "meshes/Asm_link.STL": {
+      "sha256": "60b7f8c6c93211532d8fd419533dd904216314554bd5794c166b3dd8594f48bc",
+      "source": "assets/grippers/xense/taccap/slave/body/meshes/Asm_link.STL",
+      "source_sha256": "60b7f8c6c93211532d8fd419533dd904216314554bd5794c166b3dd8594f48bc",
+      "role": "mesh"
+    },
+    "plan.json": {
+      "sha256": "8952b2b328c6a3e7cb35927102422435866f64a18de556a1ec2b18b2797e196f",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "documentation"
+    },
+    "provenance/derivation.json": {
+      "sha256": "ad7206d4aaf094abec91901e491d6780936ca1f076324f28f43b4d4e2f308b22",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "documentation"
+    },
+    "provenance/source_NOTICE.md": {
+      "sha256": "875138aee527ed060861dc17cc580934f2b916594db4355f3d8d4d046deca3a9",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "documentation"
+    },
+    "provenance/urdf/taccap_g1_slave.urdf": {
+      "sha256": "cbdfc4e045d473c52238ecf13e48518fe7c4a31c008cd5be51b81b6bda64a8fd",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "cbdfc4e045d473c52238ecf13e48518fe7c4a31c008cd5be51b81b6bda64a8fd",
+      "role": "source_urdf"
+    },
+    "provenance/urdf/taccap_g1_slave_with_mount.urdf": {
+      "sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "source_urdf"
+    },
+    "urdf/flexiv_elite_franka_to_taccap_slave.urdf": {
+      "sha256": "b77d13827a6c05438d9c612e4975c68d3cdc8dc97d5380de2265eea063105f92",
+      "source": "xense.taccap_slave:with_mount",
+      "source_sha256": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+      "role": "urdf"
+    }
+  }
+}

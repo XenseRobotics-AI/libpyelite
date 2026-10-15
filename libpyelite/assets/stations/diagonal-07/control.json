@@ -1,12 +1,18 @@
 {
-  "assembly_id": "assembly.diagonal_07_elite_cs66",
-  "assembly_urdf": "../source_assets/assemblies/diagonal-07-elite-cs66/urdf/diagonal-07-elite-cs66.urdf",
-  "assembly_sha256": "fb9274d27a91673a44c6f49b02394b0ba7868d08e8bc986f3346efeee55dbdff",
-  "joint_mapping": "q_assembly = q_controller - initial_pose; control URDF uses q_controller",
+  "assembly_id": "assembly.diagonal_07_elite_cs66_taccap",
+  "assembly_urdf": "assembly_taccap_identified.urdf",
+  "assembly_sha256": "4dbd50a531f65457e8a11112af847da5480996be72aecc2307516a6a1d9c09c6",
+  "joint_mapping": "q_assembly = q_controller; no baked initial offsets",
+  "viewer_joint_defaults": {
+    "left_tool_taccap_left_finger_joint": -0.5047492196767601,
+    "left_tool_taccap_right_finger_joint": 0.5047492196767601,
+    "right_tool_taccap_left_finger_joint": -0.5047492196767601,
+    "right_tool_taccap_right_finger_joint": 0.5047492196767601
+  },
   "arms": {
     "left": {
       "control_urdf": "left_control.urdf",
-      "control_sha256": "52aa85ce0b87259871e496356815df1738677c890098a8eebb83b814dea7b7c2",
+      "control_sha256": "d172ba340f31665684c092bf33914a850e70486f5d8f030041e4943edd3d5c6c",
       "initial_pose": [
         -1.3963,
         -0.5236,
@@ -44,7 +50,7 @@
     },
     "right": {
       "control_urdf": "right_control.urdf",
-      "control_sha256": "bbcfb3639c25b3a1a461363b59ac1bab2176f2be78314824ae2773dfbd7ca6d3",
+      "control_sha256": "a6a9e6ee5bb79eb6aad2ac1bd2162348140c296047dba1ea733f5ed545ef07f1",
       "initial_pose": [
         -1.7453,
         -2.618,
@@ -80,5 +86,8 @@
         ]
       ]
     }
-  }
+  },
+  "source_assembly_urdf": "../source_assets/assemblies/diagonal-07-elite-cs66/urdf/diagonal-07-elite-cs66-taccap.urdf",
+  "source_assembly_sha256": "a94ff8c78bf0949285153335879e6b04bd9f8c056dbbfb94024a76663aa603d0",
+  "payload_identification": "../taccap_identification.json"
 }
