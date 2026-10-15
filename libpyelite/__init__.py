@@ -2,16 +2,21 @@
 
 No connections, threads or robot motion are started by importing this module.
 """
+import json
 from pathlib import Path
 
 import numpy as np
 
 from . import _native
 from ._native import (
+    IK_BACKEND,
+    ComplianceConfig,
+    ComplianceController,
+    ComplianceStatus,
     DashboardClientInterface,
     EliteDriverConfig,
-    IK_BACKEND,
     KinematicsInfo,
+    MotionLimiter,
     PinkIKOptions,
     PlannerConfig,
     RtsiIOInterface,
@@ -19,6 +24,24 @@ from ._native import (
 
 __version__ = "0.1.0"
 _ROOT = Path(__file__).resolve().parent
+
+
+def load_compliance_config(path=None, **overrides):
+    """Enabled ComplianceConfig from a probe_force_noise.py ``analyze --export`` JSON plus overrides.
+
+    Unknown JSON keys (``source`` provenance) are ignored; unknown overrides are an error.
+    """
+    config = ComplianceConfig()
+    config.enabled = True
+    if path is not None:
+        for key, value in json.loads(Path(path).read_text()).items():
+            if key != "source" and hasattr(config, key):
+                setattr(config, key, value)
+    for key, value in overrides.items():
+        if not hasattr(config, key):
+            raise AttributeError(f"ComplianceConfig has no field {key!r}")
+        setattr(config, key, value)
+    return config
 
 
 def model_path():

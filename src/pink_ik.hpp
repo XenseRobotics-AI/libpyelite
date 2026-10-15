@@ -17,6 +17,8 @@ inline constexpr PinkPose kIdentityPose{{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1}};
 
 struct PinkIKDiagnostics {
   bool success{false};
+  bool progress{false};
+  bool qp_failed{false};
   int iterations{0};
   double position_error{0.0};
   double orientation_error{0.0};
@@ -27,12 +29,19 @@ struct PinkIKDiagnostics {
 // task gain moderates each linearized correction near wrist singularities.
 struct PinkIKOptions {
   int max_iterations{500};
+  int streamingIterationBudget() const { return max_iterations < 8 ? max_iterations : 8; }
   double dt{0.1};
   double damping{1.0e-3};
   double step_size{1.0};
   double max_step_norm{0.15};
   double position_tolerance{1.0e-4};
   double orientation_tolerance{1.0e-3};
+  // Streaming (bounded) solves stop at these instead. Stopping anywhere inside
+  // the 0.1 mm offline tolerance makes the residual jump between ticks, which
+  // differentiates into joint acceleration/jerk spikes (38 rad/s², 1.5e4 rad/s³
+  // on a 2 m/s² Cartesian move); the iteration budget still bounds the cost.
+  double streaming_position_tolerance{1.0e-7};
+  double streaming_orientation_tolerance{1.0e-6};
   double position_cost{1.0};
   double orientation_cost{1.0};
   double frame_gain{0.5};
@@ -67,15 +76,15 @@ class PinkIKModel {
   PinkPose forwardKinematics(std::size_t arm,
                             const PinkArmVector &q) const;
 
-  // Solve one arm for one planner waypoint.  ``max_step_rad`` is the
-  // per-joint velocity envelope for one integrated Pink step.  The solver
-  // uses it as a box constraint on the numerical velocity; the controller
-  // applies the same envelope once more to the final candidate before it is
-  // published, matching the two-stage bound used by libtron2rt.
+  // Offline solve: max_step_rad bounds each numerical iteration.
+  // Streaming (bounded=true): also bound TOTAL displacement from reference,
+  // using at most eight iterations. success means pose tolerances were met;
+  // progress means a finite, bounded state reduced the nonlinear task error.
+  // The controller retains a final velocity gate in either mode.
   bool solve(std::size_t arm, const PinkPose &target,
              const PinkArmVector &reference,
              const PinkArmVector &max_step_rad, PinkArmVector &solution,
-             PinkIKDiagnostics &diagnostics) const;
+             PinkIKDiagnostics &diagnostics, bool bounded = false) const;
 
   static const char *backendName() noexcept { return "pink-pinocchio-native"; }
 
@@ -94,7 +103,7 @@ class PinkIKModel {
                      const PinkArmVector &reference,
                      const PinkArmVector &max_step_rad,
                      PinkArmVector &solution,
-                     PinkIKDiagnostics &diagnostics) const;
+                     PinkIKDiagnostics &diagnostics, bool bounded = false) const;
 
   mutable std::array<std::unique_ptr<ArmModel>, 1> arms_;
   PinkIKOptions options_{};

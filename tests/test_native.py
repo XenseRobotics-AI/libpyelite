@@ -118,6 +118,95 @@ class PlannerTests(unittest.TestCase):
         self.assertEqual(p.status().ik_failures, 0)
         np.testing.assert_allclose(np.array(p.pose()).reshape(4, 4)[:3, 3], b[:3, 3], atol=1e-4)
 
+    def test_iteration_exhaustion_keeps_bounded_progress(self):
+        options = PinkIKOptions()
+        options.max_iterations = 1
+        planner = _native.Planner(model_path(), np.eye(4).ravel(), options, self.config)
+        planner.seed(LEFT)
+        target = self.model.fk(LEFT)
+        target[0, 3] += .02
+        planner.submit(target.ravel(), 0., 1)
+        q = np.asarray(planner.tick(0.))
+        self.assertFalse(planner.status().ik.success)
+        self.assertTrue(planner.status().ik.progress)
+        self.assertTrue(planner.status().moving)
+        self.assertEqual(planner.status().consumed_sequence, 0)
+        self.assertGreater(np.linalg.norm(q - LEFT), 1e-6)
+        self.assertTrue(np.all(np.abs(q - LEFT) <= self.model.velocity_limits * .004 + 1e-12))
+        for i in range(1, 120):
+            q = np.asarray(planner.tick(i * .004))
+        self.assertLess(np.linalg.norm(self.model.fk(q)[:3, 3] - target[:3, 3]), 1e-4)
+        self.assertEqual(planner.status().consumed_sequence, 1)
+
+    def test_timed_reset_does_not_accept_partial_ik(self):
+        options = PinkIKOptions()
+        options.max_iterations = 1
+        planner = _native.Planner(model_path(), np.eye(4).ravel(), options, self.config)
+        planner.seed(LEFT)
+        target = self.model.fk(LEFT)
+        target[0, 3] += .02
+        planner.submit(target.ravel(), 0., 1, .004)
+        for i in range(50):
+            planner.tick(i * .004)
+            if not planner.status().moving:
+                break
+        self.assertFalse(planner.status().moving)
+        self.assertGreater(planner.status().ik_failures, 0)
+        self.assertEqual(planner.status().consumed_sequence, 0)
+
+    def test_rotating_stream_and_tool_offset(self):
+        from libpyelite.sim import Simulation
+        tool = np.eye(4)
+        tool[:3, 3] = [.01, -.02, .15]
+        sim = Simulation(q=LEFT, tool=tool)
+        home = sim.target.copy()
+        for i in range(600):
+            angle = .12 * math.sin(i * math.pi / 300) if i < 300 else 0.
+            rotation = np.asarray(_native.pose_from_rotvec([0, 0, 0, 0, angle, 0])).reshape(4, 4)
+            target = home.copy()
+            target[:3, :3] = rotation[:3, :3] @ home[:3, :3]
+            sample = sim.step(target)
+            self.assertFalse(sample["qp_failed"])
+            self.assertLessEqual(sample["max_joint_step_rad"], math.pi * .004 + 1e-12)
+        self.assertLess(sample["position_error_m"], 1e-4)
+        self.assertLess(sample["orientation_error_rad"], 1e-3)
+
+    def test_unreachable_target_recovers_and_stale_still_holds(self):
+        from libpyelite.sim import Simulation
+        sim = Simulation(q=LEFT)
+        home = sim.target.copy()
+        far = home.copy()
+        far[0, 3] += 2.
+        previous = sim.q.copy()
+        for i in range(1250):
+            sample = sim.step(far if i < 250 else home)
+            self.assertFalse(sample["qp_failed"])
+            self.assertTrue(np.all(np.abs(sim.q-previous) <= sim.model.velocity_limits*.004+1e-12))
+            previous = sim.q.copy()
+        self.assertLess(sample["position_error_m"], 1e-4)
+        self.assertLess(sample["orientation_error_rad"], 1e-3)
+        for _ in range(130):
+            sample = sim.step(heartbeat=False)
+        self.assertTrue(sample["stale"])
+        held = sim.q.copy()
+        for _ in range(20):
+            sim.step(heartbeat=False)
+        np.testing.assert_array_equal(sim.q, held)
+
+    def test_near_singular_stream_and_target_reversal(self):
+        from libpyelite.sim import Simulation
+        sim = Simulation(q=[-1.4, -.5, 1.5, -.5, .001, -.8])
+        home = sim.target.copy()
+        for i in range(600):
+            target = home.copy()
+            target[1, 3] += .03 if i < 200 else -.03 if i < 400 else 0.
+            sample = sim.step(target)
+            self.assertFalse(sample["qp_failed"])
+            self.assertLessEqual(sample["max_joint_step_rad"], math.pi * .004 + 1e-12)
+            self.assertTrue(np.all(sim.q >= sim.model.lower_limits))
+            self.assertTrue(np.all(sim.q <= sim.model.upper_limits))
+        self.assertLess(sample["position_error_m"], .001)
+
     def test_stale_and_cancel(self):
         p = self.planner
         target = self.model.fk(LEFT)

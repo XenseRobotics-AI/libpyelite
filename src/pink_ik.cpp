@@ -61,7 +61,7 @@ bool solveBoxQP(const JointMatrix &hessian, const JointVector &rhs,
 
   for (int iteration = 0; iteration < kMaxActiveSetIterations; ++iteration) {
     // Eliminate fixed variables from the free-variable system while retaining
-    // a full 7x7 matrix.  This avoids dynamic Eigen allocations in the RT
+    // a full 6x6 matrix.  This avoids dynamic Eigen allocations in the RT
     // loop and keeps the active values exact at their bounds.
     JointMatrix system = hessian;
     JointVector vector = rhs;
@@ -148,21 +148,8 @@ bool solveBoxQP(const JointMatrix &hessian, const JointVector &rhs,
     return true;
   }
 
-  // A positive-definite Hessian should converge well within the bound above.
-  // If round-off causes an active-set tie, return a projected finite solution
-  // rather than allowing a transient QP bookkeeping issue to stop the arm.
-  const Eigen::LDLT<JointMatrix> factor(hessian);
-  if (factor.info() != Eigen::Success) {
-    return false;
-  }
-  solution = factor.solve(rhs);
-  if (!solution.allFinite()) {
-    return false;
-  }
-  for (int index = 0; index < 6; ++index) {
-    solution[index] = std::clamp(solution[index], lower[index], upper[index]);
-  }
-  return true;
+  // Never label a projected unconstrained solution as an optimal QP result.
+  return false;
 }
 
 bool finite(double value) noexcept { return std::isfinite(value); }
@@ -303,6 +290,8 @@ void PinkIKModel::validateOptions(const PinkIKOptions &options) {
       options.step_size <= 0.0 || options.max_step_norm <= 0.0 ||
       options.position_tolerance <= 0.0 ||
       options.orientation_tolerance <= 0.0 ||
+      !finite(options.streaming_position_tolerance) || options.streaming_position_tolerance <= 0.0 ||
+      !finite(options.streaming_orientation_tolerance) || options.streaming_orientation_tolerance <= 0.0 ||
       options.position_cost <= 0.0 || options.orientation_cost <= 0.0 ||
       options.frame_gain <= 0.0 || options.frame_gain > 1.0 ||
       options.posture_gain > 1.0) {
@@ -375,7 +364,7 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
                                 const PinkArmVector &reference,
                                 const PinkArmVector &max_step_rad,
                                 PinkArmVector &solution,
-                                PinkIKDiagnostics &diagnostics) const {
+                                PinkIKDiagnostics &diagnostics, bool bounded) const {
   diagnostics = PinkIKDiagnostics{};
   if (arm >= arms_.size() || !arms_[arm] || !validPose(target_values) ||
       !finiteVector(reference) || !finiteVector(max_step_rad)) {
@@ -393,24 +382,19 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
   const SE3 target = poseFromArray(target_values);
   JointVector q = toEigen(reference);
   JointVector seed = q;
-  // Match Pink's native migration semantics: Pinocchio joint limits constrain
-  // the numerical iteration and the velocity box bounds each integrated task
-  // step.  The caller still checks/clips the final candidate relative to its
-  // last published command, because one solve intentionally runs several
-  // numerical iterations and can therefore span multiple RT cycles.
+  // Offline IK may span many servo cycles. Streaming IK keeps its entire
+  // search inside one cycle's envelope, rather than clipping a distant root.
   JointVector trust_lower;
   JointVector trust_upper;
   for (int index = 0; index < 6; ++index) {
     const auto i = static_cast<std::size_t>(index);
     q[index] = std::clamp(q[index], arm_model.lower[i], arm_model.upper[i]);
     seed[index] = q[index];
-    trust_lower[index] = arm_model.lower[i];
-    trust_upper[index] = arm_model.upper[i];
+    trust_lower[index] = bounded ? std::max(arm_model.lower[i], seed[index] - max_step_rad[i]) : arm_model.lower[i];
+    trust_upper[index] = bounded ? std::min(arm_model.upper[i], seed[index] + max_step_rad[i]) : arm_model.upper[i];
   }
-  // Match Pink's failure contract: even when the requested pose cannot be
-  // reached, return the best finite warm-start state reached so far.  The
-  // native controller will hold it (and report -1) rather than consuming an
-  // uninitialized/zero candidate.
+  // Preserve the best accepted state on nonconvergence. QP failure remains
+  // a hard failure and never grants permission to advance the controller.
   solution = fromEigen(q);
 
   const auto evaluate = [&](const JointVector &state, Vector6 *error,
@@ -433,9 +417,13 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
   double orientation_error = 0.0;
   Vector6 error;
   evaluate(q, &error, position_error, orientation_error);
+  const double position_tolerance =
+      bounded ? options_.streaming_position_tolerance : options_.position_tolerance;
+  const double orientation_tolerance =
+      bounded ? options_.streaming_orientation_tolerance : options_.orientation_tolerance;
   auto converged = [&]() {
-    return position_error <= options_.position_tolerance &&
-           orientation_error <= options_.orientation_tolerance;
+    return position_error <= position_tolerance &&
+           orientation_error <= orientation_tolerance;
   };
   if (converged()) {
     solution = fromEigen(q);
@@ -449,7 +437,8 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
   weight.block<3, 3>(0, 0).diagonal().setConstant(options_.position_cost);
   weight.block<3, 3>(3, 3).diagonal().setConstant(options_.orientation_cost);
 
-  for (int iteration = 1; iteration <= options_.max_iterations; ++iteration) {
+  const int budget = bounded ? options_.streamingIterationBudget() : options_.max_iterations;
+  for (int iteration = 1; iteration <= budget; ++iteration) {
     // ``computeJointJacobians`` was called by evaluate above; refresh it after
     // every accepted step as Pink does for a warm-started configuration.
     JointJacobian jacobian;
@@ -498,6 +487,8 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
       }
     }
     if (!solveBoxQP(hessian, rhs, velocity_lower, velocity_upper, velocity)) {
+      diagnostics.qp_failed = true;
+      diagnostics.progress = false;
       solution = fromEigen(q);
       diagnostics.iterations = iteration;
       diagnostics.position_error = position_error;
@@ -515,15 +506,32 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
     if (norm > max_norm) {
       step *= max_norm / norm;
     }
-    q = pinocchio::integrate(model, q, step);
-    for (int index = 0; index < 6; ++index) {
-      q[index] = std::clamp(q[index], trust_lower[index], trust_upper[index]);
+    // Backtrack against the actual nonlinear task error. Preserve the best
+    // accepted state, including on unreachable targets and iteration exhaustion.
+    const double before = error.dot(weight * error);
+    bool accepted = false;
+    for (int backtrack = 0; backtrack < 12; ++backtrack) {
+      JointVector trial = pinocchio::integrate(model, q, step);
+      for (int index = 0; index < 6; ++index)
+        trial[index] = std::clamp(trial[index], trust_lower[index], trust_upper[index]);
+      Vector6 trial_error;
+      double trial_position, trial_orientation;
+      evaluate(trial, &trial_error, trial_position, trial_orientation);
+      if (trial_error.dot(weight * trial_error) < before - 1e-16) {
+        q = trial;
+        error = trial_error;
+        position_error = trial_position;
+        orientation_error = trial_orientation;
+        diagnostics.progress = true;
+        accepted = true;
+        break;
+      }
+      step *= 0.5;
     }
-
-    evaluate(q, &error, position_error, orientation_error);
     diagnostics.iterations = iteration;
     diagnostics.position_error = position_error;
     diagnostics.orientation_error = orientation_error;
+    if (!accepted) break;
     if (converged()) {
       diagnostics.success = true;
       solution = fromEigen(q);
@@ -539,10 +547,10 @@ bool PinkIKModel::solve(std::size_t arm, const PinkPose &target,
                         const PinkArmVector &reference,
                         const PinkArmVector &max_step_rad,
                         PinkArmVector &solution,
-                        PinkIKDiagnostics &diagnostics) const {
+                        PinkIKDiagnostics &diagnostics, bool bounded) const {
   std::lock_guard<std::mutex> lock(mutex_);
   return solveUnlocked(arm, target, reference, max_step_rad, solution,
-                       diagnostics);
+                       diagnostics, bounded);
 }
 
 }  // namespace libpyelite
