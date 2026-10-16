@@ -81,6 +81,12 @@ def contact_monitor_config(values, side=None, world_from_base=None):
     return load_compliance_config(None, **merged)
 
 
+# Adapter default (BiEliteCS66RTConfig / EliteCS66RTConfig). The C++ DriverConfig
+# keeps 1 for direct callers; test_real_adapter_and_simulator_use_same_native_parameters
+# catches drift from the adapter dataclass default.
+SERVO_FAILURE_TOLERANCE_TICKS = 250
+
+
 def configure_native_driver(cfg, settings, tool=None, side=None, world_from_base=None):
     values = settings if isinstance(settings, dict) else vars(settings)
     cfg.ik.max_iterations = values.get("native_ik_max_iterations", cfg.ik.max_iterations)
@@ -120,7 +126,7 @@ def configure_native_driver(cfg, settings, tool=None, side=None, world_from_base
         cfg.contact_monitor = contact
     cfg.command_timeout_ms = values.get("command_timeout_ms", cfg.command_timeout_ms)
     cfg.max_consecutive_write_failures = values.get(
-        "servo_failure_tolerance_ticks", cfg.max_consecutive_write_failures
+        "servo_failure_tolerance_ticks", SERVO_FAILURE_TOLERANCE_TICKS
     )
     if values.get("native_model_path") is not None:
         cfg.model_path = str(Path(values["native_model_path"]).expanduser())

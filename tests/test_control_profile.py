@@ -18,10 +18,11 @@ ROOT = Path(__file__).resolve().parents[3]
 class ControlProfileTests(unittest.TestCase):
     def test_servo_failure_tolerance_maps_to_native_sender(self):
         assembly = Assembly("diagonal-07")
-        configured = native_config({"servo_failure_tolerance_ticks": 250}, "left", assembly)
+        configured = native_config({"servo_failure_tolerance_ticks": 40}, "left", assembly)
         default = native_config({}, "left", assembly)
-        self.assertEqual(configured.max_consecutive_write_failures, 250)
-        self.assertEqual(default.max_consecutive_write_failures, 1)
+        self.assertEqual(configured.max_consecutive_write_failures, 40)
+        self.assertEqual(default.max_consecutive_write_failures, 250)
+        self.assertEqual(EliteDriverConfig().max_consecutive_write_failures, 1)
 
     def test_real_adapter_and_simulator_use_same_native_parameters(self):
         config_path = ROOT / "src/lerobot/robots/bi_elite_cs66_rt/config_bi_elite_cs66_rt.py"
