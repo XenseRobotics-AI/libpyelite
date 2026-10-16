@@ -278,7 +278,8 @@ def import_assemblies(source, destination, identification_readme, recipe_root):
 # Recipe keys the simulator needs besides every native_* key (motion limits,
 # target-jump guard, collision switch, contact monitor), which are copied as-is.
 SIMULATION_PROFILE_KEYS = ("type", "servoj_time", "command_stale_timeout_s", "max_lin_speed", "max_ang_speed",
-                           "command_timeout_ms", "left_tool_transform", "right_tool_transform",
+                           "command_timeout_ms", "servo_failure_tolerance_ticks",
+                           "left_tool_transform", "right_tool_transform",
                            "left_start_position_rad", "right_start_position_rad")
 
 

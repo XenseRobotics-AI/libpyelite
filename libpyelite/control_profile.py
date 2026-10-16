@@ -119,6 +119,9 @@ def configure_native_driver(cfg, settings, tool=None, side=None, world_from_base
     if contact is not None:
         cfg.contact_monitor = contact
     cfg.command_timeout_ms = values.get("command_timeout_ms", cfg.command_timeout_ms)
+    cfg.max_consecutive_write_failures = values.get(
+        "servo_failure_tolerance_ticks", cfg.max_consecutive_write_failures
+    )
     if values.get("native_model_path") is not None:
         cfg.model_path = str(Path(values["native_model_path"]).expanduser())
     if tool is not None:
@@ -147,6 +150,7 @@ def describe_config(cfg):
                 "feedback_timeout",
                 "planner_timeout",
                 "command_timeout_ms",
+                "max_consecutive_write_failures",
             )
         },
         "contact_monitor": {
