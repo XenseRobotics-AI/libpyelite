@@ -53,7 +53,7 @@
     -1.5708,
     -0.7854
   ],
-  "max_lin_speed": 0.5,
+  "max_lin_speed": 0.25,
   "max_ang_speed": 1.0,
   "native_cartesian_motion_limits": true,
   "native_max_linear_acceleration": 5.0,

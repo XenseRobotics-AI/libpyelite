@@ -38,7 +38,9 @@ def drag(sim, ticks=125, distance=(0.0, -0.15, -0.05), ramp=31):
 
 class TrackingTests(unittest.TestCase):
     def test_moving_target_has_no_steady_lag_and_limits_hold(self):
-        sim = StationSimulation(settings=settings())
+        # This ~0.32 m/s reference must be feasible independently of the
+        # deployment recipe's more conservative 0.25 m/s cap.
+        sim = StationSimulation(settings=settings(max_lin_speed=0.5))
         q, lag, _ = drag(sim)
         # Constant-speed segment (~0.32 m/s): a stop-at-each-target limiter lagged ~6 mm
         # here and the old 0.8/2/10 limits ~180 mm.
@@ -62,6 +64,15 @@ class TrackingTests(unittest.TestCase):
                 sim.step()
                 poses.append(sim.tcp_poses()["left"])
         return home, sim.targets()["left"], np.array(poses)
+
+    def test_faster_target_lags_at_the_recipe_cap_then_catches_up(self):
+        sim = StationSimulation(settings=settings())
+        self.assertEqual(sim.arms["left"].config.max_linear_velocity, 0.25)
+        _, lag, _ = drag(sim)
+        # The ~0.32 m/s reference exceeds the deployment cap. Lag during the
+        # drag is necessary; it must disappear after the target stops.
+        self.assertGreater(np.median(lag[12:30]), 0.01)
+        self.assertLess(lag[-1], 1e-3)
 
     def test_translation_stays_on_the_straight_line(self):
         # Per-joint limiting bent this 15 cm move 28 mm off the line.
