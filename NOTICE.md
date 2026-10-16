@@ -18,3 +18,22 @@
   match that file; no limit was widened and no acceleration value was invented.
 
 No robot calibration or physical commissioning is claimed by the offline tests.
+
+- `libpyelite/sim.py` reuses/adapts XYZ/RPY helpers and Qt slider widgets from
+  the user's `lerobot-xensehand/src/lerobot/robots/tianji_arm/tianji_sim.py`.
+  The model, native planner integration, diagnostics and validation traces are
+  Elite-specific; no Tianji runtime dependency is introduced.
+
+- Stations now snapshot the current xense-description TacCap variants with absolute
+  arm angles. Source assemblies/components and their hashes remain unmodified.
+  `assembly_taccap_identified.urdf` is an explicitly derived, aggregate-tool model
+  using the user's lerobot-xensehand README identification (0.7728457285779433 kg).
+  Effective inertia conventions and non-physical triangle-inequality residual are
+  documented in `taccap_identification.json`; no dynamics validation is claimed.
+
+Ruckig 0.15.3 (https://github.com/pantor/ruckig/tree/v0.15.3), MIT licensed,
+is vendored under vendor/ruckig. Only offline C++ trajectory generation is built;
+no cloud client or Python binding is compiled. The license is packaged in the wheel.
+Collision displacement inequalities follow Mink's published normal-distance limit
+(https://kevinzakka.github.io/mink/api/limits.html); implementation uses Pinocchio
+point Jacobians, Coal/FCL primitives and OSQP, without importing MuJoCo or Mink.

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "id": "assembly.diagonal_07_elite_cs66_taccap",
+  "entrypoint": "urdf/diagonal-07-elite-cs66-taccap.urdf",
+  "world": "world",
+  "instances": {
+    "left_arm": {
+      "asset_id": "elite.cs66",
+      "variant": "default",
+      "prefix": "left_"
+    },
+    "right_arm": {
+      "asset_id": "elite.cs66",
+      "variant": "default",
+      "prefix": "right_"
+    },
+    "stand": {
+      "asset_id": "elite_cs66.a1_stand",
+      "variant": "default",
+      "prefix": ""
+    },
+    "table": {
+      "asset_id": "worktable.120cm",
+      "variant": "default",
+      "prefix": ""
+    },
+    "left_adapter": {
+      "asset_id": "xense.flexiv_elite_franka_to_taccap_slave",
+      "variant": "default",
+      "prefix": "left_adapter_"
+    },
+    "left_gripper": {
+      "asset_id": "xense.taccap_slave",
+      "variant": "default",
+      "prefix": "left_tool_"
+    },
+    "right_adapter": {
+      "asset_id": "xense.flexiv_elite_franka_to_taccap_slave",
+      "variant": "default",
+      "prefix": "right_adapter_"
+    },
+    "right_gripper": {
+      "asset_id": "xense.taccap_slave",
+      "variant": "default",
+      "prefix": "right_tool_"
+    }
+  },
+  "connections": [
+    {
+      "name": "world_to_stand",
+      "parent": "world",
+      "child": "elite_cs66_a1_stand_base",
+      "xyz": "0 0 0",
+      "rpy": "0 0 3.141592653589793"
+    },
+    {
+      "name": "world_to_table",
+      "parent": "world",
+      "child": "worktable_120cm_base",
+      "xyz": "0.700624760246217 0.067776960061789945 0.000895483271931539",
+      "rpy": "0 0 0"
+    },
+    {
+      "name": "left_arm_attachment",
+      "parent": "right_arm_mount",
+      "child": "left_world",
+      "xyz": "0 0 0",
+      "rpy": "0 0 1.5707963267948966"
+    },
+    {
+      "name": "right_arm_attachment",
+      "parent": "left_arm_mount",
+      "child": "right_world",
+      "xyz": "0 0 0",
+      "rpy": "0 0 -1.5707963267948966"
+    },
+    {
+      "name": "left_flange_to_taccap_adapter",
+      "parent": "left_flange",
+      "child": "left_adapter_taccap_mount_link",
+      "xyz": "0 0 0",
+      "rpy": "0 0 0"
+    },
+    {
+      "name": "left_adapter_to_taccap_base",
+      "parent": "left_adapter_taccap_mount_link",
+      "child": "left_tool_taccap_base_link",
+      "xyz": "0 0 0.012",
+      "rpy": "0 0 0"
+    },
+    {
+      "name": "right_flange_to_taccap_adapter",
+      "parent": "right_flange",
+      "child": "right_adapter_taccap_mount_link",
+      "xyz": "0 0 0",
+      "rpy": "0 0 -1.5707963267948966"
+    },
+    {
+      "name": "right_adapter_to_taccap_base",
+      "parent": "right_adapter_taccap_mount_link",
+      "child": "right_tool_taccap_base_link",
+      "xyz": "0 0 0.012",
+      "rpy": "0 0 0"
+    }
+  ],
+  "inputs": {
+    "left_arm": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+    "right_arm": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+    "stand": "323b566c27b60e07e801b900f12e3e74448dfc1a1b601331e0967436fd0b237f",
+    "table": "661cedd0f0cf7e8b44205877acec50a6b8c2902f5055978ea49e8471c8ab1d74",
+    "left_adapter": "b77d13827a6c05438d9c612e4975c68d3cdc8dc97d5380de2265eea063105f92",
+    "left_gripper": "09f69c734bb85f88779006bd41295aee4664347c558b998c00f48a24c49c4c3b",
+    "right_adapter": "b77d13827a6c05438d9c612e4975c68d3cdc8dc97d5380de2265eea063105f92",
+    "right_gripper": "09f69c734bb85f88779006bd41295aee4664347c558b998c00f48a24c49c4c3b"
+  },
+  "source": {
+    "path": "A1-CS66总装.STEP",
+    "sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+    "derivation": "elite_cs66.a1_stand/provenance/step_derivation.json",
+    "notes": "Two unchanged official CS66 arms on the existing A1 stand and centered worktable; add the same independent adapter as Flexiv 01 and bare TacCap Slave per side, following bench 02 component organization. Official arm zero and all existing installation transforms are retained.",
+    "table_centering": {
+      "request": "2026-10-08: center table left/right relative to the rotated stand column",
+      "unit": "metre",
+      "evidence": "elite_cs66.a1_stand/provenance/step_derivation.json",
+      "evidence_sha256": "632427e6c6887d536eeb2f34fe4d728bed0520baabbc275f671f8380db757687",
+      "column_occurrence": "B2-支架立柱-侧向安装",
+      "original_xyz": [
+        0.700624760246217,
+        -0.0677769600617899,
+        0.000895483271931539
+      ],
+      "centered_xyz": [
+        0.700624760246217,
+        0.06777696006178995,
+        0.000895483271931539
+      ],
+      "translation_delta": [
+        0.0,
+        0.13555392012357986,
+        0.0
+      ],
+      "method": "Transform the source CAD column origin through cad_to_world and world_to_stand; align the table geometric Y midpoint with that column Y. Table X, Z and orientation are preserved."
+    },
+    "end_effector_status": "candidate mounted; hardware installation acceptance pending",
+    "base_assembly": {
+      "id": "assembly.diagonal_07_elite_cs66",
+      "snapshot": "provenance/taccap/base_assembly.json",
+      "sha256": "e4f2948dfce7ab649dbb12cf18f8a25c38f5b82672e4be6599e7f2bc8256da41"
+    },
+    "mounting": {
+      "snapshot": "provenance/taccap/mounting_reference.json",
+      "sha256": "d2f131892e56e4877908419cfd0ae3480d65bdc6563fb546808925be2bd9e196",
+      "clocking_degrees": {
+        "left": 0,
+        "right": -90
+      },
+      "scope": "User-confirmed shared adapter; source flange axes and mesh bolt centres checked; real pin/fastener/installation acceptance pending."
+    },
+    "start_pose": {
+      "path": "config/start_pose.taccap.json",
+      "sha256": "3966884eaf4157d5dfb915554ced78f1b62eb47db791a85125e1784824279741",
+      "base_snapshot": "provenance/taccap/base_start_pose.json",
+      "base_sha256": "89b1c5bb23781d2edeccf63e840a2f9dbc2193244278e61435cacb00573b3bb0",
+      "policy": "Own 12 arm start angles preserved; two source maximum-opening drivers; no follower tracks or baked initial_pose."
+    }
+  }
+}

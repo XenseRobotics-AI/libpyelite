@@ -10,9 +10,15 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 dependencies = ["pin==4.1.0", "numpy>=1.24"]
 
+[project.optional-dependencies]
+sim = ["meshcat>=0.3.2", "PySide6>=6.6", "PyYAML>=6"]
+
+[project.scripts]
+elite-ik-sim = "libpyelite.sim:main"
+
 [tool.scikit-build]
 cmake.build-type = "Release"
 cmake.define.ELITE_ROS2_BUILD = "OFF"
 wheel.packages = ["libpyelite"]
 build.tool-args = ["-j2"]
-sdist.include = ["vendor/elite_cs_sdk/**"]
+sdist.include = ["vendor/elite_cs_sdk/**", "vendor/ruckig/**"]

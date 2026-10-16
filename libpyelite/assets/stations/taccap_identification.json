@@ -1,0 +1,35 @@
+{
+  "source": "lerobot-xensehand/README.md: TacCap tool",
+  "source_sha256": "406e1e54150a32c8d65229a9dd6594b456017547eb50445c28a0b246aa036a8a",
+  "mass_kg": 0.7728457285779433,
+  "com_m_in_identification_flange": [
+    0.000491339158602296,
+    0.02413611877488365,
+    0.07832092580083444
+  ],
+  "inertia_source_order_ixx_ixy_ixz_iyy_iyz_izz": [
+    0.02759972544759407,
+    0.0,
+    0.0,
+    0.030053894711934717,
+    0.0,
+    0.0024016242589825296
+  ],
+  "raw_tool_dynamic": [
+    0.7728457285779433,
+    0.49133915860229604,
+    24.13611877488365,
+    78.32092580083444,
+    0.02759972544759407,
+    0.0,
+    0.0,
+    0.030053894711934717,
+    0.0,
+    0.0024016242589825296
+  ],
+  "scope": "aggregate identified tool, not per-link inertia; flange convention/installation transfer needs confirmation",
+  "urdf_convention": "Equivalent rigid tool at adapter mount; COM in metres. Source inertia is retained as an effective tensor at COM in mount axes, NOT validated per-link or transferable hardware dynamics. Identification frame transfer and inertia reference-point convention require physical confirmation.",
+  "inertia_positive_definite": true,
+  "inertia_triangle_inequality_satisfied": false,
+  "dynamics_validated": false
+}

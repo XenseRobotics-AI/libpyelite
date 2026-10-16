@@ -11,6 +11,7 @@ execute_process(COMMAND "${Python_EXECUTABLE}" -c
   OUTPUT_VARIABLE PIN_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 list(PREPEND CMAKE_PREFIX_PATH "${PIN_PREFIX}")
 find_package(pinocchio 4.1 REQUIRED)
+find_package(coal REQUIRED)
 set(ELITE_COMPILE_KIN_PLUGIN OFF CACHE BOOL "" FORCE)
 set(ELITE_COMPILE_TESTS OFF CACHE BOOL "" FORCE)
 set(ELITE_COMPILE_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -27,10 +28,15 @@ add_subdirectory(vendor/elite_cs_sdk EXCLUDE_FROM_ALL)
 target_link_libraries(elite_cs_series_sdk_STATIC PRIVATE Boost::boost Boost::filesystem)
 # Locked SDK uses ::round without including cmath; keep the vendor tree unmodified.
 target_compile_options(elite_cs_series_sdk_STATIC PRIVATE -include cmath)
+file(GLOB RUCKIG_SOURCES CONFIGURE_DEPENDS vendor/ruckig/src/ruckig/*.cpp)
+list(FILTER RUCKIG_SOURCES EXCLUDE REGEX "cloud_client|python")
+add_library(elite_ruckig STATIC ${RUCKIG_SOURCES})
+target_include_directories(elite_ruckig PUBLIC vendor/ruckig/include)
 pybind11_add_module(_native NO_EXTRAS src/pink_ik.cpp src/planner.cpp
-  src/native_controller.cpp src/bindings.cpp)
+  src/compliance.cpp src/station_collision.cpp src/projection_qp.cpp src/station_guard.cpp
+  src/native_controller.cpp src/station_coordinator.cpp src/bindings.cpp)
 target_include_directories(_native PRIVATE src)
-target_link_libraries(_native PRIVATE pinocchio::pinocchio
+target_link_libraries(_native PRIVATE elite_ruckig pinocchio::pinocchio coal::coal
   elite-cs-series-sdk::static Threads::Threads ${CMAKE_DL_LIBS})
 target_compile_options(_native PRIVATE -Wall -Wextra)
 set_target_properties(_native PROPERTIES
@@ -41,3 +47,5 @@ install(FILES vendor/elite_cs_sdk/source/resources/external_control.script DESTI
 install(FILES vendor/elite_cs_sdk/LICENSE DESTINATION libpyelite/licenses RENAME elite-sdk-LICENSE)
 
 install(FILES NOTICE.md DESTINATION libpyelite/licenses)
+
+install(FILES vendor/ruckig/LICENSE DESTINATION libpyelite/licenses RENAME ruckig-LICENSE)

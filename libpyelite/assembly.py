@@ -8,9 +8,8 @@ import numpy as np
 class Assembly:
     """Full viewer URDF plus derived, base-relative six-joint control chains.
 
-    Assembly URDF joints use q_relative = q_controller - initial_pose.
-    The generated control chains undo that reparameterization and expose the
-    same absolute joint coordinates as the controller. Tool offsets are not
+    Assembly and generated control chains both use absolute controller angles.
+    Tool fingers keep the source mimic relationship at a fixed viewer opening. Tool offsets are not
     baked in: the pendant TCP remains the source of truth for each arm.
     """
 
@@ -29,3 +28,6 @@ class Assembly:
 
     def initial_pose(self, side):
         return np.asarray(self.metadata["arms"][side]["initial_pose"], dtype=float).copy()
+
+    def viewer_joint_defaults(self):
+        return dict(self.metadata.get("viewer_joint_defaults", {}))

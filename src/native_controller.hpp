@@ -1,4 +1,5 @@
 #pragma once
+#include "compliance.hpp"
 #include "planner.hpp"
 #include <Elite/EliteDriver.hpp>
 #include <Elite/RtsiIOInterface.hpp>
@@ -21,6 +22,14 @@ struct DriverConfig : ELITE::EliteDriverConfig {
   double planner_timeout{0.1};
   double fk_position_tolerance{0.005};
   double fk_orientation_tolerance{0.05};
+  bool check_robot_safety{true};
+  PinkArmVector max_contact_wrench{}; // zero disables that axis; N, Nm. RTSI actual_TCP_force
+  // does not respond to external force on the CS66; prefer contact_monitor.
+  // Joint-current residual collision detection (any link). Only its collision
+  // trip is used here: the admittance offset it computes is ignored.
+  ComplianceConfig contact_monitor;
+  double max_start_joint_speed{0.02}; // require stationary seed
+
 };
 struct NativeStatus {
   PlannerStatus planner;
@@ -28,9 +37,12 @@ struct NativeStatus {
   bool reset_active{false};
   std::string error;
   std::uint64_t planner_overruns{0};
-  PinkArmVector commanded_q{};
+  PinkArmVector commanded_q{}, sent_q{}, sent_velocity{}, sent_acceleration{};
   PinkPose commanded_pose{kIdentityPose};
+  ComplianceStatus contact;  // contact_monitor estimate; biased=false while zeroing
+  double max_sender_gap_s{0}, max_write_s{0};  // longest sender period and reverse-socket write seen
 };
+class StationCoordinator;
 class NativeDriver {
  public:
   explicit NativeDriver(DriverConfig config);
@@ -46,9 +58,16 @@ class NativeDriver {
   NativeStatus status() const;
   void moveJ(const PinkArmVector &q, double duration, int timeout_ms);
   bool writeIdle(int timeout_ms);
+  // Coordinated mode: no planner thread of its own; a StationCoordinator plans
+  // both arms each period under the station collision layer. Set before startServo.
+  void setExternalPlanning(bool external);
+  bool externalPlanning() const { return external_planning_; }
+  // Re-zero the contact monitor; the arm must stay still and untouched for bias_time.
+  void rebiasContact();
   bool setPayload(double mass, const ELITE::vector3d_t &cog);
   bool getPrimaryPackage(std::shared_ptr<ELITE::PrimaryPackage> package, int timeout_ms);
  private:
+  friend class StationCoordinator;
   struct Target {
     PinkPose pose{kIdentityPose};
     PinkArmVector q{};
@@ -59,11 +78,16 @@ class NativeDriver {
   void planLoop() noexcept;
   void sendLoop() noexcept;
   void fail(const std::string &message) noexcept;
+  void checkFeedbackSafety();
   DriverConfig config_;
   Planner planner_;
   std::unique_ptr<ELITE::EliteDriver> driver_;
   std::shared_ptr<ELITE::RtsiIOInterface> rtsi_;
-  std::atomic<bool> running_{false};
+  std::unique_ptr<ComplianceController> contact_;
+  std::atomic<bool> running_{false}, rebias_contact_{false}, external_planning_{false};
+  // Coordinated planning, called by StationCoordinator with lifecycle_mutex_ held.
+  void consumeTarget(std::uint64_t &consumed, Target &target);
+  void publish(const Target &target, double begin);
   std::thread planner_thread_, sender_thread_;
   mutable std::mutex mutex_;
   std::mutex lifecycle_mutex_;

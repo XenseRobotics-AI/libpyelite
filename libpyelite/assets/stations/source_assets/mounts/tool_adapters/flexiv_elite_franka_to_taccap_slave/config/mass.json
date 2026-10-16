@@ -1,0 +1,28 @@
+{
+  "material": "Aluminium 6061-T6",
+  "manufacturing": "CNC machined; user-specified homogeneous material assumption",
+  "density_kg_m3": 2700,
+  "density_source": {
+    "url": "https://wpw.bnl.gov/rgupta/wp-content/uploads/sites/9/2023/02/section14.pdf",
+    "section": "Density of aluminum alloy 6061-T6, 300 K: 2.70 g/cm3",
+    "accessed": "2026-10-10"
+  },
+  "mesh": "meshes/Asm_link.STL",
+  "mesh_sha256": "60b7f8c6c93211532d8fd419533dd904216314554bd5794c166b3dd8594f48bc",
+  "mesh_length_unit": "m",
+  "mesh_scale": [
+    1,
+    1,
+    1
+  ],
+  "mesh_watertight": true,
+  "mesh_winding_consistent": true,
+  "mesh_triangles": 1550,
+  "volume_m3": 1.27537273801463e-05,
+  "mass_kg": 0.03443506392639501,
+  "method": "Signed tetrahedral volume of closed source STL times uniform density",
+  "status": "geometry_density_estimate_not_measured; excludes fasteners and other components",
+  "center_of_mass": null,
+  "inertia": null,
+  "urdf_inertial": "omitted_until_COM_and_inertia_are_available"
+}

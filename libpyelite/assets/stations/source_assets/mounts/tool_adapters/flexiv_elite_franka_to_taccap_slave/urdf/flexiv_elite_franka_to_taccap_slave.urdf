@@ -1,0 +1,21 @@
+<robot name="flexiv_elite_franka_to_taccap_slave">
+  <!--Extracted source mount only; mass is in config/mass.json; COM/inertia deferred.-->
+  <material name="taccap_cover_mat">
+    <color rgba="0.89804 0.91765 0.92941 1" />
+  </material>
+  <link name="taccap_mount_link">
+    <visual name="asm_visual">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes/Asm_link.STL" />
+      </geometry>
+      <material name="taccap_cover_mat" />
+    </visual>
+    <collision name="asm_collision">
+      <origin rpy="0 -1.5707963267948966 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="../meshes/Asm_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

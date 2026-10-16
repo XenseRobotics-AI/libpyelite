@@ -2,7 +2,7 @@
 
 Viewer: [urdf/worktable_120cm.urdf](urdf/worktable_120cm.urdf).
 
-Generated from the hash-locked STEP with `scripts/import_diagonal_02.py`; details and occurrence transforms are in `provenance/step_derivation.json`. Coordinates are metres, X toward the worktable, Y left, Z up.
+Generated from the hash-locked STEP with `scripts/importers/import_diagonal_02.py`; details and occurrence transforms are in `provenance/step_derivation.json`. Coordinates are metres, X toward the worktable, Y left, Z up.
 
 Table top length 1.20 m, depth 0.70 m, top height 0.75 m; origin is on the floor beneath the table centre. The source table includes its legs.
 

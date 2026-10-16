@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "source_asset_id": "xense.taccap_slave",
+  "source_variant": "with_mount",
+  "source_urdf": "provenance/urdf/taccap_g1_slave_with_mount.urdf",
+  "inputs": {
+    "provenance/urdf/taccap_g1_slave_with_mount.urdf": "df2c7c5c0d6a0914fb09b25461ba5ec748706e123eb566cbbf2a3fab9de7ed5d",
+    "provenance/urdf/taccap_g1_slave.urdf": "cbdfc4e045d473c52238ecf13e48518fe7c4a31c008cd5be51b81b6bda64a8fd",
+    "meshes/Asm_link.STL": "60b7f8c6c93211532d8fd419533dd904216314554bd5794c166b3dd8594f48bc"
+  },
+  "operation": "Extract taccap_mount_link and its referenced material; copy STL bytes without rescaling or remeshing; preserve visual/collision origins; omit all gripper links and joints.",
+  "source_link": "taccap_mount_link",
+  "source_mesh_repository_path": "assets/grippers/xense/taccap/slave/body/meshes/Asm_link.STL",
+  "density_kg_m3": 2700,
+  "density_source": {
+    "url": "https://wpw.bnl.gov/rgupta/wp-content/uploads/sites/9/2023/02/section14.pdf",
+    "section": "Density of aluminum alloy 6061-T6, 300 K: 2.70 g/cm3",
+    "accessed": "2026-10-10"
+  },
+  "material_authorization": "User requested 6061-T6 CNC aluminium and mass estimation only on 2026-10-10.",
+  "adapter_to_tool_transform": {
+    "parent": "taccap_mount_link",
+    "child": "taccap_base_link",
+    "xyz": "0 0 0.012",
+    "rpy": "0 0 0"
+  },
+  "arm_to_adapter_transform": null,
+  "center_of_mass": null,
+  "inertia": null,
+  "source_mass_note": "0.415 kg belongs to taccap_base_link and is neither copied nor subtracted."
+}
