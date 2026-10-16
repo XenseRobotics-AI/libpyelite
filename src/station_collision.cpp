@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <map>
 #include <numeric>
 #include <stdexcept>
 
@@ -45,6 +46,21 @@ struct StationCollisionModel::Impl {
   // Per pair: cached shape-pair dispatch and GJK solver, and a warm-started request.
   std::vector<coal::ComputeDistance> distance;
   std::vector<coal::DistanceRequest> request;
+  // Broad-phase level 1: a moving frame's shapes form one group, each static
+  // shape is its own. A group's AABB encloses its members', so a group-pair gap
+  // bounds every member pair's AABB gap, hence its distance, from below; member
+  // pairs are only looked at when their group pair passes. A finely fitted part
+  // (26 fingertip boxes) then costs one test per obstacle, not 26.
+  struct GroupPair {
+    int first, second;
+    double widest_margin;
+    std::vector<int> pairs;  // ascending pair indices
+  };
+  std::vector<int> group;  // per shape
+  std::vector<std::vector<int>> group_shapes;
+  std::vector<int> moving_groups;
+  std::vector<Eigen::Vector3d> group_lower, group_upper;
+  std::vector<GroupPair> group_pairs;
   Eigen::VectorXd q;
 
   Impl(const std::string &urdf) {
@@ -64,11 +80,29 @@ struct StationCollisionModel::Impl {
       lower[k] = world[k].translation() - extent;
       upper[k] = world[k].translation() + extent;
     }
+    auto enclose = [&](int g) {
+      group_lower[g] = lower[group_shapes[g].front()];
+      group_upper[g] = upper[group_shapes[g].front()];
+      for(int k : group_shapes[g]) {
+        group_lower[g] = group_lower[g].cwiseMin(lower[k]);
+        group_upper[g] = group_upper[g].cwiseMax(upper[k]);
+      }
+    };
+    if(everything)
+      for(std::size_t g = 0; g < group_shapes.size(); ++g) enclose(static_cast<int>(g));
+    else
+      for(int g : moving_groups) enclose(g);
   }
 
-  double aabbGap(int a, int b) const {
-    const Eigen::Vector3d gap = (lower[a] - upper[b]).cwiseMax(lower[b] - upper[a]).cwiseMax(0.0);
-    return gap.norm();
+  static double gap(const Eigen::Vector3d &lower_a, const Eigen::Vector3d &upper_a, const Eigen::Vector3d &lower_b,
+                    const Eigen::Vector3d &upper_b) {
+    return (lower_a - upper_b).cwiseMax(lower_b - upper_a).cwiseMax(0.0).norm();
+  }
+
+  double aabbGap(int a, int b) const { return gap(lower[a], upper[a], lower[b], upper[b]); }
+
+  double groupGap(const GroupPair &p) const {
+    return gap(group_lower[p.first], group_upper[p.first], group_lower[p.second], group_upper[p.second]);
   }
 
   double measure(int index, const std::array<int, 2> &pair, coal::DistanceResult &result) {
@@ -135,6 +169,30 @@ StationCollisionModel::StationCollisionModel(const std::string &urdf, std::vecto
     request.enable_signed_distance = true;
     request.gjk_initial_guess = coal::GJKInitialGuess::CachedGuess;
   }
+  std::map<pinocchio::FrameIndex, int> frame_group;
+  m.group.resize(n);
+  for(std::size_t k = 0; k < n; ++k) {
+    int g = static_cast<int>(m.group_shapes.size());
+    if(m.moving[k]) {
+      const auto [it, added] = frame_group.emplace(m.frame[k], g);
+      if(added) m.moving_groups.push_back(g);
+      g = it->second;
+    }
+    if(g == static_cast<int>(m.group_shapes.size())) m.group_shapes.emplace_back();
+    m.group[k] = g;
+    m.group_shapes[static_cast<std::size_t>(g)].push_back(static_cast<int>(k));
+  }
+  m.group_lower.resize(m.group_shapes.size());
+  m.group_upper.resize(m.group_shapes.size());
+  std::map<std::pair<int, int>, std::size_t> group_pair;
+  for(std::size_t index = 0; index < pairs_.size(); ++index) {
+    const int a = m.group[pairs_[index][0]], b = m.group[pairs_[index][1]];
+    const auto [it, added] = group_pair.emplace(std::minmax(a, b), m.group_pairs.size());
+    if(added) m.group_pairs.push_back({a, b, 0.0, {}});
+    auto &p = m.group_pairs[it->second];
+    p.widest_margin = std::max(p.widest_margin, margins_[index]);
+    p.pairs.push_back(static_cast<int>(index));
+  }
   m.place(pinocchio::neutral(m.model), true);  // static shapes once
 }
 
@@ -147,15 +205,33 @@ ClearanceResult StationCollisionModel::check(const Eigen::VectorXd &q, double cu
   m.place(q, false);
   narrow_calls_ = 0;
   // The AABB gap never exceeds the true distance, so gap - margin bounds each
-  // pair's clearance from below. Measure the most promising pair first; only
-  // pairs whose bound can still beat that need a narrow-phase query.
-  std::vector<double> bound(pairs_.size());
+  // pair's clearance from below, and a group pair's gap - widest margin bounds
+  // all its members'. Measure a promising pair first; only pairs whose bound can
+  // still beat that need a narrow-phase query.
+  constexpr double kInf = std::numeric_limits<double>::infinity();
+  auto pair_bound = [&](int index) {
+    const auto i = static_cast<std::size_t>(index);
+    const double gap = m.aabbGap(pairs_[i][0], pairs_[i][1]);
+    return (cutoff >= 0 && gap > cutoff) ? kInf : gap - margins_[i];
+  };
+  std::vector<double> group_bound(m.group_pairs.size());
+  for(std::size_t g = 0; g < m.group_pairs.size(); ++g) {
+    const double gap = m.groupGap(m.group_pairs[g]);
+    group_bound[g] = (cutoff >= 0 && gap > cutoff) ? kInf : gap - m.group_pairs[g].widest_margin;
+  }
+  // Seed: the best member of the most promising group pair (a group pair can
+  // pass the cutoff while none of its members does; then try the next one).
   int first = -1;
-  for(std::size_t index = 0; index < pairs_.size(); ++index) {
-    const double gap = m.aabbGap(pairs_[index][0], pairs_[index][1]);
-    bound[index] = (cutoff >= 0 && gap > cutoff) ? std::numeric_limits<double>::infinity() : gap - margins_[index];
-    if(std::isfinite(bound[index]) && (first < 0 || bound[index] < bound[static_cast<std::size_t>(first)]))
-      first = static_cast<int>(index);
+  std::vector<double> seed_bound = group_bound;
+  while(first < 0 && !seed_bound.empty()) {
+    const auto g = std::min_element(seed_bound.begin(), seed_bound.end()) - seed_bound.begin();
+    if(!std::isfinite(seed_bound[g])) break;
+    double lowest = kInf;
+    for(int index : m.group_pairs[g].pairs) {
+      const double b = pair_bound(index);
+      if(b < lowest) lowest = b, first = index;
+    }
+    seed_bound[g] = kInf;
   }
   ClearanceResult best;
   if(first < 0) return best;
@@ -169,8 +245,14 @@ ClearanceResult StationCollisionModel::check(const Eigen::VectorXd &q, double cu
   visit(first);
   std::vector<std::pair<double, int>> order;
   const double limit = std::max(best.clearance, 0.0);
-  for(std::size_t index = 0; index < pairs_.size(); ++index)
-    if(static_cast<int>(index) != first && bound[index] <= limit) order.emplace_back(bound[index], static_cast<int>(index));
+  for(std::size_t g = 0; g < m.group_pairs.size(); ++g) {
+    if(group_bound[g] > limit) continue;
+    for(int index : m.group_pairs[g].pairs) {
+      if(index == first) continue;
+      const double b = pair_bound(index);
+      if(b <= limit) order.emplace_back(b, index);
+    }
+  }
   std::sort(order.begin(), order.end());
   for(const auto &[lower, index] : order) {
     if(lower > std::max(best.clearance, 0.0)) break;
@@ -189,9 +271,18 @@ void StationCollisionModel::linearize(const Eigen::VectorXd &q, const std::vecto
   contacts_.clear();
   closest = ClearanceResult{};
   coal::DistanceResult result;
-  for(std::size_t index = 0; index < pairs_.size(); ++index) {
+  // Same candidates, in the same ascending order, as a flat scan of every pair.
+  std::vector<int> candidates;
+  for(const auto &g : m.group_pairs) {
+    if(m.groupGap(g) > detection_) continue;
+    for(int index : g.pairs)
+      if(m.aabbGap(pairs_[static_cast<std::size_t>(index)][0], pairs_[static_cast<std::size_t>(index)][1]) <= detection_)
+        candidates.push_back(index);
+  }
+  std::sort(candidates.begin(), candidates.end());
+  for(int candidate : candidates) {
+    const auto index = static_cast<std::size_t>(candidate);
     const auto &p = pairs_[index];
-    if(m.aabbGap(p[0], p[1]) > detection_) continue;
     const double d = m.measure(static_cast<int>(index), p, result);
     ++narrow_calls_;
     const double clearance = d - margins_[index];

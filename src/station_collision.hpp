@@ -36,8 +36,10 @@ struct ClearanceResult {
 // Following what Pinocchio/Coal, OCS2, Tesseract and Mink do:
 // - a flat precomputed pair list, each pair with its own cached Coal
 //   ComputeDistance functor and a GJK warm start from the previous step;
-// - a broad phase on world AABBs: the static environment's are computed once,
-//   only the moving shapes' are refreshed per configuration;
+// - a two-level broad phase on world AABBs: per group pair (a moving frame's
+//   shapes together, each static shape alone), then per shape pair only where
+//   the group pair passed. The static environment's are computed once, only
+//   the moving shapes' are refreshed per configuration;
 // - one linearisation per step (distances + barrier rows) shared by every QP
 //   pass of that step;
 // - a conservative motion bound instead of sampling every step's joint segment.
