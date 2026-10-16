@@ -38,6 +38,72 @@ def boxes(tris, depth=0):
     return boxes(tris[mask], depth + 1) + boxes(tris[~mask], depth + 1)
 
 
+FINGER_SLAB_M = 0.01
+FINGER_SPLIT_GAIN = 0.85
+
+
+def clipped_bounds(tris, lo, hi):
+    """Exact bounds of the mesh surface inside the box [lo, hi], or None if empty."""
+    vmin, vmax = tris.min(1), tris.max(1)
+    touching = np.all((vmax >= lo) & (vmin <= hi), axis=1)
+    inside = touching & np.all((vmin >= lo) & (vmax <= hi), axis=1)
+    points = [tris[inside].reshape(-1, 3)]
+    for tri in tris[touching & ~inside]:
+        polygon = list(tri)
+        for axis in range(3):
+            for bound, sign in ((lo[axis], 1.0), (hi[axis], -1.0)):
+                clipped = []
+                for k, p in enumerate(polygon):
+                    q = polygon[(k + 1) % len(polygon)]
+                    dp, dq = sign * (p[axis] - bound), sign * (q[axis] - bound)
+                    if dp >= 0:
+                        clipped.append(p)
+                    if dp * dq < 0:
+                        clipped.append(p + (q - p) * (dp / (dp - dq)))
+                polygon = clipped
+                if not polygon:
+                    break
+            if not polygon:
+                break
+        points.append(np.asarray(polygon).reshape(-1, 3))
+    points = np.concatenate(points)
+    return (points.min(0), points.max(0)) if len(points) else None
+
+
+def slab_boxes(tris, axis=2, thickness=FINGER_SLAB_M, candidates=7):
+    """Stacked boxes that follow a tapered part's outline instead of its bounding box.
+
+    One bounding box of a TacCap finger sticks out at its corners: with the
+    gripper tilted the box reached 25-32 mm below the real fingertip, so the arm
+    stopped 2-3 cm above the table. Cut the mesh into slabs along its long axis,
+    take each slab's exact clipped bounds (a stepped trapezoid in profile), and
+    split a slab once across when that saves enough volume (the finger's
+    cross-section is an L, not a rectangle). Every surface point stays enclosed.
+    """
+    points = tris.reshape(-1, 3)
+    lo, hi = points.min(0), points.max(0)
+    edges = np.linspace(lo[axis], hi[axis], max(1, int(np.ceil((hi[axis] - lo[axis]) / thickness))) + 1)
+    volume = lambda box: np.prod(box[1] - box[0] + 0.004)
+    out = []
+    for a, b in zip(edges[:-1], edges[1:]):
+        slab_lo, slab_hi = lo.copy(), hi.copy()
+        slab_lo[axis], slab_hi[axis] = a, b
+        slab = clipped_bounds(tris, slab_lo, slab_hi)
+        if slab is None:
+            continue
+        best, best_volume = [slab], volume(slab)
+        for across in (i for i in range(3) if i != axis):
+            for split in np.linspace(slab[0][across], slab[1][across], candidates + 2)[1:-1]:
+                first_hi, second_lo = slab[1].copy(), slab[0].copy()
+                first_hi[across], second_lo[across] = split, split
+                parts = [p for p in (clipped_bounds(tris, slab[0], first_hi), clipped_bounds(tris, second_lo, slab[1])) if p]
+                total = sum(volume(p) for p in parts)
+                if total < best_volume * FINGER_SPLIT_GAIN:
+                    best, best_volume = parts, total
+        out += best
+    return out
+
+
 SEPARATION_CLEARANCE_M = 0.005
 SEPARATION_MAX_JOINTS = 2
 
@@ -190,7 +256,7 @@ def generate(urdf, output):
             lo, hi = points.min(0), points.max(0)
             shapes = []
             if env or "finger_link" in name or "wrist_" in name or "shoulder_link" in name:
-                for low, high in boxes(tris):
+                for low, high in slab_boxes(tris) if "finger_link" in name else boxes(tris):
                     shapes.append(
                         {
                             "type": "box",

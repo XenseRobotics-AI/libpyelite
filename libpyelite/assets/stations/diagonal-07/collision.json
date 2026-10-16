@@ -7185,15 +7185,15 @@
         0
       ],
       "size": [
-        0.06389999976009132,
-        0.04866740600764752,
-        0.11029679635167122
+        0.014000000009313228,
+        0.030170136090801266,
+        0.013634538036253717
       ],
       "type": "box",
       "xyz": [
-        0.02266632812097669,
-        0.0013337461277842522,
-        0.032148441299796104
+        -0.0022836717544123565,
+        -0.003916514264203059,
+        -0.016182687857912645
       ]
     },
     {
@@ -7206,63 +7206,1071 @@
         0
       ],
       "size": [
-        0.04600008790940047,
-        0.04695576922595501,
-        0.09783229538798333
+        0.01400000000931323,
+        0.03418787399303955,
+        0.013634538036253717
       ],
       "type": "box",
       "xyz": [
-        0.03161628404632213,
-        0.0015221135690808296,
-        0.10550558008253574
+        -0.0022836717544123543,
+        -0.0056409040074942435,
+        -0.00654814982165893
       ]
     },
     {
-      "frame": "left_tool_taccap_right_finger_link",
+      "frame": "left_tool_taccap_left_finger_link",
       "group": "left",
-      "name": "left_tool_taccap_right_finger_link/331",
+      "name": "left_tool_taccap_left_finger_link/331",
       "rpy": [
         0,
         0,
         0
       ],
       "size": [
-        0.06389999976009132,
-        0.048638568535447124,
-        0.11026811347901821
+        0.01400000000931323,
+        0.03473746856657964,
+        0.013634538036253719
       ],
       "type": "box",
       "xyz": [
-        0.02266632812097669,
-        -0.0013480102643370628,
-        0.03216278273612261
+        -0.0022836717544123526,
+        -0.005631222592749685,
+        0.003086388214594788
       ]
     },
     {
-      "frame": "left_tool_taccap_right_finger_link",
+      "frame": "left_tool_taccap_left_finger_link",
       "group": "left",
-      "name": "left_tool_taccap_right_finger_link/332",
+      "name": "left_tool_taccap_left_finger_link/332",
       "rpy": [
         0,
         0,
         0
       ],
       "size": [
-        0.04600008790940047,
-        0.04695576922595501,
-        0.0982644327878952
+        0.03153431502548078,
+        0.037995850956589486,
+        0.013634538036253717
       ],
       "type": "box",
       "xyz": [
-        0.03161628404632213,
-        -0.0015221135690808296,
-        0.1052895113825798
+        0.006483485753671422,
+        -0.0019758124767986444,
+        0.012720926250848504
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/333",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.020520589015288467,
+        0.015112386097083517,
+        0.01310390520261394
+      ],
+      "type": "box",
+      "xyz": [
+        0.02851093777405604,
+        -0.011753660960530255,
+        0.012986242667668391
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/334",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01670576779946618,
+        0.017168483972299167,
+        0.005201126931442156
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0009307878593358718,
+        5.851882590694399e-06,
+        0.01813875873469644
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/335",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.042117303398398545,
+        0.04669921220839024,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024480747739596485,
+        0.0023178430274128914,
+        0.022355464287102222
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/336",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01787500246364583,
+        0.0444086676890295,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.01355382305055324,
+        0.0030627271858176177,
+        0.03199000232335594
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/337",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.02712500410607638,
+        0.01827138561692307,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.03205382633541434,
+        -0.010005913850235594,
+        0.03199000232335594
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/338",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013127287960818763,
+        0.03917166630265857,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.011670820525586875,
+        0.0027827222729963083,
+        0.04162454035960965
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/339",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.031381863882456285,
+        0.017280421877283323,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.0299253964472244,
+        -0.0081629658071307,
+        0.04162454035960965
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/340",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03387536655296987,
+        0.036063071104849825,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.025553488440464477,
+        0.002678949595970634,
+        0.05125907839586337
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/341",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013958455517656624,
+        0.0081021106209498,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.04547039947577772,
+        -0.003019401560978103,
+        0.05125907839586337
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/342",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.035500094737486595,
+        0.04006423642486334,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02636624905311686,
+        0.004967879969626665,
+        0.06089361643211709
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/343",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500031579162197,
+        0.007805321394290386,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.047366312211441254,
+        -0.0028541029243783944,
+        0.06089361643211709
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/344",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550001930366148,
+        0.03907191347866237,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366311914637786,
+        0.0033266937126168617,
+        0.07052815446837081
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/345",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01450000643455383,
+        0.008621395282773897,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.04736632478374544,
+        -0.0035420452592624524,
+        0.07052815446837081
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/346",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550006593205035,
+        0.03708185772487395,
+        0.013634538036253706
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366273057647063,
+        0.001423215612217154,
+        0.08016269250462452
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/347",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500021977350123,
+        0.009014236502960363,
+        0.011935422990057187
+      ],
+      "type": "box",
+      "xyz": [
+        0.047366317012347295,
+        -0.004786305386267583,
+        0.07931313498152626
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/348",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.0356131079195814,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        -0.0007409154624304836,
+        0.08979723054087824
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/349",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.02789841744685204,
+        0.013634538036253706
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        -0.00443041524117329,
+        0.09943176857713196
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/350",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.031278265915811065,
+        0.026593724371974978,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024662379641085884,
+        -0.0064385712702554835,
+        0.10906630661338566
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/351",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0300000666603446,
+        0.025530481178220682,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024616327602416305,
+        -0.0075271888908170085,
+        0.11870084464963938
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/352",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0285813554852842,
+        0.021374364028370323,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02462298752325797,
+        -0.01016223753272568,
+        0.12833538268589312
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/353",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.022683843924429414,
+        0.017218244855876433,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024616328363249902,
+        -0.012797287185956121,
+        0.1379699207221468
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_left_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_left_finger_link/354",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.016749226829535023,
+        0.013054497200567013,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632818350879,
+        -0.015428522443613169,
+        0.14760445875840056
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/355",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013999999776482584,
+        0.03084408438728473,
+        0.013632944543328552
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0022836718708276783,
+        0.0042526885444319215,
+        -0.01615480173172222
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/356",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013999999776482586,
+        0.03438423734618658,
+        0.01363294454332855
+      ],
+      "type": "box",
+      "xyz": [
+        -0.002283671870827676,
+        0.005738332868812975,
+        -0.006521857188393673
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/357",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013999999776482586,
+        0.034709491443714005,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0022836718708276744,
+        0.005616528281529497,
+        0.003111087354934877
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/358",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.031539888613313666,
+        0.03849831584953779,
+        0.01363294454332855
+      ],
+      "type": "box",
+      "xyz": [
+        0.0064862725475878695,
+        0.0021961785934089175,
+        0.012744031898263427
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/359",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.020523933167988204,
+        0.015123288225908048,
+        0.01312621410356628
+      ],
+      "type": "box",
+      "xyz": [
+        0.028518183438238805,
+        0.01175911202494252,
+        0.012997397118144561
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/360",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.016705419530838254,
+        0.017061189305036535,
+        0.0051885224117173105
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0009309619936498353,
+        1.118754498389326e-05,
+        0.018154765375786357
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/361",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.04211625859251476,
+        0.04669840382039547,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02447987706802667,
+        -0.0023180926218628883,
+        0.022376976441591978
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/362",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.017875002429536404,
+        0.044402435555628644,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.013553823124456993,
+        -0.003059611119117194,
+        0.03200992098492053
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/363",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.027125004049227342,
+        0.018275073102709462,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.03205382636383887,
+        0.0100040701073424,
+        0.03200992098492053
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/364",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013124487495797896,
+        0.03916591359001545,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.011680622153159903,
+        -0.002779845890794011,
+        0.04164286552824907
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/365",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03137346248739369,
+        0.017284971189227494,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.029929597144755696,
+        0.008160691151158615,
+        0.04164286552824907
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/366",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.033887281859243445,
+        0.03607029427529103,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.025559446093601265,
+        -0.0026825611811912373,
+        0.051275810071577624
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/367",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013962427286414485,
+        0.008100111329343561,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.04548430066643023,
+        0.0030180890920627826,
+        0.051275810071577624
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/368",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550009500377556,
+        0.04006423642486334,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366248831209395,
+        -0.004967879969626665,
+        0.06090875461490618
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/369",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01450003166792518,
+        0.007823632904687019,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.04736631216705976,
+        0.0028632586795767105,
+        0.06090875461490618
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/370",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0355000252372626,
+        0.039067598924216795,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366306969970187,
+        -0.0033245364353940744,
+        0.07054169915823473
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/371",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500008412420867,
+        0.008625230289612878,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.04736632379481192,
+        0.0035417214334068072,
+        0.07054169915823473
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/372",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550006593205035,
+        0.03707802256536678,
+        0.01363294454332854
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366273057647063,
+        -0.0014212980324635662,
+        0.08017464370156327
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/373",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500021977350123,
+        0.009012191821742802,
+        0.01192267504665585
+      ],
+      "type": "box",
+      "xyz": [
+        0.047366317012347295,
+        0.004787327726876364,
+        0.07931950895322692
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/374",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.03560975215501262,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        0.0007425933447148736,
+        0.08980758824489182
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/375",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.027897226928349315,
+        0.01363294454332854
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        0.004430372721299662,
+        0.09944053278822038
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/376",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03127826684713364,
+        0.02659363225100237,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.024420276284217855,
+        0.00643898582741753,
+        0.10907347733154892
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/377",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.030000067591667175,
+        0.025527639473772335,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02446632832288745,
+        0.007528886111164215,
+        0.11870642187487747
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/378",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.028578767128560785,
+        0.02137220971548495,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.024459732148369294,
+        0.010163498934583723,
+        0.12833936641820604
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/379",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.022681879738116372,
+        0.01721677794047461,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02446632773266174,
+        0.012798112766364708,
+        0.13797231096153456
+      ]
+    },
+    {
+      "frame": "left_tool_taccap_right_finger_link",
+      "group": "left",
+      "name": "left_tool_taccap_right_finger_link/380",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0167482459892507,
+        0.013053717681512263,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.024466328092084523,
+        0.015428912203140544,
+        0.14760525550486314
       ]
     },
     {
       "frame": "right_adapter_taccap_mount_link",
       "group": "right",
-      "name": "right_adapter_taccap_mount_link/333",
+      "name": "right_adapter_taccap_mount_link/381",
       "rpy": [
         0,
         0,
@@ -7283,7 +8291,7 @@
     {
       "frame": "right_tool_taccap_base_link",
       "group": "right",
-      "name": "right_tool_taccap_base_link/334",
+      "name": "right_tool_taccap_base_link/382",
       "rpy": [
         0,
         0,
@@ -7304,85 +8312,1093 @@
     {
       "frame": "right_tool_taccap_left_finger_link",
       "group": "right",
-      "name": "right_tool_taccap_left_finger_link/335",
+      "name": "right_tool_taccap_left_finger_link/383",
       "rpy": [
         0,
         0,
         0
       ],
       "size": [
-        0.06389999976009132,
-        0.04866740600764752,
-        0.11029679635167122
+        0.014000000009313228,
+        0.030170136090801266,
+        0.013634538036253717
       ],
       "type": "box",
       "xyz": [
-        0.02266632812097669,
-        0.0013337461277842522,
-        0.032148441299796104
+        -0.0022836717544123565,
+        -0.003916514264203059,
+        -0.016182687857912645
       ]
     },
     {
       "frame": "right_tool_taccap_left_finger_link",
       "group": "right",
-      "name": "right_tool_taccap_left_finger_link/336",
+      "name": "right_tool_taccap_left_finger_link/384",
       "rpy": [
         0,
         0,
         0
       ],
       "size": [
-        0.04600008790940047,
-        0.04695576922595501,
-        0.09783229538798333
+        0.01400000000931323,
+        0.03418787399303955,
+        0.013634538036253717
       ],
       "type": "box",
       "xyz": [
-        0.03161628404632213,
-        0.0015221135690808296,
-        0.10550558008253574
+        -0.0022836717544123543,
+        -0.0056409040074942435,
+        -0.00654814982165893
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/385",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01400000000931323,
+        0.03473746856657964,
+        0.013634538036253719
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0022836717544123526,
+        -0.005631222592749685,
+        0.003086388214594788
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/386",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03153431502548078,
+        0.037995850956589486,
+        0.013634538036253717
+      ],
+      "type": "box",
+      "xyz": [
+        0.006483485753671422,
+        -0.0019758124767986444,
+        0.012720926250848504
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/387",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.020520589015288467,
+        0.015112386097083517,
+        0.01310390520261394
+      ],
+      "type": "box",
+      "xyz": [
+        0.02851093777405604,
+        -0.011753660960530255,
+        0.012986242667668391
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/388",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01670576779946618,
+        0.017168483972299167,
+        0.005201126931442156
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0009307878593358718,
+        5.851882590694399e-06,
+        0.01813875873469644
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/389",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.042117303398398545,
+        0.04669921220839024,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024480747739596485,
+        0.0023178430274128914,
+        0.022355464287102222
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/390",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01787500246364583,
+        0.0444086676890295,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.01355382305055324,
+        0.0030627271858176177,
+        0.03199000232335594
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/391",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.02712500410607638,
+        0.01827138561692307,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.03205382633541434,
+        -0.010005913850235594,
+        0.03199000232335594
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/392",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013127287960818763,
+        0.03917166630265857,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.011670820525586875,
+        0.0027827222729963083,
+        0.04162454035960965
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/393",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.031381863882456285,
+        0.017280421877283323,
+        0.013634538036253713
+      ],
+      "type": "box",
+      "xyz": [
+        0.0299253964472244,
+        -0.0081629658071307,
+        0.04162454035960965
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/394",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03387536655296987,
+        0.036063071104849825,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.025553488440464477,
+        0.002678949595970634,
+        0.05125907839586337
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/395",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013958455517656624,
+        0.0081021106209498,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.04547039947577772,
+        -0.003019401560978103,
+        0.05125907839586337
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/396",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.035500094737486595,
+        0.04006423642486334,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02636624905311686,
+        0.004967879969626665,
+        0.06089361643211709
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/397",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500031579162197,
+        0.007805321394290386,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.047366312211441254,
+        -0.0028541029243783944,
+        0.06089361643211709
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/398",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550001930366148,
+        0.03907191347866237,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366311914637786,
+        0.0033266937126168617,
+        0.07052815446837081
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/399",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01450000643455383,
+        0.008621395282773897,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.04736632478374544,
+        -0.0035420452592624524,
+        0.07052815446837081
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/400",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550006593205035,
+        0.03708185772487395,
+        0.013634538036253706
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366273057647063,
+        0.001423215612217154,
+        0.08016269250462452
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/401",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500021977350123,
+        0.009014236502960363,
+        0.011935422990057187
+      ],
+      "type": "box",
+      "xyz": [
+        0.047366317012347295,
+        -0.004786305386267583,
+        0.07931313498152626
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/402",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.0356131079195814,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        -0.0007409154624304836,
+        0.08979723054087824
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/403",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.02789841744685204,
+        0.013634538036253706
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        -0.00443041524117329,
+        0.09943176857713196
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/404",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.031278265915811065,
+        0.026593724371974978,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024662379641085884,
+        -0.0064385712702554835,
+        0.10906630661338566
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/405",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0300000666603446,
+        0.025530481178220682,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024616327602416305,
+        -0.0075271888908170085,
+        0.11870084464963938
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/406",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0285813554852842,
+        0.021374364028370323,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02462298752325797,
+        -0.01016223753272568,
+        0.12833538268589312
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/407",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.022683843924429414,
+        0.017218244855876433,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.024616328363249902,
+        -0.012797287185956121,
+        0.1379699207221468
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_left_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_left_finger_link/408",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.016749226829535023,
+        0.013054497200567013,
+        0.01363453803625372
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632818350879,
+        -0.015428522443613169,
+        0.14760445875840056
       ]
     },
     {
       "frame": "right_tool_taccap_right_finger_link",
       "group": "right",
-      "name": "right_tool_taccap_right_finger_link/337",
+      "name": "right_tool_taccap_right_finger_link/409",
       "rpy": [
         0,
         0,
         0
       ],
       "size": [
-        0.06389999976009132,
-        0.048638568535447124,
-        0.11026811347901821
+        0.013999999776482584,
+        0.03084408438728473,
+        0.013632944543328552
       ],
       "type": "box",
       "xyz": [
-        0.02266632812097669,
-        -0.0013480102643370628,
-        0.03216278273612261
+        -0.0022836718708276783,
+        0.0042526885444319215,
+        -0.01615480173172222
       ]
     },
     {
       "frame": "right_tool_taccap_right_finger_link",
       "group": "right",
-      "name": "right_tool_taccap_right_finger_link/338",
+      "name": "right_tool_taccap_right_finger_link/410",
       "rpy": [
         0,
         0,
         0
       ],
       "size": [
-        0.04600008790940047,
-        0.04695576922595501,
-        0.0982644327878952
+        0.013999999776482586,
+        0.03438423734618658,
+        0.01363294454332855
       ],
       "type": "box",
       "xyz": [
-        0.03161628404632213,
-        -0.0015221135690808296,
-        0.1052895113825798
+        -0.002283671870827676,
+        0.005738332868812975,
+        -0.006521857188393673
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/411",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013999999776482586,
+        0.034709491443714005,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0022836718708276744,
+        0.005616528281529497,
+        0.003111087354934877
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/412",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.031539888613313666,
+        0.03849831584953779,
+        0.01363294454332855
+      ],
+      "type": "box",
+      "xyz": [
+        0.0064862725475878695,
+        0.0021961785934089175,
+        0.012744031898263427
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/413",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.020523933167988204,
+        0.015123288225908048,
+        0.01312621410356628
+      ],
+      "type": "box",
+      "xyz": [
+        0.028518183438238805,
+        0.01175911202494252,
+        0.012997397118144561
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/414",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.016705419530838254,
+        0.017061189305036535,
+        0.0051885224117173105
+      ],
+      "type": "box",
+      "xyz": [
+        -0.0009309619936498353,
+        1.118754498389326e-05,
+        0.018154765375786357
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/415",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.04211625859251476,
+        0.04669840382039547,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02447987706802667,
+        -0.0023180926218628883,
+        0.022376976441591978
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/416",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.017875002429536404,
+        0.044402435555628644,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.013553823124456993,
+        -0.003059611119117194,
+        0.03200992098492053
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/417",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.027125004049227342,
+        0.018275073102709462,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.03205382636383887,
+        0.0100040701073424,
+        0.03200992098492053
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/418",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013124487495797896,
+        0.03916591359001545,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.011680622153159903,
+        -0.002779845890794011,
+        0.04164286552824907
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/419",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03137346248739369,
+        0.017284971189227494,
+        0.013632944543328546
+      ],
+      "type": "box",
+      "xyz": [
+        0.029929597144755696,
+        0.008160691151158615,
+        0.04164286552824907
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/420",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.033887281859243445,
+        0.03607029427529103,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.025559446093601265,
+        -0.0026825611811912373,
+        0.051275810071577624
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/421",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.013962427286414485,
+        0.008100111329343561,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.04548430066643023,
+        0.0030180890920627826,
+        0.051275810071577624
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/422",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550009500377556,
+        0.04006423642486334,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366248831209395,
+        -0.004967879969626665,
+        0.06090875461490618
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/423",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.01450003166792518,
+        0.007823632904687019,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.04736631216705976,
+        0.0028632586795767105,
+        0.06090875461490618
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/424",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0355000252372626,
+        0.039067598924216795,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366306969970187,
+        -0.0033245364353940744,
+        0.07054169915823473
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/425",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500008412420867,
+        0.008625230289612878,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.04736632379481192,
+        0.0035417214334068072,
+        0.07054169915823473
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/426",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03550006593205035,
+        0.03707802256536678,
+        0.01363294454332854
+      ],
+      "type": "box",
+      "xyz": [
+        0.026366273057647063,
+        -0.0014212980324635662,
+        0.08017464370156327
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/427",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.014500021977350123,
+        0.009012191821742802,
+        0.01192267504665585
+      ],
+      "type": "box",
+      "xyz": [
+        0.047366317012347295,
+        0.004787327726876364,
+        0.07931950895322692
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/428",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.03560975215501262,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        0.0007425933447148736,
+        0.08980758824489182
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/429",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03200000086426735,
+        0.027897226928349315,
+        0.01363294454332854
+      ],
+      "type": "box",
+      "xyz": [
+        0.02461632899940016,
+        0.004430372721299662,
+        0.09944053278822038
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/430",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.03127826684713364,
+        0.02659363225100237,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.024420276284217855,
+        0.00643898582741753,
+        0.10907347733154892
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/431",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.030000067591667175,
+        0.025527639473772335,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02446632832288745,
+        0.007528886111164215,
+        0.11870642187487747
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/432",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.028578767128560785,
+        0.02137220971548495,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.024459732148369294,
+        0.010163498934583723,
+        0.12833936641820604
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/433",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.022681879738116372,
+        0.01721677794047461,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.02446632773266174,
+        0.012798112766364708,
+        0.13797231096153456
+      ]
+    },
+    {
+      "frame": "right_tool_taccap_right_finger_link",
+      "group": "right",
+      "name": "right_tool_taccap_right_finger_link/434",
+      "rpy": [
+        0,
+        0,
+        0
+      ],
+      "size": [
+        0.0167482459892507,
+        0.013053717681512263,
+        0.013632944543328553
+      ],
+      "type": "box",
+      "xyz": [
+        0.024466328092084523,
+        0.015428912203140544,
+        0.14760525550486314
       ]
     }
   ],
