@@ -156,18 +156,22 @@ class CollisionTests(unittest.TestCase):
         # Held where the table stopped it: no slide along it (it once drifted > 0.3 m).
         self.assertLess(max(errors[-60:]) - min(errors[-60:]), 0.002)
 
-    def _station(self):
+    def _station(self, **overrides):
         from libpyelite.control_profile import load_recipe
 
         root = Path(__file__).resolve().parents[3]
         settings = load_recipe(root / "recipes/teleop/bi_elite_cs66_rt/diagonal-08-taccap.yaml")
         settings.update(json.loads((Path(__file__).resolve().parents[1] / "examples/sim_safety.json").read_text()))
+        settings.update(overrides)
         return StationSimulation(settings=settings, collision_profile="auto")
 
     def test_joint_target_into_the_table_stops_at_the_margin(self):
         # A joint slider used to reset each value and check only the end
         # configuration, so dragging on jumped through the table (J2: 31 deg).
-        sim = self._station()
+        # Exercise collision rejection independently of the optional branch
+        # guard: this 94-degree target sweep intentionally crosses a shoulder
+        # branch after the table has already stopped the actual arm.
+        sim = self._station(native_preserve_configuration=False)
         home = sim.arms["left"].q.copy()
         worst = np.inf
         for k in range(1, 190):

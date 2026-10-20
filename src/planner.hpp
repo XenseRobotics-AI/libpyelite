@@ -26,6 +26,12 @@ struct PlannerConfig {
   double max_linear_jerk{1000.0}, max_angular_jerk{2500.0};           // m/s³, rad/s³ (MoveIt fallback 1000)
   double cartesian_tracking_gain{20.0};                                 // 1/s
   std::string arm_name; // optional diagnostic identity, e.g. left/right; does not affect planning
+  // CS66-only session policy. Each arm captures its own controller coordinates;
+  // mount rotations never change the meaning of these joint angles.
+  bool preserve_configuration{false};
+  double configuration_margin{0.05235987755982989};  // 3 degrees, elbow/wrist
+  double configuration_joint_span{3.140592653589793}; // unwrapped half-span < pi
+  double boundary_orientation_tolerance{0.01};       // rad, nonlinear acceptance
 };
 struct PlannerStatus {
   std::uint64_t sequence{0}, consumed_sequence{0}, ik_failures{0};
@@ -34,6 +40,10 @@ struct PlannerStatus {
   PinkIKDiagnostics ik;
   PinkArmVector joint_velocity{}, joint_acceleration{};
   bool braking{false};
+  bool boundary_limited{false};
+  bool boundary_braking{false};
+  std::uint64_t boundary_holds{0};
+  double reference_position_error{0}, reference_orientation_error{0};
   // Last streaming step: joint-speed scale applied to the IK step (1 = none) and
   // the fraction of the Cartesian waypoint step kept by the TCP speed cap.
   double step_scale{1.0}, waypoint_fraction{1.0};
@@ -69,6 +79,7 @@ class Planner {
   PinkIKModel &model() { return model_; }
   const PinkIKModel &model() const { return model_; }
   const PlannerConfig &config() const { return config_; }
+  std::unique_ptr<MotionLimiter> makeMotionLimiter(const PinkArmVector &seed) const;
   bool pending() const { return pending_; }   // planReference() left an output step to advance()
   bool jointMode() const { return joint_mode_; }
   // The goal the arm is being steered to, base axes: the latest Cartesian
@@ -102,5 +113,6 @@ class Planner {
   static constexpr double kTrustFactor=4.0;
   static constexpr double kSmoothedStepHeadroom=2.0;
   PinkArmVector scaleStep(const PinkArmVector &from, PinkArmVector to, double &factor) const;
+  void feedbackReference(const PinkPose &before);
 };
 } // namespace libpyelite

@@ -1,4 +1,5 @@
 #include "planner.hpp"
+#include "configuration_policy.hpp"
 #include <Eigen/Geometry>
 #include <algorithm>
 #include <chrono>
@@ -71,6 +72,12 @@ Planner::Planner(const std::string &urdf,const PinkPose &tool,PinkIKOptions ik,P
     if(!std::isfinite(value)||value<0) throw std::invalid_argument("Invalid target jump limit");
   if(!std::isfinite(c.joint_tracking_gain)||c.joint_tracking_gain<=0)
     throw std::invalid_argument("joint_tracking_gain must be positive and finite");
+  for(double v:{c.configuration_margin,c.configuration_joint_span,c.boundary_orientation_tolerance})
+    if(!std::isfinite(v)||v<=0) throw std::invalid_argument("Invalid configuration protection settings");
+  if(c.configuration_margin>=std::acos(-1.0)/2 || c.configuration_joint_span>=std::acos(-1.0))
+    throw std::invalid_argument("Configuration margin must be < pi/2 and winding half-span < pi");
+  if(c.preserve_configuration && !c.joint_motion_limits)
+    throw std::invalid_argument("Configuration preservation requires joint motion limits");
   auto velocity=model_.velocityLimits();
   if(c.joint_motion_limits) {
     for(int i=0;i<6;++i) {
@@ -96,16 +103,37 @@ PinkArmVector Planner::scaleStep(const PinkArmVector &from,PinkArmVector to,doub
   if(factor<1.0) for(int i=0;i<6;++i) to[i]=from[i]+factor*(to[i]-from[i]);
   return to;
 }
+std::unique_ptr<MotionLimiter> Planner::makeMotionLimiter(const PinkArmVector &seed) const {
+  if(!config_.joint_motion_limits) return nullptr;
+  auto limiter=std::make_unique<MotionLimiter>(config_.period,config_.max_joint_velocity,
+      config_.max_joint_acceleration,config_.max_joint_jerk,
+      model_.commandLowerLimits(),model_.commandUpperLimits());
+  if(model_.configuration()) {
+    const auto policy=*model_.configuration();  // lifetime-independent sender guard
+    limiter->setEnvelopeGuard([policy](const PinkArmVector &lo,const PinkArmVector &hi) {
+      return policy.boxValid(lo,hi);
+    });
+  }
+  limiter->seed(seed);
+  return limiter;
+}
 void Planner::seed(const PinkArmVector &q) {
+  if(config_.preserve_configuration) {
+    const bool first = model_.configuration()==nullptr;
+    model_.preserveConfiguration(q,config_.configuration_margin,config_.configuration_joint_span);
+    if(first) limiter_=makeMotionLimiter(q);
+  }
   pose_=model_.forwardKinematics(0,q); q_=q; seeded_=true; cancel();
   if(limiter_) limiter_->seed(q);
   stopping_=false; status_.braking=false; status_.moving=false; status_.idle=true;
   status_.joint_velocity.fill(0); status_.joint_acceleration.fill(0);
   ref_q_=q; ref_pose_=pose_; ref_velocity_.fill(0);
   goal_=pose_; cartesian_stop_=false;
+  status_.boundary_limited=false; status_.boundary_braking=false;
   if(smoother_) smoother_->reset(pose_);
 }
 void Planner::reanchor(const PinkArmVector &q,const PinkArmVector &v,const PinkArmVector &a) {
+  if(!model_.configurationValid(q)) throw std::invalid_argument("Output reanchor violates saved configuration");
   if(!limiter_) { seed(q); return; }
   // An external gate (collision QP) trimmed the output. Only the output state
   // moves: an active target and its reference keep going, so tracking does not
@@ -204,6 +232,10 @@ void Planner::submit(const PinkPose &target,double arrival,std::uint64_t seq,dou
 }
 void Planner::submitJoints(const PinkArmVector &q,double arrival,std::uint64_t seq) {
   model_.forwardKinematics(0,q);
+  PinkArmVector lo{},hi{};
+  for(int i=0;i<6;++i) { lo[i]=std::min(q_[i],q[i]); hi[i]=std::max(q_[i],q[i]); }
+  if(!model_.configurationBoxValid(lo,hi))
+    throw std::invalid_argument("Joint target path leaves the saved CS66 configuration");
   if(config_.max_target_joint_jump>0) {
     const bool previous=joint_mode_ && arrival_>=0;
     const auto &reference=previous?joint_target_:q_;
@@ -233,6 +265,7 @@ PinkArmVector Planner::tick(double now) {
 bool Planner::planReference(double now) {
   if(!seeded_||!std::isfinite(now)) throw std::logic_error("Invalid planner tick");
   pending_=false;
+  status_.boundary_limited=false; status_.boundary_braking=false;
   if(arrival_>=0 && !reset_ && now-arrival_>config_.stale_timeout) {
     cancel(); status_.stale=true;
   }
@@ -285,9 +318,30 @@ bool Planner::planReference(double now) {
     waypoint=interpolatePose(anchor,waypoint,fraction);
     PinkArmVector candidate=q_, box=max_step_;
     for(double &step:box) step*=kTrustFactor;
-    const bool ok=model_.solve(0,waypoint,seed,box,candidate,status_.ik,!reset_);
+    const bool protected_stream=config_.preserve_configuration && !reset_;
+    bool ok=model_.solve(0,waypoint,seed,box,candidate,status_.ik,!reset_,
+        protected_stream?&target_:nullptr,config_.boundary_orientation_tolerance);
     double factor=1.0;
     candidate=scaleStep(seed,candidate,factor);
+    if(protected_stream) {
+      // Pace the IK reference by what the joint trajectory has actually
+      // executed. With low acceleration/jerk, an unlimited reference could run
+      // far ahead and drive the axes along very different braking paths.
+      double lead_factor=1.0;
+      for(int i=0;i<6;++i) {
+        const double delta=candidate[i]-seed[i], lead=2*max_step_[i];
+        if(delta>0) lead_factor=std::min(lead_factor,std::max(0.0,(q_[i]+lead-seed[i])/delta));
+        else if(delta<0) lead_factor=std::min(lead_factor,std::max(0.0,(q_[i]-lead-seed[i])/delta));
+      }
+      for(int i=0;i<6;++i) candidate[i]=seed[i]+lead_factor*(candidate[i]-seed[i]);
+      factor*=lead_factor;
+      const auto candidate_pose=model_.forwardKinematics(0,candidate);
+      const double angular_limit=std::max(config_.boundary_orientation_tolerance,
+          CartesianSmoother::difference(anchor,target_).tail<3>().norm());
+      if(CartesianSmoother::difference(candidate_pose,target_).tail<3>().norm()>angular_limit+1e-12) {
+        candidate=seed; ok=false; status_.ik.progress=false; status_.ik.orientation_limited=true;
+      }
+    }
     pending_converged_=ok && fraction>=1.0 && factor>=1.0;
     status_.step_scale=factor; status_.waypoint_fraction=fraction;
     // Joint speed limited the step: slow the Cartesian path by the same factor
@@ -309,25 +363,74 @@ bool Planner::planReference(double now) {
       if(advanced) { ref_q_=candidate; ref_pose_=model_.forwardKinematics(0,ref_q_); }
       for(int i=0;i<6;++i) ref_velocity_[i]=(ref_q_[i]-ref_before_[i])/config_.period;
       pending_candidate_=ref_q_;
+      if(protected_stream) {
+        const auto remaining=CartesianSmoother::difference(ref_pose_,waypoint);
+        status_.reference_position_error=remaining.head<3>().norm();
+        status_.reference_orientation_error=remaining.tail<3>().norm();
+        // Feedback only a materially unachieved step. Ordinary numerical
+        // residuals and normal output tracking lag must not reset the smoother.
+        status_.boundary_limited=!advanced || status_.ik.configuration_limited || status_.ik.orientation_limited ||
+            remaining.head<3>().norm()>std::max(1e-5,0.1*distance) ||
+            remaining.tail<3>().norm()>std::max(1e-4,0.1*angle);
+        if(status_.boundary_limited) {
+          if(!advanced) ++status_.boundary_holds;
+          feedbackReference(model_.forwardKinematics(0,ref_before_));
+        }
+      }
     } else if(!advanced) return false;  // hold this tick; never accept an unconverged global IK
     else pending_candidate_=candidate;
   }
   pending_=true;
   return true;
 }
+void Planner::feedbackReference(const PinkPose &before) {
+  if(!smoother_ || reset_) return;
+  CartesianSmoother::Vector6 v=CartesianSmoother::difference(before,ref_pose_)/config_.period;
+  auto cap=[](auto block,double limit) {
+    const double norm=block.norm();
+    if(norm>limit) block*=limit/norm;
+  };
+  cap(v.head<3>(),config_.max_linear_velocity);
+  cap(v.tail<3>(),config_.max_angular_velocity);
+  CartesianSmoother::Vector6 a=(v-smoother_->velocity())/config_.period;
+  cap(a.head<3>(),config_.max_linear_acceleration);
+  cap(a.tail<3>(),config_.max_angular_acceleration);
+  smoother_->reset(ref_pose_,v,a);
+  // Discard only the internal unexecuted interpolation. The absolute VR target
+  // remains target_; a re-grip supplies a new target through the normal mailbox.
+  goal_=start_=ref_pose_;
+  start_time_=pending_now_;
+  const auto error=CartesianSmoother::difference(start_,target_);
+  duration_=std::max({config_.period,error.head<3>().norm()/config_.max_linear_velocity,
+                     error.tail<3>().norm()/config_.max_angular_velocity});
+}
 void Planner::setReference(const PinkArmVector &q) {
   if(!limiter_) throw std::logic_error("A joint reference exists only with joint motion limits");
   if(!pending_ || joint_mode_) throw std::logic_error("set_reference belongs between plan_reference and advance");
   // ref_pose_ already holds this tick's IK solution; the motion is from the previous tick.
   const PinkPose before=model_.forwardKinematics(0,ref_before_);
-  ref_pose_=model_.forwardKinematics(0,q); ref_q_=q; pending_candidate_=q;
+  PinkArmVector accepted=q;
+  if(config_.preserve_configuration) {
+    const double budget=std::max(config_.boundary_orientation_tolerance,
+        CartesianSmoother::difference(before,target_).tail<3>().norm());
+    for(int attempt=0;attempt<32;++attempt) {
+      PinkArmVector lo{},hi{};
+      for(int i=0;i<6;++i) { lo[i]=std::min(ref_before_[i],accepted[i]); hi[i]=std::max(ref_before_[i],accepted[i]); }
+      if(model_.configurationBoxValid(lo,hi) &&
+         CartesianSmoother::difference(model_.forwardKinematics(0,accepted),target_).tail<3>().norm()<=budget+1e-12) break;
+      for(int i=0;i<6;++i) accepted[i]=0.5*(ref_before_[i]+accepted[i]);
+      if(attempt==31) accepted=ref_before_;
+    }
+  }
+  ref_pose_=model_.forwardKinematics(0,accepted); ref_q_=accepted; pending_candidate_=accepted;
   // The constrained reference is where the smoothed TCP now is, moving as the
   // reference actually moved; otherwise the smoother winds up behind an obstacle.
   if(smoother_ && !reset_)
     smoother_->reset(ref_pose_,CartesianSmoother::difference(before,ref_pose_)/config_.period);
   // The feed-forward is the motion the reference actually makes, not what the
   // IK asked for; otherwise a blocked reference keeps pushing the output.
-  for(int i=0;i<6;++i) ref_velocity_[i]=(q[i]-ref_before_[i])/config_.period;
+  for(int i=0;i<6;++i) ref_velocity_[i]=(accepted[i]-ref_before_[i])/config_.period;
+  if(config_.preserve_configuration) feedbackReference(before);
 }
 PinkArmVector Planner::advance() {
   if(!pending_) throw std::logic_error("advance() needs a successful plan_reference()");
@@ -345,9 +448,11 @@ PinkArmVector Planner::advance() {
     // follower reproduces it (its feed-forward is the reference velocity); it
     // only departs from it, smoothly, when the reference itself steps (held by
     // a collision layer, or near a singularity).
-    if(joint_mode_ || (alpha>=1.0 && reference_still)) q_=limiter_->step(candidate);
+    if(joint_mode_ || ((alpha>=1.0 || config_.preserve_configuration) && reference_still)) q_=limiter_->step(candidate);
     else q_=limiter_->follow(candidate,ref_velocity_,config_.joint_tracking_gain);
     status_.joint_velocity=limiter_->velocity(); status_.joint_acceleration=limiter_->acceleration();
+    status_.boundary_braking=limiter_->boundaryLimited();
+    status_.boundary_limited=status_.boundary_limited || status_.boundary_braking;
     reached=limiter_->finished() && (joint_mode_ || reference_still);
     if(joint_mode_) { ref_q_=q_; ref_velocity_.fill(0); }
   } else for(int i=0;i<6;++i) {
@@ -356,6 +461,14 @@ PinkArmVector Planner::advance() {
     q_[i]+=std::clamp(delta,-max_step_[i],max_step_[i]);
   }
   pose_=model_.forwardKinematics(0,q_);
+  if(!model_.configurationValid(q_)) throw std::runtime_error("Planner output violates saved configuration");
+  if(status_.boundary_braking && !joint_mode_) {
+    // A joint-space brake may temporarily bend TCP orientation. Do not make
+    // that output a new IK reference: it would ratchet the angular compromise
+    // allowance away from the unchanged VR orientation.
+    ref_velocity_.fill(0);
+    feedbackReference(ref_pose_);
+  }
   if(limiter_ && joint_mode_) ref_pose_=pose_;
   if(smoother_ && !joint_mode_ && !reset_) {
     if(cartesian_stop_) {

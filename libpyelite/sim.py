@@ -329,19 +329,11 @@ class Simulation:
         self.config = planner_config or PlannerConfig()
         self.planner = _native.Planner(self.urdf, self.tool.ravel(), options or PinkIKOptions(), self.config)
         self.sender = None
-        if self.config.joint_motion_limits:
-            self.sender = _native.MotionLimiter(
-                self.config.period,
-                self.config.max_joint_velocity,
-                self.config.max_joint_acceleration,
-                self.config.max_joint_jerk,
-                self.model.lower_limits,
-                self.model.upper_limits,
-            )
         self.time = 0.0
         self.sequence = 0
         self.last_submit = -1.0
         self.reset(q)
+        self.sender = self.planner.make_sender_limiter(q)
 
     def reset(self, q):
         self.planner.seed(q)

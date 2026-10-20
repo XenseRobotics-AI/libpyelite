@@ -34,6 +34,8 @@ PYBIND11_MODULE(_native,m) {
     .def_readonly("success",&PinkIKDiagnostics::success)
     .def_readonly("progress",&PinkIKDiagnostics::progress)
     .def_readonly("qp_failed",&PinkIKDiagnostics::qp_failed)
+    .def_readonly("configuration_limited",&PinkIKDiagnostics::configuration_limited)
+    .def_readonly("orientation_limited",&PinkIKDiagnostics::orientation_limited)
     .def_readonly("iterations",&PinkIKDiagnostics::iterations)
     .def_readonly("position_error",&PinkIKDiagnostics::position_error)
     .def_readonly("orientation_error",&PinkIKDiagnostics::orientation_error);
@@ -47,15 +49,20 @@ PYBIND11_MODULE(_native,m) {
     },Release())
     .def_property_readonly("lower_limits",&PinkIKModel::lowerLimits)
     .def_property_readonly("upper_limits",&PinkIKModel::upperLimits)
+    .def_property_readonly("command_lower_limits",&PinkIKModel::commandLowerLimits)
+    .def_property_readonly("command_upper_limits",&PinkIKModel::commandUpperLimits)
     .def_property_readonly("velocity_limits",&PinkIKModel::velocityLimits);
   py::class_<PlannerConfig>(m,"PlannerConfig").def(py::init<>())
 #define PC(name) .def_readwrite(#name,&PlannerConfig::name)
     PC(period) PC(stale_timeout) PC(max_linear_velocity) PC(max_angular_velocity) PC(velocity_scale) PC(joint_motion_limits) PC(joint_target_horizon) PC(max_joint_velocity) PC(max_joint_acceleration) PC(max_joint_jerk) PC(joint_tracking_gain) PC(cartesian_motion_limits) PC(max_linear_acceleration) PC(max_angular_acceleration) PC(max_linear_jerk) PC(max_angular_jerk) PC(cartesian_tracking_gain)
-    PC(max_target_translation_jump) PC(max_target_rotation_jump) PC(max_target_joint_jump) PC(arm_name);
+    PC(max_target_translation_jump) PC(max_target_rotation_jump) PC(max_target_joint_jump) PC(arm_name)
+    PC(preserve_configuration) PC(configuration_margin) PC(configuration_joint_span) PC(boundary_orientation_tolerance);
 #undef PC
   py::class_<PlannerStatus>(m,"PlannerStatus")
 #define PS(name) .def_readonly(#name,&PlannerStatus::name)
     PS(step_scale) PS(waypoint_fraction)
+    PS(boundary_limited) PS(boundary_braking) PS(boundary_holds)
+    PS(reference_position_error) PS(reference_orientation_error)
     PS(sequence) PS(consumed_sequence) PS(ik_failures) PS(moving) PS(stale) PS(idle) PS(solve_time_s) PS(ik) PS(joint_velocity) PS(joint_acceleration) PS(braking);
 #undef PS
   py::class_<Planner>(m,"Planner")
@@ -64,6 +71,10 @@ PYBIND11_MODULE(_native,m) {
       py::arg("target"),py::arg("arrival"),py::arg("sequence"),py::arg("duration")=0)
     .def("submit_joints",&Planner::submitJoints).def("tick",&Planner::tick)
     .def("cancel",&Planner::cancel).def("status",&Planner::status)
+    .def("command_lower_limits",[](const Planner &s){return s.model().commandLowerLimits();})
+    .def("command_upper_limits",[](const Planner &s){return s.model().commandUpperLimits();})
+    .def("configuration_valid",[](const Planner &s,const PinkArmVector &q){return s.model().configurationValid(q);})
+    .def("make_sender_limiter",&Planner::makeMotionLimiter)
     .def("pose",&Planner::pose).def("q",&Planner::q);
   py::class_<MotionLimiter>(m,"MotionLimiter")
     .def(py::init<double,PinkArmVector,PinkArmVector,PinkArmVector,PinkArmVector,PinkArmVector>())

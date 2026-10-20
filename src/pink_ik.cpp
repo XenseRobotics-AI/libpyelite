@@ -1,4 +1,5 @@
 #include "pink_ik.hpp"
+#include "configuration_policy.hpp"
 
 #include <algorithm>
 #include <array>
@@ -54,9 +55,10 @@ bool solveBoxQP(const JointMatrix &hessian, const JointVector &rhs,
     return false;
   }
   for (int index = 0; index < 6; ++index) {
-    if (!(lower[index] < upper[index])) {
+    if (lower[index] > upper[index]) {
       return false;
     }
+    if (lower[index] == upper[index]) active[index] = 2;  // equality, never release
   }
 
   for (int iteration = 0; iteration < kMaxActiveSetIterations; ++iteration) {
@@ -132,6 +134,7 @@ bool solveBoxQP(const JointMatrix &hessian, const JointVector &rhs,
     int release_index = -1;
     for (int index = 0; index < 6; ++index) {
       const int side = active[static_cast<std::size_t>(index)];
+      if (side == 2) continue;
       const double violation =
           side < 0 ? -gradient[index] : side > 0 ? gradient[index] : 0.0;
       if (violation > largest_multiplier_violation) {
@@ -262,6 +265,61 @@ PinkArmVector PinkIKModel::upperLimits() const { return arms_[0]->upper; }
 PinkArmVector PinkIKModel::velocityLimits() const {
   return fromEigen(arms_[0]->model.velocityLimit);
 }
+PinkArmVector PinkIKModel::commandLowerLimits() const {
+  return configuration_ ? configuration_->lower() : lowerLimits();
+}
+PinkArmVector PinkIKModel::commandUpperLimits() const {
+  return configuration_ ? configuration_->upper() : upperLimits();
+}
+bool PinkIKModel::configurationValid(const PinkArmVector &q) const {
+  return !configuration_ || configuration_->valid(q);
+}
+bool PinkIKModel::configurationBoxValid(const PinkArmVector &lower, const PinkArmVector &upper) const {
+  return !configuration_ || configuration_->boxValid(lower, upper);
+}
+void PinkIKModel::preserveConfiguration(const PinkArmVector &reference, double margin, double span) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (configuration_) {
+    if (!configuration_->valid(reference))
+      throw std::invalid_argument("Measured seed is outside the saved CS66 configuration");
+    return;  // Idle, cancellation and grip re-anchors never redefine the session.
+  }
+  const auto &m = arms_[0]->model;
+  const double half_pi = std::acos(-1.0) / 2;
+  const std::array<Eigen::Vector3d, 6> offsets{{
+      {0,0,0.1625}, {0,0,0}, {-0.427,0,0}, {-0.3905,0,0.1475},
+      {0,-0.0965,0}, {0,0.095,0}}};
+  const std::array<double, 6> rolls{{0,half_pi,0,0,half_pi,-half_pi}};
+  bool recognized = m.joints.size() == 7 &&
+      m.frames[arms_[0]->tcp_frame].parentJoint == 6;
+  for (int i = 0; i < 6 && recognized; ++i) {
+    const auto id = static_cast<pinocchio::JointIndex>(i + 1);
+    recognized = m.parents[id] == static_cast<pinocchio::JointIndex>(i) &&
+                 m.joints[id].shortname() == "JointModelRZ";
+    // The root may contain a proper fixed installation transform. It does not
+    // change the local singular factors; the other five placements must match.
+    if (i > 0)
+      recognized = recognized &&
+          (m.jointPlacements[id].translation() - offsets[i]).norm() < 1e-8 &&
+          (m.jointPlacements[id].rotation() -
+           Eigen::AngleAxisd(rolls[i], Eigen::Vector3d::UnitX()).toRotationMatrix()).norm() < 1e-8;
+  }
+  ConfigurationPolicy::Geometry geometry;
+  geometry.recognized = recognized;
+  if(!recognized)
+    throw std::invalid_argument("Configuration preservation requires a recognized CS66 joint geometry");
+  if(recognized) {
+    geometry.upper_arm=-m.jointPlacements[3].translation().x();
+    geometry.forearm=-m.jointPlacements[4].translation().x();
+    geometry.wrist_offset=-m.jointPlacements[5].translation().y() -
+        m.jointPlacements[6].translation().y()*m.jointPlacements[5].rotation()(1,1);
+  }
+  auto policy = std::make_unique<ConfigurationPolicy>(
+      reference, lowerLimits(), upperLimits(), geometry, margin, span);
+  if(!policy->initialized())
+    throw std::invalid_argument("Initial CS66 joints are singular or outside the configured branch margin");
+  configuration_=std::move(policy);
+}
 
 void PinkIKModel::validateOptions(const PinkIKOptions &options) {
   if (options.max_iterations < 1) {
@@ -364,10 +422,12 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
                                 const PinkArmVector &reference,
                                 const PinkArmVector &max_step_rad,
                                 PinkArmVector &solution,
-                                PinkIKDiagnostics &diagnostics, bool bounded) const {
+                                PinkIKDiagnostics &diagnostics, bool bounded,
+                                const PinkPose *rotation_guard, double rotation_budget) const {
   diagnostics = PinkIKDiagnostics{};
   if (arm >= arms_.size() || !arms_[arm] || !validPose(target_values) ||
-      !finiteVector(reference) || !finiteVector(max_step_rad)) {
+      !finiteVector(reference) || !finiteVector(max_step_rad) ||
+      (rotation_guard && (!validPose(*rotation_guard) || !finite(rotation_budget) || rotation_budget <= 0))) {
     return false;
   }
   for (double value : max_step_rad) {
@@ -380,6 +440,12 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
   auto &model = arm_model.model;
   auto &data = arm_model.data;
   const SE3 target = poseFromArray(target_values);
+  const auto lower = commandLowerLimits(), upper = commandUpperLimits();
+  if (!configurationValid(reference)) {
+    solution = reference;
+    diagnostics.configuration_limited = true;
+    return false;
+  }
   JointVector q = toEigen(reference);
   JointVector seed = q;
   // Offline IK may span many servo cycles. Streaming IK keeps its entire
@@ -388,10 +454,10 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
   JointVector trust_upper;
   for (int index = 0; index < 6; ++index) {
     const auto i = static_cast<std::size_t>(index);
-    q[index] = std::clamp(q[index], arm_model.lower[i], arm_model.upper[i]);
+    q[index] = std::clamp(q[index], lower[i], upper[i]);
     seed[index] = q[index];
-    trust_lower[index] = bounded ? std::max(arm_model.lower[i], seed[index] - max_step_rad[i]) : arm_model.lower[i];
-    trust_upper[index] = bounded ? std::min(arm_model.upper[i], seed[index] + max_step_rad[i]) : arm_model.upper[i];
+    trust_lower[index] = bounded ? std::max(lower[i], seed[index] - max_step_rad[i]) : lower[i];
+    trust_upper[index] = bounded ? std::min(upper[i], seed[index] + max_step_rad[i]) : upper[i];
   }
   // Preserve the best accepted state on nonconvergence. QP failure remains
   // a hard failure and never grants permission to advance the controller.
@@ -417,6 +483,13 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
   double orientation_error = 0.0;
   Vector6 error;
   evaluate(q, &error, position_error, orientation_error);
+  const Eigen::Matrix3d guard_rotation = rotation_guard ? poseFromArray(*rotation_guard).rotation()
+                                                       : target.rotation();
+  // A new rotation request can start outside the budget. Allow recovery without
+  // allowing a translation trade-off to make that initial angular error worse.
+  const double angular_ceiling = rotation_guard
+      ? std::max(rotation_budget, rotationError(data.oMf[arm_model.tcp_frame].rotation(), guard_rotation).norm())
+      : std::numeric_limits<double>::infinity();
   const double position_tolerance =
       bounded ? options_.streaming_position_tolerance : options_.position_tolerance;
   const double orientation_tolerance =
@@ -514,9 +587,26 @@ bool PinkIKModel::solveUnlocked(std::size_t arm, const PinkPose &target_values,
       JointVector trial = pinocchio::integrate(model, q, step);
       for (int index = 0; index < 6; ++index)
         trial[index] = std::clamp(trial[index], trust_lower[index], trust_upper[index]);
+      const auto from = fromEigen(q), to = fromEigen(trial);
+      PinkArmVector box_lower{}, box_upper{};
+      for (int i = 0; i < 6; ++i) {
+        box_lower[i] = std::min(from[i], to[i]);
+        box_upper[i] = std::max(from[i], to[i]);
+      }
+      if (!configurationBoxValid(box_lower, box_upper)) {
+        diagnostics.configuration_limited = true;
+        step *= 0.5;
+        continue;
+      }
       Vector6 trial_error;
       double trial_position, trial_orientation;
       evaluate(trial, &trial_error, trial_position, trial_orientation);
+      if (rotation_guard &&
+          rotationError(data.oMf[arm_model.tcp_frame].rotation(), guard_rotation).norm() > angular_ceiling + 1e-12) {
+        diagnostics.orientation_limited = true;
+        step *= 0.5;
+        continue;
+      }
       if (trial_error.dot(weight * trial_error) < before - 1e-16) {
         q = trial;
         error = trial_error;
@@ -547,10 +637,11 @@ bool PinkIKModel::solve(std::size_t arm, const PinkPose &target,
                         const PinkArmVector &reference,
                         const PinkArmVector &max_step_rad,
                         PinkArmVector &solution,
-                        PinkIKDiagnostics &diagnostics, bool bounded) const {
+                        PinkIKDiagnostics &diagnostics, bool bounded,
+                        const PinkPose *rotation_guard, double rotation_budget) const {
   std::lock_guard<std::mutex> lock(mutex_);
   return solveUnlocked(arm, target, reference, max_step_rad, solution,
-                       diagnostics, bounded);
+                       diagnostics, bounded, rotation_guard, rotation_budget);
 }
 
 }  // namespace libpyelite

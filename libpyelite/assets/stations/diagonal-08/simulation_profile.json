@@ -61,6 +61,10 @@
   "native_max_linear_jerk": 1000.0,
   "native_max_angular_jerk": 2500.0,
   "native_joint_motion_limits": true,
+  "native_preserve_configuration": true,
+  "native_configuration_margin": 0.05235987755982989,
+  "native_configuration_joint_span": 3.140592653589793,
+  "native_boundary_orientation_tolerance": 0.01,
   "native_max_joint_velocity": [
     2.6,
     2.6,

@@ -49,6 +49,10 @@ PLANNER_FIELDS = (
     "max_linear_jerk",
     "max_angular_jerk",
     "cartesian_tracking_gain",
+    "preserve_configuration",
+    "configuration_margin",
+    "configuration_joint_span",
+    "boundary_orientation_tolerance",
 )
 
 
@@ -117,6 +121,10 @@ def configure_native_driver(cfg, settings, tool=None, side=None, world_from_base
         "max_linear_jerk",
         "max_angular_jerk",
         "cartesian_tracking_gain",
+        "preserve_configuration",
+        "configuration_margin",
+        "configuration_joint_span",
+        "boundary_orientation_tolerance",
     ):
         if values.get("native_" + key) is not None:
             setattr(cfg.planner, key, values["native_" + key])

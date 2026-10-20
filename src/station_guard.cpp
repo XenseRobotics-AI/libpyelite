@@ -348,7 +348,7 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
     if(!active[a]) { joint_lower.segment<6>(o) = q0.segment<6>(o); joint_upper.segment<6>(o) = q0.segment<6>(o); vmax.segment<6>(o).setZero(); continue; }
     const auto &model = planners[a]->model();
     const auto &config = planners[a]->config();
-    const auto lo = model.lowerLimits(), hi = model.upperLimits(), velocity = model.velocityLimits();
+    const auto lo = model.commandLowerLimits(), hi = model.commandUpperLimits(), velocity = model.velocityLimits();
     for(std::size_t i = 0; i < 6; ++i) {
       joint_lower[o + static_cast<Eigen::Index>(i)] = lo[i];
       joint_upper[o + static_cast<Eigen::Index>(i)] = hi[i];
@@ -452,6 +452,18 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
   for(double fraction : {1.0, 0.5, 0.25, 0.0}) {
     accepted = q0 + fraction * displacement;
     if(fraction == 0.0) { verified = closest; break; }
+    bool configuration_safe=true;
+    const auto candidate=split(accepted);
+    for(std::size_t a=0;a<2;++a) {
+      if(!active[a]) continue;
+      PinkArmVector lo{},hi{};
+      for(int i=0;i<6;++i) {
+        lo[i]=std::min(previous[a][i],candidate[a][i]);
+        hi[i]=std::max(previous[a][i],candidate[a][i]);
+      }
+      configuration_safe=configuration_safe && planners[a]->model().configurationBoxValid(lo,hi);
+    }
+    if(!configuration_safe) continue;
     verified = collision_->verifyStep(station0, stationQ(split(accepted), defaults));
     result.sampled_pairs += collision_->lastSampledPairs();
     if(verified.safe) break;

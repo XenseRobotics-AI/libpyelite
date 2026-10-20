@@ -7,6 +7,7 @@
 #include <string>
 
 namespace libpyelite {
+class ConfigurationPolicy;
 
 // The native planner uses the same 4x4 row-major pose convention as the
 // Python adapter.  These aliases intentionally stay independent of the
@@ -19,6 +20,8 @@ struct PinkIKDiagnostics {
   bool success{false};
   bool progress{false};
   bool qp_failed{false};
+  bool configuration_limited{false};
+  bool orientation_limited{false};
   int iterations{0};
   double position_error{0.0};
   double orientation_error{0.0};
@@ -68,6 +71,13 @@ class PinkIKModel {
   PinkArmVector lowerLimits() const;
   PinkArmVector upperLimits() const;
   PinkArmVector velocityLimits() const;
+  // Physical FK limits remain unchanged. These bounds constrain commands only.
+  PinkArmVector commandLowerLimits() const;
+  PinkArmVector commandUpperLimits() const;
+  void preserveConfiguration(const PinkArmVector &reference, double margin, double span);
+  const ConfigurationPolicy *configuration() const { return configuration_.get(); }
+  bool configurationValid(const PinkArmVector &q) const;
+  bool configurationBoxValid(const PinkArmVector &lower, const PinkArmVector &upper) const;
   ~PinkIKModel();
 
   PinkIKModel(const PinkIKModel &) = delete;
@@ -84,7 +94,8 @@ class PinkIKModel {
   bool solve(std::size_t arm, const PinkPose &target,
              const PinkArmVector &reference,
              const PinkArmVector &max_step_rad, PinkArmVector &solution,
-             PinkIKDiagnostics &diagnostics, bool bounded = false) const;
+             PinkIKDiagnostics &diagnostics, bool bounded = false,
+             const PinkPose *rotation_guard = nullptr, double rotation_budget = 0.0) const;
 
   static const char *backendName() noexcept { return "pink-pinocchio-native"; }
 
@@ -103,10 +114,12 @@ class PinkIKModel {
                      const PinkArmVector &reference,
                      const PinkArmVector &max_step_rad,
                      PinkArmVector &solution,
-                     PinkIKDiagnostics &diagnostics, bool bounded = false) const;
+                     PinkIKDiagnostics &diagnostics, bool bounded = false,
+                     const PinkPose *rotation_guard = nullptr, double rotation_budget = 0.0) const;
 
   mutable std::array<std::unique_ptr<ArmModel>, 1> arms_;
   PinkIKOptions options_{};
+  std::unique_ptr<ConfigurationPolicy> configuration_;
   mutable std::mutex mutex_;
 };
 

@@ -161,11 +161,11 @@ std::uint64_t NativeDriver::submit(const PinkPose &pose,double duration) {
   return generation_;
 }
 std::uint64_t NativeDriver::submitJoints(const PinkArmVector &q) {
-  const auto lower=planner_.model().lowerLimits(),upper=planner_.model().upperLimits();
-  for(int i=0;i<6;++i) if(!std::isfinite(q[i])||q[i]<lower[i]||q[i]>upper[i])
-    throw std::invalid_argument("Joint target outside CS66 limits");
   std::lock_guard<std::mutex> lock(mutex_);
   if(!running_||status_.reset_active) throw std::runtime_error("Servo not ready for joint target");
+  const auto lower=planner_.model().commandLowerLimits(),upper=planner_.model().commandUpperLimits();
+  for(int i=0;i<6;++i) if(!std::isfinite(q[i])||q[i]<lower[i]||q[i]>upper[i])
+    throw std::invalid_argument("Joint target outside CS66 limits");
   target_=Target{}; target_.q=q; target_.joint=true; target_.arrival=now();
   target_.sequence=++generation_; return generation_;
 }
@@ -230,13 +230,7 @@ void NativeDriver::sendLoop() noexcept {
   { std::lock_guard<std::mutex> lock(mutex_); last_sent=status_.commanded_q; }
   int failed_writes=0;
   const auto velocity=planner_.model().velocityLimits();
-  std::unique_ptr<MotionLimiter> sender_limiter;
-  if(config_.planner.joint_motion_limits) {
-    sender_limiter=std::make_unique<MotionLimiter>(config_.servoj_time,config_.planner.max_joint_velocity,
-      config_.planner.max_joint_acceleration,config_.planner.max_joint_jerk,
-      planner_.model().lowerLimits(),planner_.model().upperLimits());
-    sender_limiter->seed(last_sent);
-  }
+  auto sender_limiter=planner_.makeMotionLimiter(last_sent);
   const auto lower=planner_.model().lowerLimits(),upper=planner_.model().upperLimits();
   // Diagnostics: a stale-feedback trip is either the controller's RTSI stream
   // pausing or this thread itself being held up (it only sees new stamps when it runs).
@@ -292,6 +286,16 @@ void NativeDriver::sendLoop() noexcept {
         else for(int i=0;i<6;++i) {
           double step=velocity[i]*config_.planner.velocity_scale*config_.servoj_time;
           q[i]=last_sent[i]+std::clamp(q[i]-last_sent[i],-step,step);
+        }
+        if(config_.planner.preserve_configuration) {
+          PinkArmVector lo{},hi{};
+          for(int i=0;i<6;++i) { lo[i]=std::min(last_sent[i],q[i]); hi[i]=std::max(last_sent[i],q[i]); }
+          if(!planner_.model().configurationBoxValid(lo,hi))
+            throw std::runtime_error("Sender step violates saved configuration");
+          // The station approved another trajectory. Never replace its
+          // collision braking with an independently generated branch stop.
+          if(external_planning_ && q!=s.commanded_q)
+            throw std::runtime_error("Station output has no configuration-safe sender continuation");
         }
         const double write_begin=now();
         ok=driver_->writeServoj(q,config_.command_timeout_ms,false);
