@@ -93,7 +93,7 @@ PYBIND11_MODULE(_native,m) {
     .def("tcp_jacobian",&ComplianceController::tcpJacobian);
   py::class_<CollisionShape>(m,"CollisionShape").def(py::init<>())
 #define CSH(name) .def_readwrite(#name,&CollisionShape::name)
-    CSH(frame) CSH(type) CSH(size) CSH(radius) CSH(length) CSH(xyz) CSH(rpy);
+    CSH(frame) CSH(type) CSH(size) CSH(radius) CSH(length) CSH(xyz) CSH(rpy) CSH(vertices) CSH(faces);
 #undef CSH
   py::class_<ClearanceResult>(m,"ClearanceResult")
     .def_readonly("safe",&ClearanceResult::safe).def_readonly("minimum_distance",&ClearanceResult::minimum_distance)
@@ -120,14 +120,21 @@ PYBIND11_MODULE(_native,m) {
     .def_readonly("constraints",&GuardResult::constraints).def_readonly("solve_time_s",&GuardResult::solve_time_s)
     .def_readonly("reference_iterations",&GuardResult::reference_iterations)
     .def_readonly("output_iterations",&GuardResult::output_iterations)
-    .def_readonly("sampled_pairs",&GuardResult::sampled_pairs);
+    .def_readonly("sampled_pairs",&GuardResult::sampled_pairs)
+    .def_readonly("gripper_age_s",&GuardResult::gripper_age_s)
+    .def_readonly("gripper_sequence",&GuardResult::gripper_sequence)
+    .def_readonly("measured_geometry_hold",&GuardResult::measured_geometry_hold);
   py::class_<StationGuard,std::shared_ptr<StationGuard>>(m,"StationGuard")
     .def(py::init<std::shared_ptr<StationCollisionModel>,const std::string&,const Eigen::VectorXd&,const std::array<PinkPose,2>&>(),
       py::arg("collision"),py::arg("station_urdf"),py::arg("default_q"),py::arg("tools"))
     .def("tick",&StationGuard::tick,py::arg("left").none(true),py::arg("right").none(true),
       py::arg("left_fixed"),py::arg("right_fixed"),py::arg("now"))
     .def("reset",&StationGuard::reset)
-    .def("station_q",&StationGuard::stationQ);
+    .def("configure_grippers",&StationGuard::configureGrippers,py::arg("joints"),py::arg("sides"),py::arg("max_age_s"))
+    .def("update_grippers",&StationGuard::updateGrippers,py::arg("positions"),py::arg("sample_times"),
+      py::arg("sequences"),py::arg("valid"))
+    .def("station_q",static_cast<Eigen::VectorXd (StationGuard::*)(const std::array<PinkArmVector,2>&) const>(
+      &StationGuard::stationQ));
   py::class_<ProjectionQP>(m,"ProjectionQP").def(py::init<>())
     .def("solve",&ProjectionQP::solve,py::arg("metric"),py::arg("proposed"),py::arg("lower"),py::arg("upper"),
       py::arg("soft_lower"),py::arg("soft_upper"),py::arg("g"),py::arg("h"))

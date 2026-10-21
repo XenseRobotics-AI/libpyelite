@@ -11,10 +11,13 @@ namespace libpyelite {
 // Dimensions are full lengths (box sides, capsule/cylinder axial length).
 struct CollisionShape {
   std::string frame;
-  int type{0};  // 0 box, 1 capsule, 2 cylinder
+  int type{0};  // 0 box, 1 capsule, 2 cylinder, 3 convex polytope
   std::array<double, 3> size{};
   double radius{0}, length{0};
   std::array<double, 3> xyz{}, rpy{};
+  // Local coordinates and outward-facing triangles of a closed convex exterior.
+  std::vector<std::array<double, 3>> vertices;
+  std::vector<std::array<int, 3>> faces;
 };
 
 struct CollisionContact {
@@ -66,17 +69,22 @@ class StationCollisionModel {
                  Eigen::MatrixXd &rows, Eigen::VectorXd &bounds, ClearanceResult &closest);
   const std::vector<CollisionContact> &contacts() const { return contacts_; }
 
-  // Is the joint segment q0 -> q1 free of margin violations? q0 must be the
-  // configuration of the last linearize(). Each point of a shape moves at most
-  // sum_j |dq_j| * (|v_j(c)| + |w_j| r) (c, r: its bounding sphere), so a pair
-  // with d0 - bound_a - bound_b >= margin is proven safe without sampling.
-  // Only pairs that fail the bound are sampled along the segment.
+  // Certify the complete linear joint segment q0 -> q1, starting at exactly
+  // the last linearize() configuration. Scalar revolute/prismatic chains use
+  // configuration-indexed serial-chain reach bounds valid over the full path.
+  // Clearance minus pair motion certifies intervals; unresolved intervals are
+  // subdivided, including out-of-band pairs. A work/depth limit returns unsafe,
+  // never endpoint-only approval. Returned distances may be conservative lower
+  // bounds; unsafe can mean uncertified rather than measured penetration.
+  // resolution remains accepted (positive, finite) for API compatibility;
+  // a sampling spacing is never a safety certificate.
   ClearanceResult verifyStep(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1, double resolution = 0.002);
 
   // World placements (row-major 4x4) of every shape, for viewers.
   std::vector<std::array<double, 16>> placements(const Eigen::VectorXd &q);
 
-  // Diagnostics of the last call: narrow-phase queries and fallback samples.
+  // Diagnostics of the last call: narrow-phase queries and distinct pairs
+  // requiring the interval-verification fallback.
   int lastNarrowPhaseCalls() const { return narrow_calls_; }
   int lastSampledPairs() const { return sampled_pairs_; }
 

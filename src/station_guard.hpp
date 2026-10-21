@@ -5,6 +5,7 @@
 
 #include <array>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace libpyelite {
@@ -19,6 +20,9 @@ struct GuardResult {
   // Diagnostics: ADMM iterations of the two projections (0 = not needed), and
   // pairs the step verification had to sample (0 = motion bound sufficed).
   int reference_iterations{0}, output_iterations{0}, sampled_pairs{0};
+  std::array<double, 2> gripper_age_s{{-1, -1}};
+  std::array<std::uint64_t, 2> gripper_sequence{};
+  bool measured_geometry_hold{false};  // fresh free-moving gripper geometry violates clearance
 };
 
 // One control step of the two arms under the station collision layer.
@@ -49,6 +53,12 @@ class StationGuard {
   void reset();
   // Station configuration (every URDF joint) for the two arms' joints.
   Eigen::VectorXd stationQ(const std::array<PinkArmVector, 2> &q) const;
+  // Configure once before starting the coordinator. A measured snapshot is
+  // mandatory for every mapped side; simulation keeps its static defaults.
+  void configureGrippers(const std::vector<std::string> &joints, const std::vector<int> &sides,
+                         double max_age_s);
+  void updateGrippers(const std::vector<double> &positions, const std::array<double, 2> &sample_times,
+                      const std::array<std::uint64_t, 2> &sequences, const std::array<bool, 2> &valid);
   std::shared_ptr<StationCollisionModel> collision() const { return collision_; }
 
   // Orientation rows weighted as a point this far from the TCP; a small joint
@@ -59,7 +69,15 @@ class StationGuard {
 
  private:
   struct Model;
-  Eigen::MatrixXd taskMetric(const std::array<PinkArmVector, 2> &q);
+  struct Grippers {
+    std::vector<double> positions;
+    std::array<double, 2> sample_times{};
+    std::array<std::uint64_t, 2> sequences{};
+    std::array<bool, 2> valid{};
+  };
+  Eigen::VectorXd gripperDefaults(GuardResult *result = nullptr) const;
+  Eigen::VectorXd stationQ(const std::array<PinkArmVector, 2> &q, const Eigen::VectorXd &defaults) const;
+  Eigen::MatrixXd taskMetric(const Eigen::VectorXd &station_q);
   Eigen::VectorXd project(const Eigen::VectorXd &proposed, const Eigen::VectorXd &lower,
                           const Eigen::VectorXd &upper, const Eigen::VectorXd &soft_lower,
                           const Eigen::VectorXd &soft_upper, const Eigen::MatrixXd &metric,
@@ -73,5 +91,13 @@ class StationGuard {
   Eigen::VectorXd command_velocity_{Eigen::VectorXd::Zero(12)}, command_acceleration_{Eigen::VectorXd::Zero(12)};
   std::array<bool, 2> was_active_{};
   int last_iterations_{0};
+  std::vector<int> gripper_indices_, gripper_sides_;
+  std::array<bool, 2> gripper_required_{};
+  double gripper_max_age_s_{0};
+  std::shared_ptr<const Grippers> grippers_;
+  Grippers gripper_watermark_;  // last accepted sequence survives invalid publications
+  Eigen::VectorXd gripper_checked_defaults_;
+  bool measured_geometry_hold_{false};
+  std::mutex gripper_publish_mutex_;  // producer only; the planner never takes this lock
 };
 }  // namespace libpyelite

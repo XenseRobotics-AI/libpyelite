@@ -20,12 +20,71 @@
 #include <coal/collision_data.h>
 #include <coal/distance.h>
 #include <coal/shape/geometric_shapes.h>
+#include <coal/shape/convex.h>
 
 namespace libpyelite {
 namespace {
 using Matrix6x = Eigen::Matrix<double, 6, Eigen::Dynamic>;
-constexpr double kMotionBoundSafety = 1.05;  // second-order slack of the first-order motion bound
-constexpr double kMotionBoundFloor = 1e-6;   // m
+// Coal trusts the supplied topology. Validate before constructing it, including
+// callers that bypass the JSON/Python profile reader.
+std::shared_ptr<coal::CollisionGeometry> convexGeometry(const CollisionShape &shape) {
+  const auto n = shape.vertices.size();
+  if(n < 4 || n > 256 || shape.faces.size() < 4 || shape.faces.size() > 2 * n - 4)
+    throw std::invalid_argument("Invalid convex vertex/face count");
+  auto points = std::make_shared<std::vector<coal::Vec3s>>();
+  Eigen::Vector3d lo = Eigen::Vector3d::Constant(std::numeric_limits<double>::infinity()), hi = -lo;
+  Eigen::Vector3d centre = Eigen::Vector3d::Zero();
+  for(const auto &v : shape.vertices) {
+    points->emplace_back(v[0], v[1], v[2]);
+    if(!points->back().allFinite()) throw std::invalid_argument("Nonfinite convex vertex");
+    lo = lo.cwiseMin(points->back()); hi = hi.cwiseMax(points->back());
+    centre += points->back() / static_cast<double>(n);
+  }
+  const double scale = (hi - lo).maxCoeff(), tolerance = scale * 1e-9;
+  if(!std::isfinite(scale) || !(scale > 0) || !centre.allFinite())
+    throw std::invalid_argument("Degenerate convex extent");
+  for(std::size_t i = 0; i < n; ++i)
+    for(std::size_t j = 0; j < i; ++j)
+      if(((*points)[i] - (*points)[j]).norm() <= tolerance)
+        throw std::invalid_argument("Duplicate convex vertices");
+  auto polygons = std::make_shared<std::vector<coal::Triangle>>();
+  std::map<std::pair<int, int>, int> edges;
+  std::vector<bool> used(n, false);
+  double volume6 = 0;
+  for(const auto &face : shape.faces) {
+    for(int i : face)
+      if(i < 0 || i >= static_cast<int>(n)) throw std::invalid_argument("Invalid convex face index");
+    const Eigen::Vector3d a = (*points)[face[0]], b = (*points)[face[1]], c = (*points)[face[2]];
+    const Eigen::Vector3d normal = (b - a).cross(c - a);
+    const double area2 = normal.norm();
+    if(!std::isfinite(area2) || area2 <= scale * scale * 1e-12)
+      throw std::invalid_argument("Degenerate convex face");
+    const Eigen::Vector3d unit = normal / area2;
+    if(unit.dot(centre - a) >= -tolerance) throw std::invalid_argument("Convex faces must point outward");
+    for(const auto &v : *points)
+      if(unit.dot(v - a) > tolerance) throw std::invalid_argument("Nonconvex exterior");
+    volume6 += (a - centre).dot((b - centre).cross(c - centre));
+    for(int k = 0; k < 3; ++k) {
+      used[face[k]] = true;
+      if(++edges[{face[k], face[(k + 1) % 3]}] != 1)
+        throw std::invalid_argument("Duplicate convex edge");
+    }
+    polygons->emplace_back(face[0], face[1], face[2]);
+  }
+  for(const auto &[edge, count] : edges)
+    if(edges.find({edge.second, edge.first}) == edges.end())
+      throw std::invalid_argument("Open convex exterior");
+  if(std::find(used.begin(), used.end(), false) != used.end() ||
+     static_cast<int>(n) - static_cast<int>(edges.size() / 2) + static_cast<int>(shape.faces.size()) != 2 ||
+     !std::isfinite(volume6) || volume6 <= scale * scale * scale * 1e-12)
+    throw std::invalid_argument("Invalid convex exterior topology or volume");
+  return std::make_shared<coal::Convex<coal::Triangle>>(points, n, polygons, polygons->size());
+}
+constexpr double kMotionSlack = 1e-6;  // m; numerical reserve, not a finite-rotation approximation
+constexpr int kMaxSegmentIntervals = 512;
+constexpr int kMaxSegmentQueries = 4096;
+constexpr int kMaxSegmentPairVisits = 131072;
+constexpr int kMaxSegmentDepth = 32;
 }  // namespace
 
 struct StationCollisionModel::Impl {
@@ -36,13 +95,26 @@ struct StationCollisionModel::Impl {
   std::vector<pinocchio::FrameIndex> frame;
   std::vector<pinocchio::SE3> local;
   std::vector<Eigen::Vector3d> half;      // local AABB half extents
-  std::vector<double> bounding_radius;    // bounding sphere about the shape centre
+  std::vector<Eigen::Vector3d> aabb_center;  // convex coordinates need not be centred
+  std::vector<double> bounding_radius;    // bounding sphere about the placement origin
   std::vector<bool> moving;
   std::vector<int> moving_shapes;
   std::vector<pinocchio::SE3> world;
   std::vector<Eigen::Vector3d> lower, upper;
   // Joints (velocity columns) that move each shape; empty for static shapes.
   std::vector<std::vector<int>> chain;
+  // Separate configuration indices: idx_q is not generally the velocity index.
+  // Built lazily so check()/linearize() retain their existing joint support.
+  struct MotionLink {
+    int q_index;
+    bool prismatic;
+    double offset;
+  };
+  struct MotionChain {
+    double radius;
+    std::vector<MotionLink> links;  // shape's parent joint towards the root
+  };
+  std::vector<MotionChain> motion_chains;
   // Per pair: cached shape-pair dispatch and GJK solver, and a warm-started request.
   std::vector<coal::ComputeDistance> distance;
   std::vector<coal::DistanceRequest> request;
@@ -68,6 +140,47 @@ struct StationCollisionModel::Impl {
     data = pinocchio::Data(model);
   }
 
+  std::vector<double> motionBounds(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1) {
+    if(motion_chains.empty()) {
+      std::vector<MotionChain> chains(shapes.size());
+      for(int k : moving_shapes) {
+        const auto &f = model.frames[frame[k]];
+        auto &c = chains[k];
+        c.radius = (f.placement * local[k]).translation().norm() + bounding_radius[k];
+        for(auto j = f.parentJoint; j != 0; j = model.parents[j]) {
+          const auto &joint = model.joints[j];
+          const auto name = joint.shortname();
+          const bool prismatic = name == "JointModelPX" || name == "JointModelPY" ||
+                                 name == "JointModelPZ" || name == "JointModelPrismaticUnaligned";
+          const bool revolute = name == "JointModelRX" || name == "JointModelRY" ||
+                                name == "JointModelRZ" || name == "JointModelRevoluteUnaligned";
+          if(joint.nq() != 1 || joint.nv() != 1 || !(prismatic || revolute))
+            throw std::invalid_argument("verifyStep supports scalar revolute/prismatic collision chains only");
+          c.links.push_back({joint.idx_q(), prismatic, model.jointPlacements[j].translation().norm()});
+        }
+      }
+      motion_chains = std::move(chains);
+    }
+    std::vector<double> bound(shapes.size(), 0.0);
+    for(int k : moving_shapes) {
+      const auto &c = motion_chains[k];
+      double reach = c.radius, travel = 0;
+      for(const auto &j : c.links) {
+        const double delta = std::abs(q1[j.q_index] - q0[j.q_index]);
+        travel += delta * (j.prismatic ? 1.0 : reach);
+        // Rotations preserve lengths. The triangle inequality bounds the
+        // lever arm at EVERY configuration, including simultaneous rotations
+        // and downstream prismatic travel, not just the Jacobian at q0.
+        reach += j.offset;
+        if(j.prismatic) reach += std::max(std::abs(q0[j.q_index]), std::abs(q1[j.q_index]));
+      }
+      if(!std::isfinite(travel) || !std::isfinite(reach))
+        throw std::invalid_argument("Nonfinite collision motion bound");
+      bound[k] = travel;
+    }
+    return bound;
+  }
+
   void place(const Eigen::VectorXd &configuration, bool everything) {
     if(configuration.size() != model.nq || !configuration.allFinite())
       throw std::invalid_argument("Invalid collision configuration");
@@ -77,8 +190,9 @@ struct StationCollisionModel::Impl {
       if(!everything && !moving[k]) continue;
       world[k] = data.oMf[frame[k]] * local[k];
       const Eigen::Vector3d extent = world[k].rotation().cwiseAbs() * half[k];
-      lower[k] = world[k].translation() - extent;
-      upper[k] = world[k].translation() + extent;
+      const Eigen::Vector3d centre = world[k].act(aabb_center[k]);
+      lower[k] = centre - extent;
+      upper[k] = centre + extent;
     }
     auto enclose = [&](int g) {
       group_lower[g] = lower[group_shapes[g].front()];
@@ -130,10 +244,15 @@ StationCollisionModel::StationCollisionModel(const std::string &urdf, std::vecto
   m.world.resize(n); m.lower.resize(n); m.upper.resize(n); m.chain.resize(n);
   for(const auto &s : m.shapes) {
     if(!m.model.existFrame(s.frame)) throw std::invalid_argument("Missing collision frame: " + s.frame);
+    for(double value : s.xyz)
+      if(!std::isfinite(value)) throw std::invalid_argument("Nonfinite collision transform");
+    for(double value : s.rpy)
+      if(!std::isfinite(value)) throw std::invalid_argument("Nonfinite collision transform");
     const auto frame = m.model.getFrameId(s.frame);
     m.frame.push_back(frame);
     m.local.emplace_back(pinocchio::rpy::rpyToMatrix(s.rpy[0], s.rpy[1], s.rpy[2]),
                          Eigen::Vector3d(s.xyz[0], s.xyz[1], s.xyz[2]));
+    m.aabb_center.emplace_back(Eigen::Vector3d::Zero());
     if(s.type == 0) {
       m.geometry.push_back(std::make_shared<coal::Box>(s.size[0], s.size[1], s.size[2]));
       m.half.emplace_back(s.size[0] / 2, s.size[1] / 2, s.size[2] / 2);
@@ -143,9 +262,24 @@ StationCollisionModel::StationCollisionModel(const std::string &urdf, std::vecto
     } else if(s.type == 2) {
       m.geometry.push_back(std::make_shared<coal::Cylinder>(s.radius, s.length));
       m.half.emplace_back(s.radius, s.radius, s.length / 2);
+    } else if(s.type == 3) {
+      m.geometry.push_back(convexGeometry(s));
+      auto &geometry = *m.geometry.back();
+      geometry.computeLocalAABB();
+      m.aabb_center.back() = (geometry.aabb_local.min_ + geometry.aabb_local.max_) / 2;
+      m.half.push_back((geometry.aabb_local.max_ - geometry.aabb_local.min_) / 2);
     } else throw std::invalid_argument("Unknown collision primitive type");
-    if(!(m.half.back().array() > 0).all()) throw std::invalid_argument("Invalid primitive dimensions");
-    m.bounding_radius.push_back(s.type == 1 ? s.length / 2 + s.radius : m.half.back().norm());
+    if(!m.half.back().allFinite() || !(m.half.back().array() > 0).all() ||
+       ((s.type == 1 || s.type == 2) && (!std::isfinite(s.length) || s.length <= 0)))
+      throw std::invalid_argument("Invalid primitive dimensions");
+    double radius = s.type == 1 ? s.length / 2 + s.radius : m.half.back().norm();
+    if(s.type == 3) {
+      radius = 0;
+      for(const auto &v : s.vertices)
+        radius = std::max(radius, Eigen::Vector3d(v[0], v[1], v[2]).norm());
+    }
+    if(!std::isfinite(radius)) throw std::invalid_argument("Invalid collision bounding radius");
+    m.bounding_radius.push_back(radius);
     const auto joint = m.model.frames[frame].parentJoint;
     m.moving.push_back(joint != 0);
   }
@@ -320,65 +454,107 @@ void StationCollisionModel::linearize(const Eigen::VectorXd &q, const std::vecto
 ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1,
                                                   double resolution) {
   auto &m = *impl_;
-  if(q0.size() != m.model.nq || q1.size() != m.model.nq || !q1.allFinite() || !(resolution > 0))
+  if(q0.size() != m.model.nq || q1.size() != m.model.nq || !q0.allFinite() || !q1.allFinite() ||
+     !std::isfinite(resolution) || !(resolution > 0))
     throw std::invalid_argument("Invalid collision segment");
-  if(linearized_q_.size() != q0.size() || (linearized_q_ - q0).cwiseAbs().maxCoeff() > 1e-12)
+  if(linearized_q_.size() != q0.size() || (linearized_q_.array() != q0.array()).any())
     throw std::logic_error("verifyStep needs the configuration of the last linearize()");
   sampled_pairs_ = 0;
   narrow_calls_ = 0;
   const Eigen::VectorXd dq = q1 - q0;
-  // Motion bound per moving shape at q0: sum_j |dq_j| (|v_j + w_j x c| + |w_j| r).
-  pinocchio::computeJointJacobians(m.model, m.data, q0);
-  pinocchio::framesForwardKinematics(m.model, m.data, q0);
-  std::vector<double> bound(m.shapes.size(), 0.0);
-  double largest = 0;
-  for(int k : m.moving_shapes) {
-    const Eigen::Vector3d centre = (m.data.oMf[m.frame[k]] * m.local[k]).translation();
-    double sum = 0;
-    for(int v : m.chain[k]) {
-      const auto column = m.data.J.col(v);
-      sum += std::abs(dq[v]) * ((column.head<3>() + column.tail<3>().cross(centre)).norm() +
-                                column.tail<3>().norm() * m.bounding_radius[k]);
-    }
-    bound[k] = kMotionBoundSafety * sum + kMotionBoundFloor;
-    largest = std::max(largest, bound[k]);
-  }
-  double widest_margin = 0;
-  for(double margin : margins_) widest_margin = std::max(widest_margin, margin);
-  if(2 * largest > detection_ - widest_margin) {
-    // A pair outside the band could close in on its margin within this step:
-    // the band argument does not hold, check the end configuration exhaustively.
-    return check(q1);
+  if(!dq.allFinite()) throw std::invalid_argument("Nonfinite collision displacement");
+  if(pairs_.empty()) return {};
+  if(dq.isZero(0)) return check(q0);
+  const auto motion = m.motionBounds(q0, q1);
+  // q(t) = q0 + t*dq. motion[k]*|t-s| bounds the displacement of EVERY
+  // material point of shape k. Distance between two sets is 1-Lipschitz in
+  // each shape's point displacement, so d(s) - pair_motion*|t-s| is a
+  // clearance certificate over an interval, including between query points.
+  std::vector<double> pair_motion(pairs_.size()), start_distance(pairs_.size(), detection_);
+  for(const auto &c : contacts_) {
+    start_distance[c.pair] = c.distance;
+    const double clearance = c.distance - margins_[c.pair];
+    if(clearance < -1e-9) return {false, c.distance, c.pair, clearance};
   }
   ClearanceResult worst;
-  std::vector<int> unproven;
-  for(const auto &c : contacts_) {
-    const auto &p = pairs_[c.pair];
-    const double clearance = c.distance - bound[p[0]] - bound[p[1]] - margins_[c.pair];
-    if(clearance >= 0) {
-      if(clearance < worst.clearance) worst = {true, c.distance - bound[p[0]] - bound[p[1]], c.pair, clearance};
-    } else unproven.push_back(c.pair);
+  auto record = [&](int index, double clearance) {
+    if(clearance < worst.clearance)
+      worst = {true, clearance + margins_[index], index, clearance};
+  };
+  std::vector<int> candidates;
+  double widest_margin = 0;
+  for(std::size_t i = 0; i < pairs_.size(); ++i) {
+    pair_motion[i] = motion[pairs_[i][0]] + motion[pairs_[i][1]];
+    if(!std::isfinite(pair_motion[i])) throw std::invalid_argument("Nonfinite collision pair motion");
+    widest_margin = std::max(widest_margin, margins_[i]);
+    // linearize() measured all pairs in the band; every other pair has
+    // distance >= detection_, even when broadphase omitted it entirely.
+    const double clearance = start_distance[i] - margins_[i] - pair_motion[i] - kMotionSlack;
+    if(clearance >= 0) record(static_cast<int>(i), clearance);
+    else candidates.push_back(static_cast<int>(i));
   }
-  if(unproven.empty()) return worst;
-  // Sample only the pairs the bound could not clear, including the end point.
-  const int samples = std::max(1, static_cast<int>(std::ceil(dq.cwiseAbs().maxCoeff() / resolution)));
-  sampled_pairs_ = static_cast<int>(unproven.size());
+  if(candidates.empty()) return worst;  // common small-step path: no FK or distance queries
+  sampled_pairs_ = static_cast<int>(candidates.size());
+  // Reserve the QP buffer and numerical slack, then spend only half of the
+  // remaining detection band per substep. If there is no usable band, the
+  // exhaustive clearance certificate below remains valid without this hint.
+  const double spatial_budget = 0.5 * (detection_ - widest_margin - buffer_ - kMotionSlack);
+  struct Interval {
+    double lo, hi;
+    int depth;
+    std::vector<int> pairs;
+  };
+  std::vector<Interval> pending;
+  pending.push_back({0, 1, 0, std::move(candidates)});
   coal::DistanceResult result;
-  for(int s = 1; s <= samples; ++s) {
-    m.place(q0 + dq * (static_cast<double>(s) / samples), false);
-    for(int index : unproven) {
-      const double d = m.measure(index, pairs_[index], result);
-      ++narrow_calls_;
-      const double clearance = d - margins_[index];
-      if(clearance < worst.clearance) worst = {clearance >= -1e-9, d, index, clearance};
-      if(clearance < -1e-9) {
-        m.place(q0, false);
-        return worst;
+  int intervals = 0, pair_visits = 0;
+  auto finish = [&](ClearanceResult answer) {
+    m.place(q0, false);
+    return answer;
+  };
+  auto unresolved = [&](int index, double lower) {
+    // Negative clearance is a conservative lower bound, NOT an assertion of
+    // measured penetration. The caller must shrink/hold an uncertified step.
+    const double clearance = std::min(lower, -kMotionSlack);
+    return finish({false, margins_[index] + clearance, index, clearance});
+  };
+  while(!pending.empty()) {
+    Interval interval = std::move(pending.back());
+    pending.pop_back();
+    if(++intervals > kMaxSegmentIntervals) return unresolved(interval.pairs.front(), -kMotionSlack);
+    const double width = interval.hi - interval.lo;
+    const double mid = interval.lo + 0.5 * width;
+    m.place(q0 + mid * dq, false);
+    std::vector<int> unproven;
+    double lowest = 0;
+    for(int index : interval.pairs) {
+      if(++pair_visits > kMaxSegmentPairVisits) return unresolved(index, -kMotionSlack);
+      const auto &p = pairs_[index];
+      const double radius = 0.5 * width * pair_motion[index];
+      double lower = m.aabbGap(p[0], p[1]) - margins_[index] - radius - kMotionSlack;
+      if(lower < 0 && (spatial_budget <= 0 || width * pair_motion[index] <= spatial_budget)) {
+        if(narrow_calls_ >= kMaxSegmentQueries) return unresolved(index, lower);
+        const double d = m.measure(index, p, result);
+        ++narrow_calls_;
+        const double clearance = d - margins_[index];
+        if(clearance < -1e-9) return finish({false, d, index, clearance});
+        lower = clearance - radius - kMotionSlack;
+      }
+      if(lower >= 0) record(index, lower);
+      else {
+        unproven.push_back(index);
+        lowest = std::min(lowest, lower);
       }
     }
+    if(unproven.empty()) continue;
+    // resolution is retained only for API compatibility; reaching a sample
+    // spacing NEVER proves safety. Only certified intervals leave this stack.
+    if(interval.depth >= kMaxSegmentDepth || mid == interval.lo || mid == interval.hi)
+      return unresolved(unproven.front(), lowest);
+    pending.push_back({mid, interval.hi, interval.depth + 1, unproven});
+    pending.push_back({interval.lo, mid, interval.depth + 1, std::move(unproven)});
   }
-  m.place(q0, false);
-  return worst;
+  return finish(worst);
 }
 
 std::vector<std::array<double, 16>> StationCollisionModel::placements(const Eigen::VectorXd &q) {

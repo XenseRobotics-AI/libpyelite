@@ -96,18 +96,126 @@ StationGuard::~StationGuard() = default;
 void StationGuard::reset() {
   command_velocity_.setZero();
   command_acceleration_.setZero();
+  gripper_checked_defaults_.resize(0);
+  measured_geometry_hold_ = false;
 }
 
 Eigen::VectorXd StationGuard::stationQ(const std::array<PinkArmVector, 2> &q) const {
+  return stationQ(q, gripperDefaults());
+}
+
+void StationGuard::configureGrippers(const std::vector<std::string> &joints, const std::vector<int> &sides,
+                                     double max_age_s) {
+  if(!gripper_indices_.empty()) throw std::logic_error("Gripper mapping is already configured");
+  if(joints.empty() || joints.size() != sides.size() || !std::isfinite(max_age_s) || max_age_s <= 0)
+    throw std::invalid_argument("Invalid gripper mapping or freshness limit");
+  std::vector<int> indices;
+  for(std::size_t i = 0; i < joints.size(); ++i) {
+    if(sides[i] < 0 || sides[i] > 1 || !model_->model.existJointName(joints[i]))
+      throw std::invalid_argument("Unknown gripper joint or side");
+    const auto &joint = model_->model.joints[model_->model.getJointId(joints[i])];
+    if(joint.nq() != 1 || joint.nv() != 1)
+      throw std::invalid_argument("Gripper joints must have one scalar coordinate");
+    const int index = joint.idx_q();
+    if(std::find(indices.begin(), indices.end(), index) != indices.end())
+      throw std::invalid_argument("Duplicate gripper joint");
+    for(const auto &arm : model_->q_index)
+      if(std::find(arm.begin(), arm.end(), index) != arm.end())
+        throw std::invalid_argument("Gripper mapping cannot overwrite an arm joint");
+    indices.push_back(index);
+  }
+  gripper_indices_ = std::move(indices);
+  gripper_sides_ = sides;
+  gripper_max_age_s_ = max_age_s;
+  gripper_watermark_.positions.resize(joints.size());
+  for(const int side : sides) gripper_required_[static_cast<std::size_t>(side)] = true;
+}
+
+void StationGuard::updateGrippers(const std::vector<double> &positions,
+                                  const std::array<double, 2> &sample_times,
+                                  const std::array<std::uint64_t, 2> &sequences,
+                                  const std::array<bool, 2> &valid) {
+  if(gripper_indices_.empty() || positions.size() != gripper_indices_.size())
+    throw std::invalid_argument("Gripper snapshot does not match configured joints");
+  auto next = std::make_shared<Grippers>();
+  next->positions = positions;
+  next->sample_times = sample_times;
+  next->sequences = sequences;
+  next->valid = valid;
+  std::lock_guard<std::mutex> lock(gripper_publish_mutex_);
+  for(std::size_t side = 0; side < 2; ++side) {
+    if(!next->valid[side]) continue;
+    auto &old = gripper_watermark_;
+    if(!std::isfinite(sample_times[side]) || sample_times[side] <= 0 || sequences[side] == 0)
+      next->valid[side] = false;
+    if(old.valid[side] && (sequences[side] < old.sequences[side] ||
+       (sequences[side] > old.sequences[side] && sample_times[side] < old.sample_times[side]))) {
+      next->valid[side] = false;
+    } else if(old.valid[side] && sequences[side] == old.sequences[side]) {
+      // A repeatedly published cache must never acquire a new receive time.
+      next->sample_times[side] = std::min(sample_times[side], old.sample_times[side]);
+      for(std::size_t i = 0; i < positions.size(); ++i)
+        if(gripper_sides_[i] == static_cast<int>(side) && positions[i] != old.positions[i])
+          next->valid[side] = false;
+    }
+    for(std::size_t i = 0; i < positions.size(); ++i)
+      if(gripper_sides_[i] == static_cast<int>(side) &&
+         (!std::isfinite(positions[i]) || positions[i] < model_->model.lowerPositionLimit[gripper_indices_[i]] ||
+          positions[i] > model_->model.upperPositionLimit[gripper_indices_[i]]))
+        next->valid[side] = false;
+    if(next->valid[side]) {
+      old.valid[side] = true;
+      old.sequences[side] = next->sequences[side];
+      old.sample_times[side] = next->sample_times[side];
+      for(std::size_t i = 0; i < positions.size(); ++i)
+        if(gripper_sides_[i] == static_cast<int>(side)) old.positions[i] = positions[i];
+    }
+  }
+  std::atomic_store(&grippers_, std::shared_ptr<const Grippers>(std::move(next)));
+}
+
+Eigen::VectorXd StationGuard::gripperDefaults(GuardResult *result) const {
   Eigen::VectorXd out = model_->defaults;
+  if(gripper_indices_.empty()) return out;
+  const auto snapshot = std::atomic_load(&grippers_);
+  if(!snapshot) throw std::runtime_error("Gripper collision state is uninitialized");
+  // Read time AFTER acquiring the snapshot: a producer may have published
+  // since the coordinator's tick-begin/planner logical timestamp.
+  const double now = std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+  for(std::size_t side = 0; side < 2; ++side) {
+    if(!gripper_required_[side]) continue;
+    const double stamp = snapshot->sample_times[side], age = now - stamp;
+    if(!snapshot->valid[side] || snapshot->sequences[side] == 0 ||
+       !std::isfinite(now) || !std::isfinite(stamp) || stamp <= 0 || age < 0 || age > gripper_max_age_s_)
+      throw std::runtime_error(std::string(side == 0 ? "Left" : "Right") +
+                               " gripper collision state is invalid, stale or from the future");
+    if(result) {
+      result->gripper_age_s[side] = age;
+      result->gripper_sequence[side] = snapshot->sequences[side];
+    }
+  }
+  for(std::size_t i = 0; i < gripper_indices_.size(); ++i) {
+    const int index = gripper_indices_[i];
+    const double value = snapshot->positions[i];
+    if(!std::isfinite(value) || value < model_->model.lowerPositionLimit[index] ||
+       value > model_->model.upperPositionLimit[index])
+      throw std::runtime_error("Measured gripper joint is invalid or outside URDF limits");
+    out[index] = value;
+  }
+  return out;
+}
+
+Eigen::VectorXd StationGuard::stationQ(const std::array<PinkArmVector, 2> &q,
+                                      const Eigen::VectorXd &defaults) const {
+  Eigen::VectorXd out = defaults;
   for(std::size_t a = 0; a < 2; ++a)
     for(std::size_t i = 0; i < 6; ++i) out[model_->q_index[a][i]] = q[a][i];
   return out;
 }
 
-Eigen::MatrixXd StationGuard::taskMetric(const std::array<PinkArmVector, 2> &q) {
+Eigen::MatrixXd StationGuard::taskMetric(const Eigen::VectorXd &station_q) {
   auto &m = *model_;
-  pinocchio::computeJointJacobians(m.model, m.data, stationQ(q));
+  pinocchio::computeJointJacobians(m.model, m.data, station_q);
   pinocchio::updateFramePlacements(m.model, m.data);
   Eigen::MatrixXd metric = Eigen::MatrixXd::Zero(12, 12);
   Eigen::Matrix<double, 6, Eigen::Dynamic> jacobian(6, m.model.nv);
@@ -170,21 +278,52 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
     was_active_[a] = active[a];
   }
   GuardResult result;
+  // One immutable pair of measured gripper samples for the whole tick, even
+  // while arm commands are held. No Python callback or hardware IO here.
+  const Eigen::VectorXd defaults = gripperDefaults(&result);
   if(period <= 0) {  // nothing to drive
     result.q = previous;
     return result;
+  }
+  const Eigen::VectorXd station0 = stationQ(previous, defaults);
+  if(!gripper_indices_.empty() &&
+     (measured_geometry_hold_ || gripper_checked_defaults_.size() != defaults.size() ||
+      (gripper_checked_defaults_.array() != defaults.array()).any())) {
+    // Free gripper motion can invalidate the last safe arm command. Never
+    // invent an arm escape from an overlap: hold the last accepted command
+    // and retry measured geometry until it clears. Telemetry faults above
+    // remain distinct and still stop the coordinator.
+    const auto current = collision_->check(station0);
+    gripper_checked_defaults_ = defaults;
+    measured_geometry_hold_ = !current.safe;
+    if(measured_geometry_hold_) {
+      for(std::size_t a = 0; a < 2; ++a) {
+        if(!active[a]) continue;
+        result.held[a] = result.limited[a] = true;
+        // Reanchor only the output derivatives, at the last COMMAND, and only
+        // where reanchor preserves the target (the joint-limited planner).
+        if(planners[a]->config().joint_motion_limits)
+          planners[a]->reanchor(previous[a], PinkArmVector{}, PinkArmVector{});
+      }
+      command_velocity_.setZero();
+      command_acceleration_.setZero();
+      result.q = previous;
+      result.clearance = current;
+      result.measured_geometry_hold = true;
+      result.solve_time_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - begin).count();
+      return result;
+    }
   }
   for(std::size_t a = 0; a < 2; ++a)
     if(active[a]) planners[a]->planReference(now);
 
   // 2. One linearisation per step, at the published joints.
   const Eigen::VectorXd q0 = stack(previous);
-  const Eigen::VectorXd station0 = stationQ(previous);
   Eigen::MatrixXd g;
   Eigen::VectorXd h;
   ClearanceResult closest;
   collision_->linearize(station0, velocity_indices_, g, h, closest);
-  const Eigen::MatrixXd metric = taskMetric(previous);
+  const Eigen::MatrixXd metric = taskMetric(station0);
   result.constraints = static_cast<int>(h.size());
 
   // Joint position limits and the per-step velocity box, per arm.
@@ -298,7 +437,7 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
   for(double fraction : {1.0, 0.5, 0.25, 0.0}) {
     accepted = q0 + fraction * displacement;
     if(fraction == 0.0) { verified = closest; break; }
-    verified = collision_->verifyStep(station0, stationQ(split(accepted)));
+    verified = collision_->verifyStep(station0, stationQ(split(accepted), defaults));
     result.sampled_pairs += collision_->lastSampledPairs();
     if(verified.safe) break;
   }
