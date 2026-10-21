@@ -1,10 +1,12 @@
 """Fit conservative primitives offline; runtime reads JSON, never rewrites URDF.
 
-Binary STL triangles are enclosed in capsules/cylinders/boxes. Furniture is
-partitioned by triangle centroids; each complete triangle remains in its box.
+Binary STL triangles are enclosed in capsules/cylinders/boxes/convex polytopes.
+Furniture is partitioned by triangle centroids; each complete triangle remains
+in its box. Finger fitting additionally uses scipy.spatial (offline only).
 """
 
 import argparse
+import copy
 import hashlib
 import json
 import struct
@@ -42,8 +44,12 @@ FINGER_SLAB_M = 0.01
 FINGER_SPLIT_GAIN = 0.85
 
 
-def clipped_bounds(tris, lo, hi):
-    """Exact bounds of the mesh surface inside the box [lo, hi], or None if empty."""
+def clipped_points(tris, lo, hi):
+    """Vertices of every complete triangle fragment clipped to [lo, hi].
+
+    A fragment is a convex polygon, so linear inequalities checked at these
+    vertices hold over its entire surface, including edges introduced by cuts.
+    """
     vmin, vmax = tris.min(1), tris.max(1)
     touching = np.all((vmax >= lo) & (vmin <= hi), axis=1)
     inside = touching & np.all((vmin >= lo) & (vmax <= hi), axis=1)
@@ -67,6 +73,12 @@ def clipped_bounds(tris, lo, hi):
                 break
         points.append(np.asarray(polygon).reshape(-1, 3))
     points = np.concatenate(points)
+    return np.unique(points, axis=0)
+
+
+def clipped_bounds(tris, lo, hi):
+    """Exact bounds of the mesh surface inside the box [lo, hi], or None if empty."""
+    points = clipped_points(tris, lo, hi)
     return (points.min(0), points.max(0)) if len(points) else None
 
 
@@ -102,6 +114,134 @@ def slab_boxes(tris, axis=2, thickness=FINGER_SLAB_M, candidates=7):
                     best, best_volume = parts, total
         out += best
     return out
+
+
+FINGER_CONVEX_SLAB_M = 0.045
+FINGER_PADDING_M = 0.002
+FINGER_MAX_PLANES = 12  # 20 vertices before envelope clipping; shipped pieces stay <=32
+
+
+def padded_convex(points, padding=FINGER_PADDING_M, envelope=None):
+    """Deterministic exterior approximation using a small set of support planes.
+
+    Every plane is a supporting plane of the complete clipped surface shifted
+    outward by ``padding``. Their intersection therefore contains the surface's
+    Euclidean padding, even at corners; no inscribed hull simplification is used.
+    """
+    from scipy.spatial import ConvexHull, HalfspaceIntersection
+
+    points = np.unique(np.asarray(points, dtype=float), axis=0)
+    if points.ndim != 2 or points.shape[1:] != (3,) or len(points) < 4 or not np.isfinite(points).all():
+        raise ValueError("Invalid convex fitting points")
+    if not np.isfinite(padding) or padding <= 0:
+        raise ValueError("Invalid convex padding")
+    hull = ConvexHull(points)
+    centre = points[hull.vertices].mean(0)
+    normals = hull.equations[:, :3]
+    # Lexicographic uniqueness and tie-breaking make generation repeatable.
+    normals = np.unique(np.round(normals, 12), axis=0)
+    normals /= np.linalg.norm(normals, axis=1)[:, None]
+    support = (normals @ points.T).max(1) + padding
+    axes = np.vstack((np.eye(3), -np.eye(3)))
+    planes = np.column_stack((axes, -(axes @ points.T).max(1) - padding))
+    for _ in range(FINGER_MAX_PLANES - len(planes) + 1):
+        vertices = HalfspaceIntersection(planes, centre).intersections
+        excess = (normals @ vertices.T).max(1) - support
+        worst = int(np.argmax(excess))
+        if len(planes) >= FINGER_MAX_PLANES or excess[worst] <= 0.0004:
+            break
+        planes = np.vstack((planes, np.r_[normals[worst], -support[worst]]))
+    if envelope is not None:
+        # The old padded boxes already enclose every triangle plus a 2 mm
+        # Euclidean ball. Intersecting their convex envelope preserves coverage
+        # and proves no greater table-plane reach in ANY orientation.
+        active = (envelope[:, :3] @ vertices.T + envelope[:, 3, None]).max(1) > 1e-12
+        if active.any():
+            vertices = HalfspaceIntersection(np.vstack((planes, envelope[active])), centre).intersections
+    # Rebuild outward triangles and stable indices, independent of Qhull's order.
+    vertices = np.unique(vertices, axis=0)
+    exterior = ConvexHull(vertices)
+    vertices = vertices[np.sort(exterior.vertices)]
+    exterior = ConvexHull(vertices)
+    faces = []
+    for face, equation in zip(exterior.simplices, exterior.equations, strict=True):
+        a, b, c = vertices[face]
+        if np.dot(np.cross(b - a, c - a), equation[:3]) < 0:
+            face = face[[0, 2, 1]]
+        face = np.roll(face, -int(np.argmin(face)))
+        faces.append(face.tolist())
+    faces.sort()
+    shape = {"type": "convex", "vertices": vertices.tolist(), "faces": faces, "xyz": [0, 0, 0], "rpy": [0, 0, 0]}
+    verify_convex_coverage(points, shape, padding)
+    return shape
+
+
+def verify_convex_coverage(points, shape, padding=FINGER_PADDING_M):
+    """Prove each clipped polygon and its padding lies behind every hull face."""
+    vertices = np.asarray(shape["vertices"])
+    triangles = vertices[np.asarray(shape["faces"])]
+    normals = np.cross(triangles[:, 1] - triangles[:, 0], triangles[:, 2] - triangles[:, 0])
+    normals /= np.linalg.norm(normals, axis=1)[:, None]
+    offsets = np.einsum("ij,ij->i", normals, triangles[:, 0])
+    slack = offsets - (normals @ np.asarray(points).T).max(1)
+    if not np.isfinite(slack).all() or slack.min() < padding - 1e-10:
+        raise ValueError("Convex exterior does not cover complete clipped triangles with padding")
+    return float(slack.min())
+
+
+def finger_convexes(tris):
+    """Few convex cells following both taper and the concave L cross-section.
+
+    Disjoint axial slabs cover the mesh AABB. Within each slab an axis-aligned
+    cut is retained when it reduces padded hull volume by 15%; both sides of
+    every cut are clipped exactly, never assigned from vertex/centroid samples.
+    Source cells are retained in JSON so offline validation can repeat the proof.
+    """
+    from scipy.spatial import ConvexHull
+
+    tris = np.asarray(tris, dtype=float)
+    if tris.ndim != 3 or tris.shape[1:] != (3, 3) or not len(tris) or not np.isfinite(tris).all():
+        raise ValueError("Invalid finger triangles")
+    lo, hi = tris.reshape(-1, 3).min(0), tris.reshape(-1, 3).max(0)
+    old_vertices = np.concatenate([
+        np.array([[x, y, z] for x in (low[0] - FINGER_PADDING_M, high[0] + FINGER_PADDING_M)
+                  for y in (low[1] - FINGER_PADDING_M, high[1] + FINGER_PADDING_M)
+                  for z in (low[2] - FINGER_PADDING_M, high[2] + FINGER_PADDING_M)])
+        for low, high in slab_boxes(tris)
+    ])
+    envelope = ConvexHull(old_vertices).equations
+    edges = np.linspace(lo[2], hi[2], max(1, int(np.ceil((hi[2] - lo[2]) / FINGER_CONVEX_SLAB_M))) + 1)
+    result = []
+
+    def volume(points):
+        if len(points) < 4 or np.linalg.matrix_rank(points - points.mean(0)) < 3:
+            return 0.0
+        hull = ConvexHull(points)
+        return hull.volume + hull.area * FINGER_PADDING_M
+
+    for a, b in zip(edges[:-1], edges[1:]):
+        low, high = lo.copy(), hi.copy()
+        low[2], high[2] = a, b
+        points = clipped_points(tris, low, high)
+        if len(points) == 0:
+            continue
+        best, best_volume = [(low, high, points)], volume(points)
+        for across in (0, 1):
+            for split in np.linspace(points[:, across].min(), points[:, across].max(), 9)[1:-1]:
+                first_hi, second_lo = high.copy(), low.copy()
+                first_hi[across] = second_lo[across] = split
+                parts = [(low, first_hi, clipped_points(tris, low, first_hi)),
+                         (second_lo, high, clipped_points(tris, second_lo, high))]
+                if any(volume(p) == 0 for _, _, p in parts):
+                    continue
+                total = sum(volume(p) for _, _, p in parts)
+                if total < best_volume * FINGER_SPLIT_GAIN:
+                    best, best_volume = parts, total
+        for low, high, points in best:
+            shape = padded_convex(points, envelope=envelope)
+            shape["source_cell"] = [low.tolist(), high.tolist()]
+            result.append(shape)
+    return result
 
 
 SEPARATION_CLEARANCE_M = 0.005
@@ -221,6 +361,12 @@ def generate(urdf, output):
         "gain": 0.2,
         "qp_buffer_m": 0.001,
         "padding_m": 0.002,
+        "finger_fit": {
+            "method": "clipped-triangle support polytopes, intersected with legacy padded-box envelope",
+            "slab_m": FINGER_CONVEX_SLAB_M,
+            "support_planes": FINGER_MAX_PLANES,
+            "padding_m": FINGER_PADDING_M,
+        },
         "urdf_sha256": hashlib.sha256(urdf.read_bytes()).hexdigest(),
         "shapes": [],
         "allowed_link_pairs": [],
@@ -234,6 +380,7 @@ def generate(urdf, output):
             link = parent[link]
         return link
 
+    finger_cache = {}
     for link in tree.findall("link"):
         name = link.get("name")
         env = name in ("elite_cs66_a1_stand_base", "worktable_120cm_base")
@@ -255,8 +402,13 @@ def generate(urdf, output):
             points = tris.reshape(-1, 3)
             lo, hi = points.min(0), points.max(0)
             shapes = []
-            if env or "finger_link" in name or "wrist_" in name or "shoulder_link" in name:
-                for low, high in slab_boxes(tris) if "finger_link" in name else boxes(tris):
+            if "finger_link" in name:
+                fingerprint = hashlib.sha256(tris.tobytes()).digest()
+                if fingerprint not in finger_cache:
+                    finger_cache[fingerprint] = finger_convexes(tris)
+                shapes = copy.deepcopy(finger_cache[fingerprint])
+            elif env or "wrist_" in name or "shoulder_link" in name:
+                for low, high in boxes(tris):
                     shapes.append(
                         {
                             "type": "box",

@@ -77,7 +77,7 @@ class CollisionTests(unittest.TestCase):
         groups = {x["group"] for x in s.collision.shapes}
         self.assertEqual(groups, {"left", "right", "environment"})
         self.assertIn("worktable_120cm_base", {x["frame"] for x in s.collision.shapes})
-        self.assertEqual({x["type"] for x in s.collision.shapes}, {"box", "capsule", "cylinder"})
+        self.assertEqual({x["type"] for x in s.collision.shapes}, {"box", "capsule", "cylinder", "convex"})
         # Opposite base / shoulder must not disappear via the shared fixed world.
         frames = [{s.collision.shapes[i]["frame"], s.collision.shapes[j]["frame"]} for i, j in s.collision.pairs]
         self.assertIn({"left_base_link_inertia", "right_shoulder_link"}, frames)
@@ -221,6 +221,14 @@ class CollisionTests(unittest.TestCase):
         # compare against a fresh, unpruned Coal query on every pair.
         import coal
 
+        def convex(shape):
+            vertices, faces = coal.StdVec_Vec3s(), coal.StdVec_Triangle()
+            for vertex in shape["vertices"]:
+                vertices.append(np.asarray(vertex))
+            for face in shape["faces"]:
+                faces.append(coal.Triangle(*face))
+            return coal.Convex(vertices, faces)
+
         s = StationSimulation(collision_profile="auto")
         c = s.collision
         rng = np.random.default_rng(3)
@@ -235,6 +243,7 @@ class CollisionTests(unittest.TestCase):
                     "box": lambda: coal.Box(*shape["size"]),
                     "capsule": lambda: coal.Capsule(shape["radius"], shape["length"]),
                     "cylinder": lambda: coal.Cylinder(shape["radius"], shape["length"]),
+                    "convex": lambda: convex(shape),
                 }[shape["type"]]()
                 objects.append(coal.CollisionObject(geometry, coal.Transform3s(placement.rotation, placement.translation)))
             request = coal.DistanceRequest()

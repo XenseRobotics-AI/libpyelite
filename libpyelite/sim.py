@@ -618,6 +618,13 @@ class MeshcatRobotView:
                 )
                 if shape["type"] == "box":
                     node.set_object(geometry.Box(shape["size"]), material)
+                elif shape["type"] == "convex":
+                    node.set_object(
+                        geometry.TriangularMeshGeometry(
+                            np.asarray(shape["vertices"]), np.asarray(shape["faces"], dtype=np.int32)
+                        ),
+                        material,
+                    )
                 else:
                     node["body"].set_object(geometry.Cylinder(shape["length"], shape["radius"]), material)
                     rotation = np.eye(4)
