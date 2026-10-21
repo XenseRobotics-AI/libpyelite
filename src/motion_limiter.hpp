@@ -5,6 +5,7 @@
 #include <cmath>
 #include <sstream>
 #include <functional>
+#include <limits>
 
 namespace libpyelite {
 // Stateful command trajectory. Limits describe commands, not measured servo dynamics.
@@ -55,21 +56,39 @@ class MotionLimiter {
                      bool hard_only=false) {
     boundary_limited_=false;
     constexpr double kSlack=1.05;
-    bool feasible=true;
+    bool position_ok=true,velocity_ok=true,derivatives_ok=true;
     PinkArmVector v{},a{};
     for(int i=0;i<6;++i) {
       if(!std::isfinite(target[i])) throw std::invalid_argument("Nonfinite trajectory target");
       v[i]=(target[i]-sent_[i])/dt_; a[i]=(v[i]-sent_velocity_[i])/dt_;
       const double j=(a[i]-sent_acceleration_[i])/dt_;
-      feasible=feasible && target[i]>=lower_[i] && target[i]<=upper_[i] &&
-        std::abs(v[i])<=velocity_[i] &&
+      position_ok=position_ok && target[i]>=lower_[i] && target[i]<=upper_[i];
+      // Subtracting absolute joint angles at exactly vmax*dt can round upward.
+      // Compare displacement with a scale-aware floating-point allowance, not
+      // a percentage of the physical velocity limit (nor the soft a/j slack).
+      const double roundoff=32*std::numeric_limits<double>::epsilon()*
+          (1+std::abs(target[i])+std::abs(sent_[i])+velocity_[i]*dt_);
+      velocity_ok=velocity_ok && std::abs(target[i]-sent_[i])<=velocity_[i]*dt_+roundoff;
+      derivatives_ok=derivatives_ok &&
         (hard_only || (std::abs(a[i])<=acceleration_[i]*kSlack && std::abs(j)<=jerk_[i]*kSlack));
     }
-    if(envelope_guard_) feasible = feasible && segmentSafe(sent_,target) && canStop(target,velocity,acceleration);
+    const bool segment_ok=!envelope_guard_ || segmentSafe(sent_,target);
+    const bool stop_ok=!envelope_guard_ || canStop(target,velocity,acceleration);
+    const bool feasible=position_ok && velocity_ok && derivatives_ok && segment_ok && stop_ok;
     passed_=feasible;
     if(!feasible) {
-      if(envelope_guard_ && hard_only)
-        throw std::runtime_error("Station-approved sample has no configuration-safe sender continuation");
+      if(envelope_guard_ && hard_only) {
+        std::ostringstream message;
+        message.precision(17);
+        message<<"Station-approved sample has no configuration-safe sender continuation"
+               <<" (position_ok="<<position_ok<<", velocity_ok="<<velocity_ok
+               <<", segment_ok="<<segment_ok<<", stop_ok="<<stop_ok<<")";
+        for(int i=0;i<6;++i)
+          message<<"; J"<<i+1<<" from="<<sent_[i]<<" to="<<target[i]
+                 <<" fd_v="<<v[i]<<" vmax="<<velocity_[i]
+                 <<" v="<<velocity[i]<<" a="<<acceleration[i];
+        throw std::runtime_error(message.str());
+      }
       PinkArmVector tv=velocity,ta=acceleration;
       for(int i=0;i<6;++i) {
         tv[i]=std::clamp(tv[i],-velocity_[i],velocity_[i]); ta[i]=std::clamp(ta[i],-acceleration_[i],acceleration_[i]);

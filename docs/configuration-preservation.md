@@ -76,6 +76,19 @@ sample cannot be replaced by an independent sender trajectory: an infeasible
 continuation faults before the socket write. Collision and configuration
 constraints may make a requested motion unavailable.
 
+Station output uses one outstanding sample per arm. The coordinator waits for
+both senders' successful socket writes before advancing either planner; an
+independent sender clock must not skip an approved step. Repeated reads and
+failed writes retain that sample. Live retries keep the handoff watchdog alive
+while the configured consecutive-write-failure budget remains owned by the
+sender. A stalled sender or planner still faults. Cancellation and the final
+braking sample pass through the same station gate before idle.
+
+The sender's hard velocity comparison allows only floating-point subtraction
+roundoff at the exact speed limit. It does not relax the physical speed cap by
+a percentage. Rejections report position, velocity, configuration-segment and
+stopping-envelope results with joint states, so these failure modes are distinct.
+
 ## Returning to the start
 
 Keeping singular-surface signs and winding does not establish global IK
@@ -94,7 +107,18 @@ certificates. `tests/test_configuration_geometry.py` checks the analytic
 Jacobian determinant and both mirrored assemblies. The tracking regressions
 exercise outward/return motion on both elbows, prolonged boundary holds,
 regrip recovery, low-jerk braking, stationary velocity profiles, rejected
-configuration changes, and station sender refusal.
+configuration changes, repeated station extension/return with the sender gate
+enabled, exact speed-limit samples, and station sender refusal. The station
+simulator now runs that final sender gate as well as collision projection.
+
+`tests/test_command_handoff.cpp` injects asynchronous dual senders, delayed and
+repeated reads, write failures, stale acknowledgements, timeouts and shutdown.
+It can be built and run without the SDK or robot:
+
+```sh
+c++ -std=c++17 -O2 -pthread tests/test_command_handoff.cpp -o /tmp/test_command_handoff
+/tmp/test_command_handoff
+```
 
 The Python adapter tests separately exercise measured reset completion,
 freshness, cancellation, command ownership, mirrored startup snapshots and the

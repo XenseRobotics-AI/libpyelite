@@ -478,10 +478,8 @@ class StationSimulation:
             # StationGuard the StationCoordinator runs on the robot.
             layer = StationLayer(self.assembly, collision_profile, [arm.tool for arm in self.arms.values()])
             self.collision, self.guard = layer.collision, layer.guard
-            # The guard's joint gate is the final command gate, as on hardware,
-            # where the sender then only checks velocity and position.
-            for arm in self.arms.values():
-                arm.sender = None
+            # Keep the sender gate: hardware also validates the approved sample's
+            # velocity and configuration stopping envelope before writing it.
         if initial_q is not None:
             self.reset(initial_q)
         if self.collision:
@@ -557,7 +555,13 @@ class StationSimulation:
             result = self.guard.tick(left.planner, right.planner, left.q, right.q, left.time)
             samples = {}
             for index, (side, arm) in enumerate(self.arms.items()):
-                arm.q = np.asarray(result.q[index])
+                q = result.q[index]
+                if arm.sender:
+                    status = arm.planner.status()
+                    q = arm.sender.gate(q, status.joint_velocity, status.joint_acceleration, True)
+                    if not np.array_equal(q, result.q[index]):
+                        raise RuntimeError("Sender changed a station-approved sample")
+                arm.q = np.asarray(q)
                 arm.pending = False
                 arm.time += arm.config.period
                 sample = arm.sample(previous[index * 6 : (index + 1) * 6])

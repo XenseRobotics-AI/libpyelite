@@ -217,9 +217,73 @@ class ConfigurationTrackingTests(unittest.TestCase):
         # Approved q is safe, but its supplied outward velocity cannot stop
         # inside the branch. Substituting another safe q bypasses collision
         # approval, so reject before the native socket write.
-        with self.assertRaisesRegex(RuntimeError, "Station-approved"):
+        with self.assertRaisesRegex(RuntimeError, "Station-approved.*stop_ok=0"):
             sender.gate(q0, velocity, np.zeros(6), True)
         np.testing.assert_allclose(sender.velocity(), np.zeros(6), atol=1e-12)
+
+    def test_station_sender_accepts_velocity_limit_roundoff_on_both_branches(self):
+        for side in ("left", "right"):
+            with self.subTest(side=side):
+                q0 = near_straight(side, 0.3)
+                config = protected_config()
+                p = _native.Planner(model_path(), np.eye(4).ravel(), PinkIKOptions(), config)
+                p.seed(q0)
+                upstream, sender = p.make_sender_limiter(q0), p.make_sender_limiter(q0)
+                previous = q0.copy()
+                peak = 0.0
+                # Repeated reversals reach the exact speed limit on either side
+                # of zero. Before the fix this faults at the first cruise phase.
+                for cycle in range(6):
+                    target = q0.copy()
+                    target[0] += 0.5 if cycle % 2 == 0 else -0.5
+                    for _ in range(180):
+                        q = np.array(upstream.step(target))
+                        peak = max(peak, abs(q[0] - previous[0]) / config.period)
+                        sent = sender.gate(q, upstream.velocity(), upstream.acceleration(), True)
+                        np.testing.assert_array_equal(sent, q)
+                        self.assertTrue(p.configuration_valid(sent))
+                        previous = q
+                self.assertAlmostEqual(peak, config.max_joint_velocity[0], places=10)
+
+    def test_station_sender_still_rejects_a_skipped_sample(self):
+        q0 = near_straight("left", 0.3)
+        p = _native.Planner(model_path(), np.eye(4).ravel(), PinkIKOptions(), protected_config())
+        p.seed(q0)
+        upstream, sender = p.make_sender_limiter(q0), p.make_sender_limiter(q0)
+        target = q0.copy()
+        target[0] += 0.5
+        for _ in range(15):
+            q = upstream.step(target)
+            sender.gate(q, upstream.velocity(), upstream.acceleration(), True)
+        upstream.step(target)  # A latest-sample mailbox used to drop this step.
+        q = upstream.step(target)
+        with self.assertRaisesRegex(RuntimeError, "velocity_ok=0.*segment_ok=1.*stop_ok=1"):
+            sender.gate(q, upstream.velocity(), upstream.acceleration(), True)
+
+    def test_station_repeated_extension_and_return_includes_sender_checks(self):
+        from libpyelite.control_profile import load_recipe
+        from libpyelite.sim import StationSimulation
+
+        root = Path(__file__).resolve().parents[3]
+        settings = load_recipe(root / "recipes/teleop/bi_elite_cs66_rt/diagonal-08-taccap.yaml")
+        # The test jumps between its two targets; live teleop supplies a stream.
+        settings["native_max_target_translation_jump"] = 0.0
+        for side in ("left", "right"):
+            with self.subTest(side=side):
+                sim = StationSimulation(settings=settings, collision_profile="auto")
+                self.assertIsNotNone(sim.arms[side].sender)
+                home = sim.targets()[side].copy()
+                far = home.copy()
+                far[:3, 3] += [0.28, 0.10 if side == "left" else -0.10, 0.14]
+                for cycle in range(6):
+                    for target in (far, home):
+                        sim.set_target(side, target)
+                        for _ in range(1000):
+                            sim.step()
+                            for arm in sim.arms.values():
+                                self.assertTrue(arm.planner.configuration_valid(arm.q))
+                    np.testing.assert_allclose(sim.q, sim.home_q, atol=1e-3)
+                self.assertIsNone(sim.collision_error)
 
     def test_boundary_braking_does_not_ratchet_reference_orientation(self):
         directions = np.random.default_rng(44).normal(size=(30, 3))
