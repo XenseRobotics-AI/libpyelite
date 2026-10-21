@@ -111,6 +111,7 @@ void NativeDriver::startServo(std::shared_ptr<ELITE::RtsiIOInterface> rtsi) {
     std::lock_guard<std::mutex> lock(mutex_);
     target_=Target{}; target_.sequence=++generation_; target_.cancel=true;
     status_=NativeStatus{}; status_.commanded_q=q; status_.sent_q=q; status_.commanded_pose=fk;
+    command_handoff_.reset();
     command_time_=now(); running_=true;
   }
   try {
@@ -125,6 +126,7 @@ void NativeDriver::startServo(std::shared_ptr<ELITE::RtsiIOInterface> rtsi) {
 void NativeDriver::stopServo() {
   std::lock_guard<std::mutex> lifecycle(lifecycle_mutex_);
   running_=false;
+  command_handoff_.stop();
   if(planner_thread_.joinable()) planner_thread_.join();
   if(sender_thread_.joinable()) sender_thread_.join();
 }
@@ -140,6 +142,7 @@ void NativeDriver::checkFeedbackSafety() {
 void NativeDriver::fail(const std::string &message) noexcept {
   std::lock_guard<std::mutex> lock(mutex_);
   status_.error=message; status_.reset_active=false; running_=false;
+  command_handoff_.stop();
 }
 NativeStatus NativeDriver::status() const {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -148,7 +151,11 @@ NativeStatus NativeDriver::status() const {
 void NativeDriver::cancel() {
   std::lock_guard<std::mutex> lock(mutex_);
   target_=Target{}; target_.sequence=++generation_; target_.cancel=true;
-  status_.planner.idle=true; status_.reset_active=false;
+  // In station mode cancellation must be planned and collision checked before
+  // the sender sees it. Mutating the published sample's idle flag here would
+  // skip its last step or independently brake outside the station guard.
+  if(!external_planning_) status_.planner.idle=true;
+  status_.reset_active=false;
 }
 std::uint64_t NativeDriver::submit(const PinkPose &pose,double duration) {
   if(!validPose(pose)||!std::isfinite(duration)||duration<0)
@@ -185,6 +192,7 @@ void NativeDriver::publish(const Target &target,double begin) {
   // A retarget that arrived mid-step is consumed next period; this step was
   // already checked by the collision layer, so it is published as is.
   status_.planner=ps; status_.commanded_q=q; status_.commanded_pose=pose;
+  status_.command_sequence=command_handoff_.publish();
   status_.reset_active=target.sequence==target_.sequence && target.duration>0 && ps.moving;
   command_time_=now();
   if(now()-begin>config_.servoj_time) ++status_.planner_overruns;
@@ -266,10 +274,16 @@ void NativeDriver::sendLoop() noexcept {
       }
       NativeStatus s; double updated;
       { std::lock_guard<std::mutex> lock(mutex_); s=status_; updated=command_time_; }
-      if(now()-updated>config_.planner_timeout)
+      // A station waiting for this write is not a stalled planner. Its handoff
+      // watchdog monitors sender progress; normal planner deadlines resume as
+      // soon as this sample is delivered.
+      const bool station_pending=external_planning_ && s.command_sequence!=s.sent_sequence;
+      if(!station_pending && now()-updated>config_.planner_timeout)
         throw std::runtime_error("Native planner deadline exceeded");
       bool ok;
-      if(s.planner.idle && (!sender_limiter || sender_limiter->finished())) {
+      // Deliver the final station braking sample before switching to writeIdle.
+      const bool station_final_sample=external_planning_ && s.commanded_q!=s.sent_q;
+      if(s.planner.idle && !station_final_sample && (!sender_limiter || sender_limiter->finished())) {
         const double write_begin=now();
         ok=driver_->writeIdle(config_.command_timeout_ms);
         last_write=now()-write_begin;
@@ -280,7 +294,7 @@ void NativeDriver::sendLoop() noexcept {
         // The planner output is already limited; the sender only steps in when a
         // planner sample was skipped or repeated, and brakes once the planner is idle.
         if(sender_limiter) {
-          if(s.planner.idle) q=sender_limiter->step(q,true);
+          if(s.planner.idle && !external_planning_) q=sender_limiter->step(q,true);
           else q=sender_limiter->gate(q,s.planner.joint_velocity,s.planner.joint_acceleration,external_planning_);
         }
         else for(int i=0;i<6;++i) {
@@ -309,6 +323,14 @@ void NativeDriver::sendLoop() noexcept {
             status_.sent_acceleration=sender_limiter->acceleration();
           }
         }
+      }
+      if(external_planning_) {
+        {
+          std::lock_guard<std::mutex> lock(mutex_);
+          if(ok) status_.sent_sequence=s.command_sequence;
+          if(station_pending) command_time_=now();
+        }
+        command_handoff_.completeAttempt(s.command_sequence,ok);
       }
       // A failed period leaves last_sent unchanged, so the next one re-steps from it.
       failed_writes=ok?0:failed_writes+1;

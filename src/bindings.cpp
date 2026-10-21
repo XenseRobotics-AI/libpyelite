@@ -171,7 +171,7 @@ PYBIND11_MODULE(_native,m) {
 #undef DC
   py::class_<NativeStatus>(m,"NativeStatus")
 #define NS(name) .def_readonly(#name,&NativeStatus::name)
-    NS(planner) NS(running) NS(reset_active) NS(error) NS(planner_overruns)
+    NS(planner) NS(running) NS(reset_active) NS(error) NS(planner_overruns) NS(command_sequence) NS(sent_sequence)
     NS(commanded_q) NS(commanded_pose) NS(sent_q) NS(sent_velocity) NS(sent_acceleration) NS(contact) NS(max_sender_gap_s) NS(max_write_s);
 #undef NS
   py::class_<ELITE::RtsiIOInterface,std::shared_ptr<ELITE::RtsiIOInterface>>(m,"RtsiIOInterface")

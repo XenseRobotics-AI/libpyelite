@@ -1,6 +1,7 @@
 #pragma once
 #include "compliance.hpp"
 #include "planner.hpp"
+#include "command_handoff.hpp"
 #include <Elite/EliteDriver.hpp>
 #include <Elite/RtsiIOInterface.hpp>
 #include <atomic>
@@ -37,6 +38,7 @@ struct NativeStatus {
   bool reset_active{false};
   std::string error;
   std::uint64_t planner_overruns{0};
+  std::uint64_t command_sequence{0}, sent_sequence{0};
   PinkArmVector commanded_q{}, sent_q{}, sent_velocity{}, sent_acceleration{};
   PinkPose commanded_pose{kIdentityPose};
   ComplianceStatus contact;  // contact_monitor estimate; biased=false while zeroing
@@ -92,6 +94,7 @@ class NativeDriver {
   mutable std::mutex mutex_;
   std::mutex lifecycle_mutex_;
   Target target_;
+  CommandHandoff command_handoff_;
   NativeStatus status_;
   double command_time_{0};
   std::uint64_t generation_{0};

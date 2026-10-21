@@ -39,6 +39,7 @@ void StationCoordinator::start() {
 
 void StationCoordinator::stop() {
   running_ = false;
+  for(auto *driver : drivers_) driver->command_handoff_.wake();
   if(thread_.joinable()) thread_.join();
 }
 
@@ -64,7 +65,6 @@ void StationCoordinator::loop() noexcept {
   std::array<bool, 2> was_running{};
   try {
     while(running_) {
-      const double begin = now();
       // A driver that faulted (feedback, safety mode, socket) stops its partner too.
       for(std::size_t a = 0; a < 2; ++a) {
         const auto s = drivers_[a]->status();
@@ -86,12 +86,31 @@ void StationCoordinator::loop() noexcept {
         if(active && !was_running[a]) consumed[a] = 0;
         was_running[a] = active;
         if(active) {
-          driver->consumeTarget(consumed[a], targets[a]);
           planners[a] = &driver->planner_;
         } else {
           if(locks[a].owns_lock()) locks[a].unlock();
-          fixed[a] = rtsi_[a]->getActualJointPositions();
         }
+      }
+      // The two senders and this planner have independent clocks. Wait for
+      // BOTH successful writes before advancing either arm, so a scheduling
+      // slip or a failed socket write cannot turn two approved 4 ms steps into
+      // one unchecked jump. There is no queued trajectory to catch up later.
+      for(std::size_t a = 0; a < 2; ++a) {
+        if(!planners[a]) continue;
+        auto *driver = drivers_[a];
+        const auto timeout = std::chrono::duration_cast<Clock::duration>(
+            std::chrono::duration<double>(driver->config_.planner_timeout));
+        if(!driver->command_handoff_.waitFor(timeout,&running_)) {
+          if(!running_) return;
+          const auto error=driver->status().error;
+          throw std::runtime_error(std::string(a == 0 ? "left" : "right") +
+              (error.empty() ? " station sender acknowledgement timed out or stopped" : " arm fault: "+error));
+        }
+      }
+      const double begin = now();
+      for(std::size_t a = 0; a < 2; ++a) {
+        if(planners[a]) drivers_[a]->consumeTarget(consumed[a], targets[a]);
+        else fixed[a] = rtsi_[a]->getActualJointPositions();
       }
       const auto result = guard_->tick(planners[0], planners[1], fixed[0], fixed[1], begin);
       for(std::size_t a = 0; a < 2; ++a)
