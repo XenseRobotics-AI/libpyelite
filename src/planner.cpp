@@ -3,6 +3,10 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <iomanip>
+#include <limits>
+#include <locale>
+#include <sstream>
 #include <stdexcept>
 
 namespace libpyelite {
@@ -13,6 +17,15 @@ PinkPose array(const Matrix4 &m) {
   PinkPose p; Eigen::Map<Matrix4>(p.data()) = m; return p;
 }
 double minJerk(double x) { return x*x*x*(10+x*(-15+6*x)); }
+std::ostringstream jumpError(const char *kind,const PlannerConfig &config,
+                             std::uint64_t sequence,std::uint64_t last_sequence) {
+  std::ostringstream out;
+  out.imbue(std::locale::classic());
+  out << std::setprecision(std::numeric_limits<double>::max_digits10)
+      << kind << " target jump rejected: arm=" << (config.arm_name.empty()?"unspecified":config.arm_name)
+      << " sequence=" << sequence << " last_accepted_sequence=" << last_sequence;
+  return out;
+}
 }
 bool validPose(const PinkPose &p) {
   auto m=matrix(p); const Eigen::Matrix3d r=m.block<3,3>(0,0);
@@ -138,8 +151,32 @@ void Planner::submit(const PinkPose &target,double arrival,std::uint64_t seq,dou
       (config_.max_target_rotation_jump>0 && Eigen::Quaterniond(from.block<3,3>(0,0)).angularDistance(
         Eigen::Quaterniond(requested.block<3,3>(0,0)))>config_.max_target_rotation_jump);
   };
-  if(duration==0 && jumps(arrival_<0?pose_:target_) && jumps(pose_))
-    throw std::invalid_argument("Cartesian target jump rejected");
+  if(duration==0 && jumps(arrival_<0?pose_:target_) && jumps(pose_)) {
+    // Format only on rejection; keep the streaming checks and their short-circuit
+    // behavior unchanged. Report both references: they can trip different limits.
+    auto error=jumpError("Cartesian",config_,seq,status_.sequence);
+    error << "; limits={native_max_target_translation_jump=" << config_.max_target_translation_jump
+          << " m" << (config_.max_target_translation_jump==0?" (disabled)":"")
+          << ", native_max_target_rotation_jump=" << config_.max_target_rotation_jump
+          << " rad" << (config_.max_target_rotation_jump==0?" (disabled)":"") << "}"
+          << "; previous_reference=" << (arrival_<0?"planned_pose":"previous_target");
+    const auto describe=[&](const char *name,const PinkPose &reference) {
+      const auto from=matrix(reference);
+      const double translation=(from.block<3,1>(0,3)-requested.block<3,1>(0,3)).norm();
+      const double rotation=Eigen::Quaterniond(from.block<3,3>(0,0)).angularDistance(
+        Eigen::Quaterniond(requested.block<3,3>(0,0)));
+      const bool translation_exceeded=config_.max_target_translation_jump>0 && translation>config_.max_target_translation_jump;
+      const bool rotation_exceeded=config_.max_target_rotation_jump>0 && rotation>config_.max_target_rotation_jump;
+      error << "; " << name << "={translation=" << translation << " m, rotation=" << rotation << " rad, exceeded=[";
+      if(translation_exceeded) error << "native_max_target_translation_jump";
+      if(translation_exceeded && rotation_exceeded) error << ", ";
+      if(rotation_exceeded) error << "native_max_target_rotation_jump";
+      error << "]}";
+    };
+    describe("previous",arrival_<0?pose_:target_);
+    describe("planned_pose",pose_);
+    throw std::invalid_argument(error.str());
+  }
   const bool resume=stopping_ || !status_.moving || joint_mode_;
   if(limiter_ && resume) { ref_q_=q_; ref_pose_=pose_; ref_velocity_.fill(0); }
   if(smoother_ && (resume || duration>0)) {
@@ -167,9 +204,26 @@ void Planner::submit(const PinkPose &target,double arrival,std::uint64_t seq,dou
 }
 void Planner::submitJoints(const PinkArmVector &q,double arrival,std::uint64_t seq) {
   model_.forwardKinematics(0,q);
-  if(config_.max_target_joint_jump>0)
-    for(int i=0;i<6;++i) if(std::abs(q[i]-(joint_mode_ && arrival_>=0?joint_target_[i]:q_[i]))>config_.max_target_joint_jump)
-      throw std::invalid_argument("Joint target jump rejected");
+  if(config_.max_target_joint_jump>0) {
+    const bool previous=joint_mode_ && arrival_>=0;
+    const auto &reference=previous?joint_target_:q_;
+    for(int i=0;i<6;++i) if(std::abs(q[i]-reference[i])>config_.max_target_joint_jump) {
+      auto error=jumpError("Joint",config_,seq,status_.sequence);
+      error << "; native_max_target_joint_jump=" << config_.max_target_joint_jump << " rad"
+            << "; reference=" << (previous?"previous_joint_target":"planned_q") << "; exceeded=[";
+      bool first=true;
+      for(int j=0;j<6;++j) {
+        const double delta=std::abs(q[j]-reference[j]);
+        if(delta<=config_.max_target_joint_jump) continue;
+        if(!first) error << ", ";
+        first=false;
+        error << "J" << j+1 << "{delta=" << delta << " rad, target=" << q[j]
+              << " rad, reference=" << reference[j] << " rad}";
+      }
+      error << "]";
+      throw std::invalid_argument(error.str());
+    }
+  }
   submit(pose_,arrival,seq); joint_mode_=true; joint_target_=q;
 }
 PinkArmVector Planner::tick(double now) {

@@ -89,6 +89,8 @@ SERVO_FAILURE_TOLERANCE_TICKS = 250
 
 def configure_native_driver(cfg, settings, tool=None, side=None, world_from_base=None):
     values = settings if isinstance(settings, dict) else vars(settings)
+    if side is not None:
+        cfg.planner.arm_name = side
     cfg.ik.max_iterations = values.get("native_ik_max_iterations", cfg.ik.max_iterations)
     cfg.servoj_time = values.get("servoj_time", cfg.servoj_time)
     cfg.planner.period = cfg.servoj_time

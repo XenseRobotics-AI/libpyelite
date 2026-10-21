@@ -51,7 +51,7 @@ PYBIND11_MODULE(_native,m) {
   py::class_<PlannerConfig>(m,"PlannerConfig").def(py::init<>())
 #define PC(name) .def_readwrite(#name,&PlannerConfig::name)
     PC(period) PC(stale_timeout) PC(max_linear_velocity) PC(max_angular_velocity) PC(velocity_scale) PC(joint_motion_limits) PC(joint_target_horizon) PC(max_joint_velocity) PC(max_joint_acceleration) PC(max_joint_jerk) PC(joint_tracking_gain) PC(cartesian_motion_limits) PC(max_linear_acceleration) PC(max_angular_acceleration) PC(max_linear_jerk) PC(max_angular_jerk) PC(cartesian_tracking_gain)
-    PC(max_target_translation_jump) PC(max_target_rotation_jump) PC(max_target_joint_jump);
+    PC(max_target_translation_jump) PC(max_target_rotation_jump) PC(max_target_joint_jump) PC(arm_name);
 #undef PC
   py::class_<PlannerStatus>(m,"PlannerStatus")
 #define PS(name) .def_readonly(#name,&PlannerStatus::name)

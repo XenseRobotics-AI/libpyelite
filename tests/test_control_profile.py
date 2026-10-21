@@ -63,11 +63,14 @@ class ControlProfileTests(unittest.TestCase):
                 for side in ("left", "right"):
                     real = EliteDriverConfig()
                     namespace["_configure_native_driver"](
-                        real, SimpleNamespace(**effective), effective.get(side + "_tool_transform")
+                        real, SimpleNamespace(**effective), effective.get(side + "_tool_transform"),
+                        side, assembly.world_from_base(side),
                     )
                     real.model_path = assembly.control_model_path(side)
                     simulated = native_config(requested, side, assembly)
                     self.assertEqual(describe_config(real), describe_config(simulated))
+                    self.assertEqual(real.planner.arm_name, side)
+                    self.assertEqual(simulated.planner.arm_name, side)
                     self.assertEqual(real.ik.streaming_iteration_budget, min(real.ik.max_iterations, 8))
 
     def test_packaged_profile_matches_recipe(self):

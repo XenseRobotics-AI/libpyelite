@@ -3,6 +3,7 @@
 #include "motion_limiter.hpp"
 #include "cartesian_smoother.hpp"
 #include <cstdint>
+#include <string>
 
 namespace libpyelite {
 struct PlannerConfig {
@@ -24,7 +25,7 @@ struct PlannerConfig {
   double max_linear_acceleration{2.0}, max_angular_acceleration{5.0};  // m/s², rad/s² (Flexiv defaults)
   double max_linear_jerk{1000.0}, max_angular_jerk{2500.0};           // m/s³, rad/s³ (MoveIt fallback 1000)
   double cartesian_tracking_gain{20.0};                                 // 1/s
-
+  std::string arm_name; // optional diagnostic identity, e.g. left/right; does not affect planning
 };
 struct PlannerStatus {
   std::uint64_t sequence{0}, consumed_sequence{0}, ik_failures{0};

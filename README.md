@@ -68,6 +68,27 @@ native callback/keepalive loop with the GIL released. stopServo joins workers;
 it is not a hardware emergency stop. Controller safety mechanisms remain active.
 Disconnect/home behavior remains the existing LeRobot behavior.
 
+### Target jump diagnostics
+
+Jump rejections retain the `Cartesian target jump rejected` / `Joint target jump
+rejected` prefixes and include the arm, rejected sequence and last accepted
+sequence. Cartesian errors report the effective `native_max_target_translation_jump`
+(m) and `native_max_target_rotation_jump` (rad) recipe limits, both measured deltas,
+and an `exceeded=[...]` list for each comparison. A zero limit is marked disabled.
+`previous_reference` says whether `previous` uses the previous accepted target or,
+when no active previous target exists, the current planned pose. `planned_pose`
+is the FK of the planner output, not a fresh measured TCP sample. The streaming
+guard still requires **both** comparisons to exceed at least one enabled limit;
+timed resets still bypass this jump guard. Joint errors name every offending
+axis (`J1`..`J6`), its absolute delta, target and reference, and the effective limit.
+
+`configure_native_driver(..., side="left"/"right")` sets `cfg.planner.arm_name`
+for diagnostics, using the side already supplied by the LeRobot adapter. Direct
+planner/driver callers can set `PlannerConfig.arm_name` themselves; an unset name
+is reported as `arm=unspecified`. The source arm stays in the exception when the
+station coordinator forwards a failure to both drivers. These changes require
+rebuilding and reinstalling the native extension, with no LeRobot source changes.
+
 ## Offline validation
 
 ```sh
