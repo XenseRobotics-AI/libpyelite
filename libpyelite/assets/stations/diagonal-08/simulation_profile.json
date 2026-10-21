@@ -89,9 +89,37 @@
   "native_max_target_rotation_jump": 0.3,
   "native_max_target_joint_jump": 0.3,
   "native_collision_profile": "auto",
+  "native_collision_gripper_calibration": {
+    "left": {
+      "left_tool_taccap_right_finger_joint": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.5047492196767601
+        ]
+      ]
+    },
+    "right": {
+      "right_tool_taccap_right_finger_joint": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.5047492196767601
+        ]
+      ]
+    }
+  },
+  "native_collision_gripper_max_age_s": 0.1,
+  "native_collision_gripper_publish_hz": 100.0,
   "native_contact_monitor": null,
   "source": {
     "path": "recipes/teleop/bi_elite_cs66_rt/diagonal-08-taccap.yaml",
-    "sha256": "de91fab955973d629162d19021f6547d39fd063b639a925a4f39f03099c12d68"
+    "sha256": "395c00ddcc5a79fd14bfb0ae43d71eaa242d2093673b6411ede60a73846127fd"
   }
 }

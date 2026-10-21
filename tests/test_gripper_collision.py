@@ -156,9 +156,11 @@ class GripperCollisionTests(unittest.TestCase):
 
     def test_stale_future_nan_and_invalid_data_fail_closed(self):
         self.configure()
-        for seq, kwargs in enumerate(
-            ({"age": 0.2}, {"age": -1.0}, {"stamp": float("nan")}, {"seq": 0},
-             {"valid": False}, {"side": "right"}, {"opening": float("nan")}, {"opening": 1.001}), 1
+        for seq, (kwargs, reason) in enumerate(
+            (({"age": 0.2}, "Left.*is stale"), ({"age": -1.0}, "Left.*is from the future"),
+             ({"stamp": float("nan")}, "Left.*invalid timestamp"), ({"seq": 0}, "Left.*is invalid"),
+             ({"valid": False}, "Left.*is invalid"), ({"side": "right"}, "Right.*is invalid"),
+             ({"opening": float("nan")}, "Left.*is invalid"), ({"opening": 1.001}, "Left.*is invalid")), 1
         ):
             with self.subTest(kwargs=kwargs):
                 # Independent guards avoid a deliberately invalid future timestamp
@@ -170,8 +172,11 @@ class GripperCollisionTests(unittest.TestCase):
                 maps = self.layer._gripper_maps
                 self.layer.guard.configure_grippers([m[0] for m in maps], [m[1] for m in maps], 0.1)
                 self.publish(**({"seq": seq} | kwargs))
-                with self.assertRaises(RuntimeError):
+                with self.assertRaisesRegex(RuntimeError, reason) as failure:
                     self.station_q()
+                self.assertIn("sequence=", str(failure.exception))
+                self.assertIn("age_s=", str(failure.exception))
+                self.assertIn("max_age_s=0.1", str(failure.exception))
 
     def test_same_sequence_never_refreshes_timestamp_even_across_invalid_state(self):
         self.configure()

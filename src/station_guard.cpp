@@ -4,6 +4,8 @@
 #include <chrono>
 #include <cmath>
 #include <limits>
+#include <locale>
+#include <sstream>
 #include <stdexcept>
 
 // Pinocchio's joint collection has 25 alternatives; see pink_ik.cpp.
@@ -185,10 +187,23 @@ Eigen::VectorXd StationGuard::gripperDefaults(GuardResult *result) const {
   for(std::size_t side = 0; side < 2; ++side) {
     if(!gripper_required_[side]) continue;
     const double stamp = snapshot->sample_times[side], age = now - stamp;
-    if(!snapshot->valid[side] || snapshot->sequences[side] == 0 ||
-       !std::isfinite(now) || !std::isfinite(stamp) || stamp <= 0 || age < 0 || age > gripper_max_age_s_)
-      throw std::runtime_error(std::string(side == 0 ? "Left" : "Right") +
-                               " gripper collision state is invalid, stale or from the future");
+    const char *reason = nullptr;
+    if(!std::isfinite(now) || !std::isfinite(stamp) || stamp <= 0)
+      reason = "has an invalid timestamp";
+    else if(age < 0)
+      reason = "is from the future";
+    else if(age > gripper_max_age_s_)
+      reason = "is stale";
+    else if(!snapshot->valid[side] || snapshot->sequences[side] == 0)
+      reason = "is invalid";
+    if(reason) {
+      std::ostringstream message;
+      message.imbue(std::locale::classic());
+      message << (side == 0 ? "Left" : "Right") << " gripper collision state " << reason
+              << " (valid=" << snapshot->valid[side] << ", sequence=" << snapshot->sequences[side]
+              << ", age_s=" << age << ", max_age_s=" << gripper_max_age_s_ << ')';
+      throw std::runtime_error(message.str());
+    }
     if(result) {
       result->gripper_age_s[side] = age;
       result->gripper_sequence[side] = snapshot->sequences[side];
