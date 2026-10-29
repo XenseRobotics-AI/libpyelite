@@ -1,3 +1,6 @@
 [submodule "vendor/elite_cs_sdk"]
 	path = vendor/elite_cs_sdk
-	url = git@github.com:Vertax42/Elite_Robots_CS_SDK.git
+	url = git@github.com:XenseRobotics-AI/Elite_Robots_CS_SDK.git
+[submodule "vendor/elite_cs_sdk_python"]
+	path = vendor/elite_cs_sdk_python
+	url = git@github.com:XenseRobotics-AI/Elite_Robots_CS_SDK_Python.git
