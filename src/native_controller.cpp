@@ -49,6 +49,25 @@ bool NativeDriver::setPayload(double mass, const ELITE::vector3d_t &cog) {
   for(double x:cog) if(!std::isfinite(x)) throw std::invalid_argument("Nonfinite payload CoG");
   return driver_->setPayload(mass,cog);
 }
+bool NativeDriver::setToolVoltage(int voltage) {
+  if(voltage!=0 && voltage!=12 && voltage!=24)
+    throw std::invalid_argument("Tool voltage must be 0, 12 or 24 V");
+  return driver_->setToolVoltage(static_cast<ELITE::ToolVoltage>(voltage));
+}
+bool NativeDriver::configureToolRs485(int baudrate, int parity, int stop_bits) {
+  std::lock_guard<std::mutex> lifecycle(lifecycle_mutex_);
+  if(running_) throw std::logic_error("Configure tool RS485 before starting native servo");
+  const std::vector<int> supported={2400,4800,9600,19200,38400,57600,115200,460800,1000000,2000000};
+  if(std::find(supported.begin(),supported.end(),baudrate)==supported.end() ||
+     parity<0 || parity>2 || (stop_bits!=1 && stop_bits!=2))
+    throw std::invalid_argument("Invalid Elite tool RS485 configuration");
+  // Same secondary script as EliteDriver::startToolRs485. Bridge process
+  // ownership/SSH deadlines are handled by the host adapter, outside servo IO.
+  return driver_->sendScript("sec tool_rs485_config():\n"
+    "    set_tool_analog_io_work_mode(0)\n"
+    "    tool_serial_config(True,"+std::to_string(baudrate)+","+
+    std::to_string(parity)+","+std::to_string(stop_bits)+")\nend\n");
+}
 bool NativeDriver::getPrimaryPackage(std::shared_ptr<ELITE::PrimaryPackage> package, int timeout_ms) {
   return driver_->getPrimaryPackage(std::move(package),timeout_ms);
 }

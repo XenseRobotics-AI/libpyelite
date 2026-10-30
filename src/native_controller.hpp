@@ -67,6 +67,8 @@ class NativeDriver {
   // Re-zero the contact monitor; the arm must stay still and untouched for bias_time.
   void rebiasContact();
   bool setPayload(double mass, const ELITE::vector3d_t &cog);
+  bool setToolVoltage(int voltage);
+  bool configureToolRs485(int baudrate, int parity=0, int stop_bits=1);
   bool getPrimaryPackage(std::shared_ptr<ELITE::PrimaryPackage> package, int timeout_ms);
  private:
   friend class StationCoordinator;

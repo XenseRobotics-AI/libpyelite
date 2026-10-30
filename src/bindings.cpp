@@ -215,6 +215,9 @@ PYBIND11_MODULE(_native,m) {
     .def("setExternalPlanning",&NativeDriver::setExternalPlanning,Release())
     .def("externalPlanning",&NativeDriver::externalPlanning)
     .def("setPayload",&NativeDriver::setPayload,Release())
+    .def("setToolVoltage",&NativeDriver::setToolVoltage,py::arg("voltage"),Release())
+    .def("configureToolRs485",&NativeDriver::configureToolRs485,
+      py::arg("baudrate"),py::arg("parity")=0,py::arg("stop_bits")=1,Release())
     .def("getPrimaryPackage",&NativeDriver::getPrimaryPackage,Release())
     .def("moveJ",&NativeDriver::moveJ,Release())
     .def("cancel",&NativeDriver::cancel,Release())

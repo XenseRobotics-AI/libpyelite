@@ -30,6 +30,14 @@ The bridge also exposes SDK `setPayload`, `getPrimaryPackage`, and
 `KinematicsInfo` for LeRobot's payload configuration and optional DH-based
 motion guards. These calls do not replace the native Pink IK planner.
 
+For host-controlled tool peripherals, `EliteDriver` also exposes
+`configureToolRs485(baudrate, parity=0, stop_bits=1)` and `setToolVoltage(voltage)`.
+Configure the serial port before `startServo`; the method sends the same
+secondary setup script as the vendor SDK's `startToolRs485`. It does not launch
+a bridge or replace the external-control main program. Both bindings release
+the GIL. The LeRobot Elite adapter owns its TCP-to-TCI bridge and bounded SSH
+subprocesses. These tool calls are not used by the native servo/planner loops.
+
 ## Model and limits
 
 assets/cs66 is copied from xense-description, preserving its upstream provenance.
