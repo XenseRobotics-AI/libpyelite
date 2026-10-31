@@ -288,8 +288,8 @@ class ConfigurationTrackingTests(unittest.TestCase):
     def test_boundary_braking_does_not_ratchet_reference_orientation(self):
         directions = np.random.default_rng(44).normal(size=(30, 3))
         directions /= np.linalg.norm(directions, axis=1)[:, None]
-        for index in (8, 15, 21):
-            with self.subTest(case=index):
+        for index, unchanged_gate in ((8, False), (15, False), (21, False), (15, True)):
+            with self.subTest(case=index, unchanged_gate=unchanged_gate):
                 low = index >= 15
                 cfg = protected_config(**(
                     dict(max_joint_velocity=[0.6] * 6, max_joint_acceleration=[1.0] * 6,
@@ -303,6 +303,12 @@ class ConfigurationTrackingTests(unittest.TestCase):
                 target[:3, 3] += 0.3 * directions[index]
                 for _ in range(5000):
                     row = sim.step(target)
+                    if unchanged_gate:
+                        # The coupled guard reanchors both arms when either is
+                        # clipped. Passing this arm through unchanged must not
+                        # disable its configuration-boundary convergence.
+                        status = sim.planner.status()
+                        sim.planner.reanchor(sim.q, status.joint_velocity, status.joint_acceleration)
                     self.assertTrue(sim.planner.configuration_valid(sim.q))
                     reference = sim.model.fk(sim.planner.reference())
                     angle = np.linalg.norm(_native.pose_to_rotvec(

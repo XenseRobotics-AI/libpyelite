@@ -129,6 +129,7 @@ void Planner::seed(const PinkArmVector &q) {
   status_.joint_velocity.fill(0); status_.joint_acceleration.fill(0);
   ref_q_=q; ref_pose_=pose_; ref_velocity_.fill(0);
   goal_=pose_; cartesian_stop_=false;
+  external_limited_=false;
   status_.boundary_limited=false; status_.boundary_braking=false;
   if(smoother_) smoother_->reset(pose_);
 }
@@ -140,8 +141,12 @@ void Planner::reanchor(const PinkArmVector &q,const PinkArmVector &v,const PinkA
   // restart. Pulling the reference here would turn the next IK step into a 1/dt
   // position gain and limit-cycle against the acceleration limit; an external
   // layer that must constrain the reference uses setReference() instead.
+  // The station also reanchors an unchanged partner when only one arm was
+  // clipped. That must not suppress the partner's configuration-boundary settle.
+  const bool changed=q!=q_ || v!=status_.joint_velocity || a!=status_.joint_acceleration;
   pose_=model_.forwardKinematics(0,q); q_=q;
   limiter_->reanchor(q,v,a);
+  external_limited_=external_limited_ || changed;
   status_.joint_velocity=v; status_.joint_acceleration=a;
   if(!status_.moving) {
     ref_q_=q; ref_pose_=pose_; ref_velocity_.fill(0);
@@ -431,6 +436,7 @@ void Planner::setReference(const PinkArmVector &q) {
   // IK asked for; otherwise a blocked reference keeps pushing the output.
   for(int i=0;i<6;++i) ref_velocity_[i]=(accepted[i]-ref_before_[i])/config_.period;
   if(config_.preserve_configuration) feedbackReference(before);
+  external_limited_=true;
 }
 PinkArmVector Planner::advance() {
   if(!pending_) throw std::logic_error("advance() needs a successful plan_reference()");
@@ -448,8 +454,15 @@ PinkArmVector Planner::advance() {
     // follower reproduces it (its feed-forward is the reference velocity); it
     // only departs from it, smoothly, when the reference itself steps (held by
     // a collision layer, or near a singularity).
-    if(joint_mode_ || ((alpha>=1.0 || config_.preserve_configuration) && reference_still)) q_=limiter_->step(candidate);
+    // Configuration boundaries may settle on a held reference before the
+    // Cartesian segment finishes. A collision projection can also hold it,
+    // but early position-mode catch-up then fights the externally trimmed
+    // output and its reanchored derivatives, driving the TCP along the obstacle.
+    // Keep the original velocity-following path while that gate is intervening.
+    const bool settle_boundary=config_.preserve_configuration && !external_limited_;
+    if(joint_mode_ || ((alpha>=1.0 || settle_boundary) && reference_still)) q_=limiter_->step(candidate);
     else q_=limiter_->follow(candidate,ref_velocity_,config_.joint_tracking_gain);
+    external_limited_=false;
     status_.joint_velocity=limiter_->velocity(); status_.joint_acceleration=limiter_->acceleration();
     status_.boundary_braking=limiter_->boundaryLimited();
     status_.boundary_limited=status_.boundary_limited || status_.boundary_braking;

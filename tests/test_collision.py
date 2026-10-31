@@ -165,6 +165,49 @@ class CollisionTests(unittest.TestCase):
         settings.update(overrides)
         return StationSimulation(settings=settings, collision_profile="auto")
 
+    def test_collision_hold_with_configuration_preservation_does_not_drift(self):
+        # A downward drag with a small rotation can hold the IK reference before
+        # its interpolation finishes. Treating that reference as a new fixed
+        # joint goal fought the collision projection and slid the TCP > 30 cm.
+        initial = [-1.15, -0.53, 1.45, -0.62, 1.78, -0.66]
+        for angle in (0.08, 0.2):
+            with self.subTest(rotation=angle):
+                sim = self._station(native_preserve_configuration=True,
+                                    left_start_position_rad=initial)
+                home = sim.targets()["left"].copy()
+                right = sim.arms["right"].q.copy()
+
+                def target_at(fraction):
+                    pose = home.copy()
+                    pose[2, 3] -= 0.12 * fraction
+                    pose[:3, :3] = pin.exp3(np.array([0.0, angle * fraction, 0.0])) @ home[:3, :3]
+                    return pose
+
+                positions = []
+                for frame in range(220):
+                    # 32 ms VR updates, then an unchanged target for six seconds.
+                    sim.set_target("left", target_at(min(1.0, frame / 30)))
+                    for _ in range(8):
+                        sim.step()
+                        self.assertGreaterEqual(sim.last_collision.clearance, -1e-9)
+                        self.assertTrue(sim.arms["left"].planner.configuration_valid(sim.arms["left"].q))
+                    positions.append(sim.tcp_poses()["left"][:3, 3])
+                positions = np.asarray(positions)
+                # Check both departure from the requested vertical path and
+                # late motion: a large slide that eventually stops is also wrong.
+                lateral = positions[:, :2] - home[:2, 3]
+                self.assertLess(np.linalg.norm(lateral, axis=1).max(), 0.005)
+                self.assertLess(np.ptp(positions[-120:], axis=0).max(), 0.002)
+                np.testing.assert_allclose(sim.arms["right"].q, right, atol=1e-9)
+
+                # A safe retreat must release the hold and regain the same pose.
+                for frame in range(130):
+                    sim.set_target("left", target_at(1.0 - min(1.0, frame / 30)))
+                    for _ in range(8):
+                        sim.step()
+                np.testing.assert_allclose(sim.tcp_poses()["left"], home, atol=1e-4)
+                self.assertIsNone(sim.collision_error)
+
     def test_joint_target_into_the_table_stops_at_the_margin(self):
         # A joint slider used to reset each value and check only the end
         # configuration, so dragging on jumped through the table (J2: 31 deg).

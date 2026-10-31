@@ -96,6 +96,9 @@ class Planner {
   PinkArmVector ref_before_{}, pending_candidate_{};
   double pending_now_{0}, pending_alpha_{0};
   bool pending_{false}, pending_converged_{true};
+  // Reference projection this tick or output reanchor after the previous tick.
+  // Consume in advance(), not on target arrival: VR heartbeats must not erase it.
+  bool external_limited_{false};
   static constexpr double kStillVelocity=1e-6;  // rad/s, a projected reference is never exactly still
   PinkPose pose_{kIdentityPose}, start_{kIdentityPose}, target_{kIdentityPose};
   double arrival_{-1}, start_time_{0}, duration_{0};
