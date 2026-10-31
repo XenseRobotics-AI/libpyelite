@@ -170,14 +170,23 @@ The simulator CLI now restarts itself on Linux with the bundled PySide6 `Qt/lib`
 first in `LD_LIBRARY_PATH`, preserving other entries. This affects only the
 simulator process; it does not change shell settings or the Conda installation.
 Both `python -m libpyelite.sim` and `elite-ik-sim` use this setup. Headless checks
-skip Qt entirely. Reinstall the updated package from the repository root:
+skip Qt entirely.
+
+If Python has file capabilities such as `cap_sys_nice` (set by the LeRobot
+installer for real-time scheduling), Linux's secure-execution mode strips
+`LD_LIBRARY_PATH`. The simulator detects this and restarts through the current
+ELF loader, so this offline process can use the bundled Qt libraries. Python's
+file capabilities remain available to hardware control programs. A restart
+that still loses the library path now raises an error instead of looping
+silently. Reinstall the updated package from the repository root:
 
 ```sh
 python -m pip install './third_party/libpyelite[sim]'
 python -m libpyelite.sim
 ```
 
-For an older installed simulator, this command applies the same workaround:
+For an older installed simulator whose Python has no file capabilities, this
+command applies the library-path workaround:
 
 ```sh
 ELITE_QT_LIB="$(python -c 'import pathlib, PySide6; print(pathlib.Path(PySide6.__file__).parent / "Qt" / "lib")')"

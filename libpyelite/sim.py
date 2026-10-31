@@ -70,6 +70,33 @@ def pose_to_xyz_rpy(pose: Sequence[Sequence[float]] | Sequence[float]) -> np.nda
     return np.array([matrix[0, 3], matrix[1, 3], matrix[2, 3], roll, pitch, yaw])
 
 
+def _qt_restart_command() -> list[str]:
+    """Keep file capabilities on Python from stripping the simulator's Qt path."""
+    import ctypes
+
+    command = [sys.executable, "-m", "libpyelite.sim", *sys.argv[1:]]
+    getauxval = ctypes.CDLL(None).getauxval
+    getauxval.argtypes = [ctypes.c_ulong]
+    getauxval.restype = ctypes.c_ulong
+    if not getauxval(23):  # AT_SECURE: e.g. Python granted cap_sys_nice by setup_env.sh
+        return command
+
+    # Executing the current ELF loader directly starts this offline simulator
+    # without acquiring Python's file capabilities. Find the actual loader via
+    # AT_BASE instead of assuming an x86_64/aarch64 installation path.
+    base = getauxval(7)  # AT_BASE
+    for line in Path("/proc/self/maps").read_text().splitlines():
+        fields = line.split(maxsplit=5)
+        if len(fields) == 6 and int(fields[0].split("-")[0], 16) == base:
+            loader = fields[5]
+            if Path(loader).is_file():
+                return [loader, *command]
+    raise RuntimeError(
+        "Cannot locate the ELF loader for the Qt simulator under AT_SECURE. "
+        "Run the offline simulator with a Python interpreter without file capabilities."
+    )
+
+
 def _prepare_qt_runtime() -> None:
     """Restart the CLI with wheel Qt libraries before conflicting Conda libraries.
 
@@ -94,9 +121,20 @@ def _prepare_qt_runtime() -> None:
     paths = [p for p in os.environ.get("LD_LIBRARY_PATH", "").split(":") if p]
     if paths and paths[0] == str(qt_lib):
         return
+    # exec preserves the PID; an ordinary child process has a different PID and
+    # must still be allowed to prepare its own Qt runtime.
+    restart_key = "LIBPYELITE_QT_REEXEC_PID"
+    if os.environ.get(restart_key) == str(os.getpid()):
+        raise RuntimeError(
+            "Qt runtime setup failed: LD_LIBRARY_PATH was not retained after restart. "
+            "Refusing to restart again; use a Python interpreter without file capabilities "
+            "for the offline simulator."
+        )
     env = os.environ.copy()
     env["LD_LIBRARY_PATH"] = ":".join([str(qt_lib), *[p for p in paths if p != str(qt_lib)]])
-    os.execve(sys.executable, [sys.executable, "-m", "libpyelite.sim", *sys.argv[1:]], env)
+    env[restart_key] = str(os.getpid())
+    command = _qt_restart_command()
+    os.execve(command[0], command, env)
 
 
 def _load_qt() -> dict[str, Any]:
