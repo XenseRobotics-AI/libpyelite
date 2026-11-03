@@ -145,6 +145,21 @@ class TrackingTests(unittest.TestCase):
             sim.step()
         self.assertLess(np.linalg.norm(sim.tcp_poses()["left"][:3, 3] - target[:3, 3]), 1e-3)
 
+    def test_reanchor_without_joint_limiter_preserves_unconsumed_target(self):
+        sim = StationSimulation(settings=settings(native_joint_motion_limits=False,
+                                                   native_preserve_configuration=False))
+        arm = sim.arms["left"]
+        start = arm.q.copy()
+        target = arm.target.copy()
+        target[1, 3] -= 0.02
+        arm.planner.submit(target.ravel(), 0.0, 1)
+        arm.planner.tick(0.0)
+        arm.planner.reanchor(start, [0.0] * 6, [0.0] * 6)
+        np.testing.assert_array_equal(arm.planner.q(), start)
+        self.assertTrue(arm.planner.status().moving)
+        arm.planner.tick(DT)
+        self.assertGreater(np.linalg.norm(np.asarray(arm.planner.q()) - start), 0)
+
     def test_set_reference_only_between_plan_and_advance(self):
         sim = StationSimulation(settings=settings())
         planner = sim.arms["left"].planner

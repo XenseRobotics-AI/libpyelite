@@ -99,7 +99,7 @@ void StationGuard::reset() {
   command_velocity_.setZero();
   command_acceleration_.setZero();
   gripper_checked_defaults_.resize(0);
-  measured_geometry_hold_ = false;
+  measured_geometry_recovery_ = false;
 }
 
 Eigen::VectorXd StationGuard::stationQ(const std::array<PinkArmVector, 2> &q) const {
@@ -301,43 +301,43 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
     return result;
   }
   const Eigen::VectorXd station0 = stationQ(previous, defaults);
+  auto holdMeasuredGeometry = [&](const ClearanceResult &current) {
+    for(std::size_t a = 0; a < 2; ++a) {
+      if(!active[a]) continue;
+      result.held[a] = result.limited[a] = true;
+      planners[a]->hold(previous[a], now);
+    }
+    command_velocity_.setZero();
+    command_acceleration_.setZero();
+    result.q = previous;
+    result.clearance = current;
+    result.measured_geometry_hold = true;
+    result.solve_time_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - begin).count();
+    return result;
+  };
   if(!gripper_indices_.empty() &&
-     (measured_geometry_hold_ || gripper_checked_defaults_.size() != defaults.size() ||
+     (measured_geometry_recovery_ || gripper_checked_defaults_.size() != defaults.size() ||
       (gripper_checked_defaults_.array() != defaults.array()).any())) {
-    // Free gripper motion can invalidate the last safe arm command. Never
-    // invent an arm escape from an overlap: hold the last accepted command
-    // and retry measured geometry until it clears. Telemetry faults above
-    // remain distinct and still stop the coordinator.
     const auto current = collision_->check(station0);
     gripper_checked_defaults_ = defaults;
-    measured_geometry_hold_ = !current.safe;
-    if(measured_geometry_hold_) {
-      for(std::size_t a = 0; a < 2; ++a) {
-        if(!active[a]) continue;
-        result.held[a] = result.limited[a] = true;
-        // Reanchor only the output derivatives, at the last COMMAND, and only
-        // where reanchor preserves the target (the joint-limited planner).
-        if(planners[a]->config().joint_motion_limits)
-          planners[a]->reanchor(previous[a], PinkArmVector{}, PinkArmVector{});
-      }
-      command_velocity_.setZero();
-      command_acceleration_.setZero();
-      result.q = previous;
-      result.clearance = current;
-      result.measured_geometry_hold = true;
-      result.solve_time_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - begin).count();
-      return result;
-    }
+    measured_geometry_recovery_ = !current.safe;
   }
-  for(std::size_t a = 0; a < 2; ++a)
-    if(active[a]) planners[a]->planReference(now);
 
-  // 2. One linearisation per step, at the published joints.
+  // One linearisation per step, at the published joints.
   const Eigen::VectorXd q0 = stack(previous);
   Eigen::MatrixXd g;
   Eigen::VectorXd h;
   ClearanceResult closest;
-  collision_->linearize(station0, velocity_indices_, g, h, closest);
+  if(measured_geometry_recovery_) {
+    // A changing gripper can enter the margin without an arm step. Only the
+    // final whole-path retreat certificate may authorize movement from here.
+    if(!collision_->linearizeRetreat(station0, velocity_indices_, g, h, closest))
+      return holdMeasuredGeometry(closest);
+  } else {
+    collision_->linearize(station0, velocity_indices_, g, h, closest);
+  }
+  for(std::size_t a = 0; a < 2; ++a)
+    if(active[a]) planners[a]->planReference(now);
   const Eigen::MatrixXd metric = taskMetric(station0);
   result.constraints = static_cast<int>(h.size());
 
@@ -449,6 +449,7 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
   // 5. Verify on the real geometry; shorten (finally hold) rather than fault on a first-order miss.
   Eigen::VectorXd accepted = q0;
   ClearanceResult verified = closest;
+  bool retreat_approved = false;
   for(double fraction : {1.0, 0.5, 0.25, 0.0}) {
     accepted = q0 + fraction * displacement;
     if(fraction == 0.0) { verified = closest; break; }
@@ -464,13 +465,28 @@ GuardResult StationGuard::tick(Planner *left, Planner *right, const PinkArmVecto
       configuration_safe=configuration_safe && planners[a]->model().configurationBoxValid(lo,hi);
     }
     if(!configuration_safe) continue;
-    verified = collision_->verifyStep(station0, stationQ(split(accepted), defaults));
+    const auto candidate_station = stationQ(split(accepted), defaults);
+    if(measured_geometry_recovery_) {
+      retreat_approved = collision_->verifyRetreat(station0, candidate_station);
+      result.sampled_pairs += collision_->lastSampledPairs();
+      if(retreat_approved) {
+        verified = collision_->check(candidate_station);
+        break;
+      }
+      continue;
+    }
+    verified = collision_->verifyStep(station0, candidate_station);
     result.sampled_pairs += collision_->lastSampledPairs();
     if(verified.safe) break;
   }
-  if(!verified.safe) throw std::runtime_error("Current configuration violates collision clearance");
+  if(measured_geometry_recovery_ && (!retreat_approved || (accepted - q0).isZero(0)))
+    return holdMeasuredGeometry(closest);
+  if(!measured_geometry_recovery_ && !verified.safe)
+    throw std::runtime_error("Current configuration violates collision clearance");
   const Eigen::VectorXd correction = accepted - q1;
-  const bool changed = correction.norm() > 1e-7;
+  // NativeDriver publishes planner.q(); even a small rejected correction must
+  // not leave it different from the geometry-certified command.
+  const bool changed = (correction.array() != 0.0).any();
   const Eigen::VectorXd step = accepted - q0;
   const auto out = split(accepted);
   for(std::size_t a = 0; a < 2; ++a) {

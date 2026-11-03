@@ -135,7 +135,13 @@ void Planner::seed(const PinkArmVector &q) {
 }
 void Planner::reanchor(const PinkArmVector &q,const PinkArmVector &v,const PinkArmVector &a) {
   if(!model_.configurationValid(q)) throw std::invalid_argument("Output reanchor violates saved configuration");
-  if(!limiter_) { seed(q); return; }
+  if(!limiter_) {
+    // A rejected output step must not consume the user's active target.
+    pose_=model_.forwardKinematics(0,q); q_=ref_q_=q; ref_pose_=pose_;
+    ref_velocity_.fill(0);
+    status_.joint_velocity=v; status_.joint_acceleration=a;
+    return;
+  }
   // An external gate (collision QP) trimmed the output. Only the output state
   // moves: an active target and its reference keep going, so tracking does not
   // restart. Pulling the reference here would turn the next IK step into a 1/dt
@@ -153,6 +159,20 @@ void Planner::reanchor(const PinkArmVector &q,const PinkArmVector &v,const PinkA
     bool still=true;
     for(int i=0;i<6;++i) still=still && v[i]==0 && a[i]==0;
     stopping_=!still; status_.braking=stopping_; status_.moving=stopping_; status_.idle=still;
+  }
+}
+void Planner::hold(const PinkArmVector &q, double now) {
+  if(!std::isfinite(now)) throw std::invalid_argument("Invalid hold time");
+  reanchor(q, PinkArmVector{}, PinkArmVector{});
+  ref_q_=ref_before_=q; ref_pose_=pose_; ref_velocity_.fill(0);
+  pending_=false; external_limited_=true;
+  if(smoother_) smoother_->reset(pose_);
+  start_=goal_=pose_; start_time_=now; first_tick_=true;
+  if(!joint_mode_) {
+    const auto error=CartesianSmoother::difference(pose_,target_);
+    duration_=std::max({config_.period,reset_?duration_:0.0,
+        error.head<3>().norm()/config_.max_linear_velocity,
+        error.tail<3>().norm()/config_.max_angular_velocity});
   }
 }
 void Planner::cancel() {

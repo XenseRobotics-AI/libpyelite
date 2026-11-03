@@ -61,6 +61,8 @@ class Planner {
   Planner(const std::string &urdf, const PinkPose &tool, PinkIKOptions ik, PlannerConfig config);
   void seed(const PinkArmVector &q);
   void reanchor(const PinkArmVector &q,const PinkArmVector &v,const PinkArmVector &a);
+  // Discard an unexecuted reference at a forced stop, retaining target and freshness.
+  void hold(const PinkArmVector &q, double now);
   // Joint reference the limited output follows (equals q() without joint motion limits).
   PinkArmVector reference() const { return limiter_?ref_q_:q_; }
   // tick() == planReference() then advance(). A layer that must constrain the

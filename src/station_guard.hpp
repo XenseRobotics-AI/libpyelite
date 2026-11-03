@@ -22,21 +22,23 @@ struct GuardResult {
   int reference_iterations{0}, output_iterations{0}, sampled_pairs{0};
   std::array<double, 2> gripper_age_s{{-1, -1}};
   std::array<std::uint64_t, 2> gripper_sequence{};
-  bool measured_geometry_hold{false};  // fresh free-moving gripper geometry violates clearance
+  bool measured_geometry_hold{false};  // measured geometry prevents a certified arm step
 };
 
 // One control step of the two arms under the station collision layer.
 // The same object runs in libpyelite.sim and in the hardware StationCoordinator,
 // so what the simulator shows is what the robot executes:
-//  1. each active planner plans its joint reference (Cartesian smoothing + IK);
-//  2. distances and barrier rows are linearised once, at the published joints;
+//  1. measured gripper geometry is checked, then distances and barrier rows
+//     are linearised once at the published joints; contact remains held;
+//  2. each active planner plans its joint reference (Cartesian smoothing + IK);
 //  3. the references are projected (TCP metric); an arm whose blocked step
 //     would not bring its TCP closer to the goal is held instead of sliding;
 //  4. the joint limiters advance; the outputs pass a joint QP gate (hard:
 //     velocity, position, barrier; soft: acceleration/jerk), joint-target arms
 //     only along their commanded joint step;
 //  5. the step is verified on the real geometry (motion bound, then samples),
-//     shortened if needed; a corrected arm's planner is re-anchored.
+//     shortened if needed; measured submargin starts require a nondecreasing
+//     distance certificate instead. A corrected arm's planner is re-anchored.
 // An arm given without a planner (servo stopped, MoveJ) is a fixed obstacle
 // at the given joints. Anything inconsistent throws; the caller stops both arms.
 class StationGuard {
@@ -97,7 +99,7 @@ class StationGuard {
   std::shared_ptr<const Grippers> grippers_;
   Grippers gripper_watermark_;  // last accepted sequence survives invalid publications
   Eigen::VectorXd gripper_checked_defaults_;
-  bool measured_geometry_hold_{false};
+  bool measured_geometry_recovery_{false};
   std::mutex gripper_publish_mutex_;  // producer only; the planner never takes this lock
 };
 }  // namespace libpyelite

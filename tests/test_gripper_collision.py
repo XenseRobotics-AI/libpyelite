@@ -125,7 +125,6 @@ class GripperCollisionTests(unittest.TestCase):
                 self.publish(0, seq=seq)
                 result = self.layer.guard.tick(planner, None, self.q, self.q, now)
                 previous = np.asarray(result.q[0]).copy()
-                reference = np.asarray(planner.reference()).copy()
                 for opening in (0.91875, 1.0, 0.99, 1.0):
                     seq += 1
                     self.publish(opening, seq=seq)
@@ -138,7 +137,8 @@ class GripperCollisionTests(unittest.TestCase):
                     if opening == 1:
                         self.assertLess(result.clearance.minimum_distance, 0)  # actual overlap
                     np.testing.assert_array_equal(result.q[0], previous)
-                    np.testing.assert_array_equal(planner.reference(), reference)
+                    np.testing.assert_array_equal(planner.q(), previous)
+                    np.testing.assert_array_equal(planner.status().joint_velocity, np.zeros(6))
                 seq += 1
                 self.publish(0, seq=seq)
                 result = self.layer.guard.tick(planner, None, self.q, self.q, now + 0.008)
