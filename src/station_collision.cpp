@@ -107,6 +107,7 @@ struct StationCollisionModel::Impl {
   // Built lazily so check()/linearize() retain their existing joint support.
   struct MotionLink {
     int q_index;
+    int v_index;
     bool prismatic;
     double offset;
   };
@@ -156,7 +157,7 @@ struct StationCollisionModel::Impl {
                                 name == "JointModelRZ" || name == "JointModelRevoluteUnaligned";
           if(joint.nq() != 1 || joint.nv() != 1 || !(prismatic || revolute))
             throw std::invalid_argument("verifyStep supports scalar revolute/prismatic collision chains only");
-          c.links.push_back({joint.idx_q(), prismatic, model.jointPlacements[j].translation().norm()});
+          c.links.push_back({joint.idx_q(), joint.idx_v(), prismatic, model.jointPlacements[j].translation().norm()});
         }
       }
       motion_chains = std::move(chains);
@@ -179,6 +180,95 @@ struct StationCollisionModel::Impl {
       bound[k] = travel;
     }
     return bound;
+  }
+
+  struct MotionDerivativeBound {
+    double speed{0}, acceleration{0};
+  };
+
+  std::vector<MotionDerivativeBound> derivativeBounds(const Eigen::VectorXd &q0,
+                                                     const Eigen::VectorXd &q1) {
+    motionBounds(q0, q1);  // Build and validate the same scalar-joint chains.
+    std::vector<MotionDerivativeBound> bounds(shapes.size());
+    for(int k : moving_shapes) {
+      double reach = motion_chains[k].radius;
+      auto &b = bounds[k];
+      for(const auto &j : motion_chains[k].links) {
+        const double delta = std::abs(q1[j.q_index] - q0[j.q_index]);
+        if(j.prismatic) {
+          b.speed += delta;
+          reach += std::max(std::abs(q0[j.q_index]), std::abs(q1[j.q_index]));
+        } else {
+          // Differentiate R(t)x(t): the cross term must use the OLD speed.
+          b.acceleration += 2 * delta * b.speed + delta * delta * reach;
+          b.speed += delta * reach;
+        }
+        reach += j.offset;
+      }
+      const double reserve = 1 + 128 * std::numeric_limits<double>::epsilon();
+      b.speed *= reserve;
+      b.acceleration *= reserve;
+      if(!std::isfinite(b.speed) || !std::isfinite(b.acceleration))
+        throw std::invalid_argument("Nonfinite collision derivative bound");
+    }
+    return bounds;
+  }
+
+  double support(int k, const Eigen::Vector3d &direction) const {
+    const auto &s = shapes[k];
+    if(s.type == 0) return half[k].dot(direction.cwiseAbs());
+    if(s.type == 1) return s.length * 0.5 * std::abs(direction.z()) + s.radius * direction.norm();
+    if(s.type == 2) return s.length * 0.5 * std::abs(direction.z()) + s.radius * direction.head<2>().norm();
+    double largest = -std::numeric_limits<double>::infinity();
+    for(const auto &v : s.vertices)
+      largest = std::max(largest, direction.dot(Eigen::Vector3d(v[0], v[1], v[2])));
+    return largest;
+  }
+
+  // Construct a material point instead of trusting a distance solver's rounded
+  // nearest point to lie in the primitive. Convex-face candidates are explicit
+  // convex combinations of validated vertices, including edges and vertices.
+  Eigen::Vector3d witness(int k, const Eigen::Vector3d &world_point) const {
+    const Eigen::Vector3d p = world[k].actInv(world_point);
+    const auto &s = shapes[k];
+    Eigen::Vector3d local_point = p;
+    if(s.type == 0) {
+      local_point = p.cwiseMax(-half[k]).cwiseMin(half[k]);
+    } else if(s.type == 1) {
+      const Eigen::Vector3d axis(0, 0, std::clamp(p.z(), -s.length * 0.5, s.length * 0.5));
+      const Eigen::Vector3d radial = p - axis;
+      if(radial.norm() > s.radius) local_point = axis + radial * (s.radius / radial.norm());
+    } else if(s.type == 2) {
+      local_point.z() = std::clamp(p.z(), -s.length * 0.5, s.length * 0.5);
+      const double radial = p.head<2>().norm();
+      if(radial > s.radius) local_point.head<2>() *= s.radius / radial;
+    } else {
+      double best = std::numeric_limits<double>::infinity();
+      auto consider = [&](const Eigen::Vector3d &candidate) {
+        const double squared = (p - candidate).squaredNorm();
+        if(squared < best) { best = squared; local_point = candidate; }
+      };
+      for(const auto &face : s.faces) {
+        std::array<Eigen::Vector3d, 3> v;
+        for(int i = 0; i < 3; ++i) {
+          const auto &vertex = s.vertices[face[i]];
+          v[i] = Eigen::Vector3d(vertex[0], vertex[1], vertex[2]);
+        }
+        for(int i = 0; i < 3; ++i) {
+          const Eigen::Vector3d edge = v[(i + 1) % 3] - v[i];
+          const double t = std::clamp((p - v[i]).dot(edge) / edge.squaredNorm(), 0.0, 1.0);
+          consider((1 - t) * v[i] + t * v[(i + 1) % 3]);
+        }
+        const Eigen::Vector3d ab = v[1] - v[0], ac = v[2] - v[0], ap = p - v[0];
+        const double aa = ab.squaredNorm(), cc = ac.squaredNorm(), cross = ab.dot(ac);
+        const double determinant = aa * cc - cross * cross;
+        if(determinant <= 0) continue;
+        const double b = (cc * ap.dot(ab) - cross * ap.dot(ac)) / determinant;
+        const double c = (aa * ap.dot(ac) - cross * ap.dot(ab)) / determinant;
+        if(b >= 0 && c >= 0 && b + c <= 1) consider((1 - b - c) * v[0] + b * v[1] + c * v[2]);
+      }
+    }
+    return world[k].act(local_point);
   }
 
   void place(const Eigen::VectorXd &configuration, bool everything) {
@@ -397,6 +487,18 @@ ClearanceResult StationCollisionModel::check(const Eigen::VectorXd &q, double cu
 
 void StationCollisionModel::linearize(const Eigen::VectorXd &q, const std::vector<int> &velocity_indices,
                                       Eigen::MatrixXd &rows, Eigen::VectorXd &bounds, ClearanceResult &closest) {
+  linearizeImpl(q, velocity_indices, rows, bounds, closest, false);
+}
+
+bool StationCollisionModel::linearizeRetreat(const Eigen::VectorXd &q, const std::vector<int> &velocity_indices,
+                                           Eigen::MatrixXd &rows, Eigen::VectorXd &bounds,
+                                           ClearanceResult &closest) {
+  return linearizeImpl(q, velocity_indices, rows, bounds, closest, true);
+}
+
+bool StationCollisionModel::linearizeImpl(const Eigen::VectorXd &q, const std::vector<int> &velocity_indices,
+                                        Eigen::MatrixXd &rows, Eigen::VectorXd &bounds,
+                                        ClearanceResult &closest, bool retreat) {
   auto &m = *impl_;
   for(int column : velocity_indices)
     if(column < 0 || column >= m.model.nv) throw std::invalid_argument("Invalid velocity index");
@@ -405,12 +507,15 @@ void StationCollisionModel::linearize(const Eigen::VectorXd &q, const std::vecto
   contacts_.clear();
   closest = ClearanceResult{};
   coal::DistanceResult result;
+  double band = detection_;
+  if(retreat)
+    for(double margin : margins_) band = std::max(band, margin + kMotionSlack);
   // Same candidates, in the same ascending order, as a flat scan of every pair.
   std::vector<int> candidates;
   for(const auto &g : m.group_pairs) {
-    if(m.groupGap(g) > detection_) continue;
+    if(m.groupGap(g) > band) continue;
     for(int index : g.pairs)
-      if(m.aabbGap(pairs_[static_cast<std::size_t>(index)][0], pairs_[static_cast<std::size_t>(index)][1]) <= detection_)
+      if(m.aabbGap(pairs_[static_cast<std::size_t>(index)][0], pairs_[static_cast<std::size_t>(index)][1]) <= band)
         candidates.push_back(index);
   }
   std::sort(candidates.begin(), candidates.end());
@@ -421,18 +526,22 @@ void StationCollisionModel::linearize(const Eigen::VectorXd &q, const std::vecto
     ++narrow_calls_;
     const double clearance = d - margins_[index];
     if(clearance < closest.clearance) closest = {clearance >= -1e-9, d, static_cast<int>(index), clearance};
-    if(d > detection_) continue;
+    if(d > band) continue;
     contacts_.push_back({static_cast<int>(index), d, result.nearest_points[0], result.nearest_points[1]});
   }
   linearized_q_ = q;
   rows.setZero(static_cast<Eigen::Index>(contacts_.size()), static_cast<Eigen::Index>(velocity_indices.size()));
   bounds.resize(static_cast<Eigen::Index>(contacts_.size()));
-  if(contacts_.empty()) return;
+  if(contacts_.empty()) return true;
   // One Jacobian pass for every row; joint columns are world twists at the origin.
   pinocchio::computeJointJacobians(m.model, m.data, q);
   for(std::size_t r = 0; r < contacts_.size(); ++r) {
     const auto &c = contacts_[r];
-    if(c.distance <= 1e-9) throw std::runtime_error("Already touching/penetrating; reset to a checked configuration");
+    if(c.distance <= 1e-9 || !c.point1.allFinite() || !c.point2.allFinite() ||
+       (c.point1 - c.point2).norm() <= 1e-9) {
+      if(retreat) { rows.resize(0, rows.cols()); bounds.resize(0); return false; }
+      throw std::runtime_error("Already touching/penetrating; reset to a checked configuration");
+    }
     const Eigen::Vector3d normal = (c.point1 - c.point2).normalized();
     for(std::size_t k = 0; k < velocity_indices.size(); ++k) {
       const int v = velocity_indices[k];
@@ -449,18 +558,152 @@ void StationCollisionModel::linearize(const Eigen::VectorXd &q, const std::vecto
     }
     bounds[static_cast<Eigen::Index>(r)] = gain_ * std::max(0.0, c.distance - margins_[c.pair] - buffer_);
   }
+  return true;
+}
+
+bool StationCollisionModel::verifyRetreat(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1) {
+  auto &m = *impl_;
+  if(q0.size() != m.model.nq || q1.size() != m.model.nq || !q0.allFinite() || !q1.allFinite())
+    throw std::invalid_argument("Invalid collision segment");
+  if(linearized_q_.size() != q0.size() || (linearized_q_.array() != q0.array()).any())
+    throw std::logic_error("verifyRetreat needs the configuration of the last linearize()");
+  const Eigen::VectorXd dq = q1 - q0;
+  if(!dq.allFinite()) throw std::invalid_argument("Nonfinite collision displacement");
+  sampled_pairs_ = narrow_calls_ = 0;
+  SegmentWork work;
+  m.place(q0, false);
+  struct RestorePlacement {
+    Impl &model;
+    const Eigen::VectorXd &q;
+    ~RestorePlacement() { model.place(q, false); }
+  } restore{m, q0};
+
+  std::vector<double> start_distance(pairs_.size(), std::numeric_limits<double>::infinity());
+  for(const auto &contact : contacts_) start_distance[contact.pair] = contact.distance;
+  std::vector<int> deficient;
+  coal::DistanceResult query;
+  for(std::size_t i = 0; i < pairs_.size(); ++i) {
+    if(++work.pair_visits > kMaxSegmentPairVisits) return false;
+    double d = start_distance[i];
+    if(!std::isfinite(d)) {
+      const auto &p = pairs_[i];
+      // This also handles a caller that used ordinary linearize with a
+      // detection band smaller than a pair's margin.
+      if(m.aabbGap(p[0], p[1]) > margins_[i] + kMotionSlack) continue;
+      if(narrow_calls_ >= kMaxSegmentQueries) return false;
+      d = m.measure(static_cast<int>(i), p, query);
+      ++narrow_calls_;
+    }
+    if(d <= 1e-9) return false;
+    if(d < margins_[i]) deficient.push_back(static_cast<int>(i));
+  }
+  if(dq.isZero(0)) return true;
+  if(deficient.empty()) return verifySegment(q0, q1, 0.002, {}, work).safe;
+
+  const auto motion = m.derivativeBounds(q0, q1);
+  Eigen::VectorXd joint_step = Eigen::VectorXd::Zero(m.model.nv);
+  for(int k : m.moving_shapes)
+    for(const auto &j : m.motion_chains[k].links) joint_step[j.v_index] = dq[j.q_index];
+  std::vector<Eigen::Vector3d> velocity(m.shapes.size(), Eigen::Vector3d::Zero());
+  std::vector<Eigen::Vector3d> angular(m.shapes.size(), Eigen::Vector3d::Zero());
+  struct Interval {
+    double lo, hi;
+    int depth;
+    std::vector<int> pairs;
+  };
+  std::vector<Interval> pending{{0, 1, 0, deficient}};
+  sampled_pairs_ = static_cast<int>(deficient.size());
+  while(!pending.empty()) {
+    Interval interval = std::move(pending.back());
+    pending.pop_back();
+    if(++work.intervals > kMaxSegmentIntervals) return false;
+    const double half_width = (interval.hi - interval.lo) * 0.5;
+    const double mid = interval.lo + half_width;
+    const Eigen::VectorXd midpoint = q0 + mid * dq;
+    m.place(midpoint, false);
+    pinocchio::computeJointJacobians(m.model, m.data, midpoint);
+    for(int k : m.moving_shapes) {
+      Eigen::Matrix<double, 6, 1> twist = Eigen::Matrix<double, 6, 1>::Zero();
+      for(int v : m.chain[k]) twist += m.data.J.col(v) * joint_step[v];
+      angular[k] = twist.tail<3>();
+      velocity[k] = twist.head<3>() + angular[k].cross(m.world[k].translation());
+    }
+    std::vector<int> unproven;
+    for(int index : interval.pairs) {
+      if(++work.pair_visits > kMaxSegmentPairVisits) return false;
+      const auto &p = pairs_[index];
+      const int a = p[0], b = p[1];
+      const double speed = motion[a].speed + motion[b].speed;
+      if(speed == 0) continue;  // Both shapes are exactly stationary.
+      if(narrow_calls_ >= kMaxSegmentQueries) return false;
+      const double distance = m.measure(index, p, query);
+      ++narrow_calls_;
+      if(distance <= 1e-9 || !query.nearest_points[0].allFinite() || !query.nearest_points[1].allFinite())
+        return false;
+      const Eigen::Vector3d difference = m.witness(a, query.nearest_points[0]) - m.witness(b, query.nearest_points[1]);
+      const double upper_distance = difference.norm();
+      if(!std::isfinite(upper_distance) || upper_distance <= 1e-9) return false;
+      const Eigen::Vector3d normal = difference / upper_distance;
+      const double arithmetic_scale = m.world[a].translation().norm() + m.world[b].translation().norm() +
+                                      m.bounding_radius[a] + m.bounding_radius[b];
+      const double distance_reserve = kMotionSlack + 128 * std::numeric_limits<double>::epsilon() * arithmetic_scale;
+      const double gap = normal.dot(m.world[a].translation() - m.world[b].translation()) -
+                         m.support(a, -m.world[a].rotation().transpose() * normal) -
+                         m.support(b, m.world[b].rotation().transpose() * normal) - distance_reserve;
+      const double travel = speed * half_width;
+      const double lower_projection = gap - travel;
+      bool certified = false;
+      if(lower_projection > 0) {
+        // The closest difference vector has projection >= lower_projection
+        // and norm <= this transported material witness. This encloses ALL
+        // closest normals, including a change of closest feature midinterval.
+        const double cosine = std::min(1.0, lower_projection / (upper_distance + distance_reserve + travel));
+        const double normal_radius = std::sqrt(2 * (1 - cosine));
+        const double projected_rate = normal.dot(velocity[a] - velocity[b]) -
+          m.bounding_radius[a] * normal.cross(angular[a]).norm() -
+          m.bounding_radius[b] * normal.cross(angular[b]).norm();
+        const double acceleration = motion[a].acceleration + motion[b].acceleration;
+        const double rate_scale = speed + std::abs(projected_rate) + acceleration * half_width +
+          velocity[a].norm() + velocity[b].norm() +
+          arithmetic_scale * (angular[a].norm() + angular[b].norm());
+        const double rate_reserve = 128 * std::numeric_limits<double>::epsilon() * rate_scale;
+        const double lower_rate = projected_rate - acceleration * half_width - speed * normal_radius - rate_reserve;
+        // No negative tolerance: repeatedly approving tiny losses is a drift
+        // budget. An unresolved zero-rate motion is conservatively held.
+        certified = std::isfinite(lower_rate) && lower_rate >= 0;
+      }
+      if(!certified) unproven.push_back(index);
+    }
+    if(unproven.empty()) continue;
+    if(interval.depth >= kMaxSegmentDepth || mid == interval.lo || mid == interval.hi) return false;
+    pending.push_back({mid, interval.hi, interval.depth + 1, unproven});
+    pending.push_back({interval.lo, mid, interval.depth + 1, std::move(unproven)});
+  }
+  std::vector<bool> certified_retreat(pairs_.size(), false);
+  for(int index : deficient) certified_retreat[index] = true;
+  m.place(q0, false);
+  // Only derivative-certified initial violations are exempt from the normal
+  // margin predicate. All other pairs, including out-of-band ones, use it.
+  return verifySegment(q0, q1, 0.002, certified_retreat, work).safe;
 }
 
 ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1,
                                                   double resolution) {
+  sampled_pairs_ = 0;
+  narrow_calls_ = 0;
+  SegmentWork work;
+  return verifySegment(q0, q1, resolution, {}, work);
+}
+
+ClearanceResult StationCollisionModel::verifySegment(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1,
+                                                     double resolution, const std::vector<bool> &certified_retreat,
+                                                     SegmentWork &work) {
   auto &m = *impl_;
   if(q0.size() != m.model.nq || q1.size() != m.model.nq || !q0.allFinite() || !q1.allFinite() ||
      !std::isfinite(resolution) || !(resolution > 0))
     throw std::invalid_argument("Invalid collision segment");
   if(linearized_q_.size() != q0.size() || (linearized_q_.array() != q0.array()).any())
     throw std::logic_error("verifyStep needs the configuration of the last linearize()");
-  sampled_pairs_ = 0;
-  narrow_calls_ = 0;
   const Eigen::VectorXd dq = q1 - q0;
   if(!dq.allFinite()) throw std::invalid_argument("Nonfinite collision displacement");
   if(pairs_.empty()) return {};
@@ -472,6 +715,7 @@ ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, con
   // clearance certificate over an interval, including between query points.
   std::vector<double> pair_motion(pairs_.size()), start_distance(pairs_.size(), detection_);
   for(const auto &c : contacts_) {
+    if(!certified_retreat.empty() && certified_retreat[c.pair]) continue;
     start_distance[c.pair] = c.distance;
     const double clearance = c.distance - margins_[c.pair];
     if(clearance < -1e-9) return {false, c.distance, c.pair, clearance};
@@ -484,6 +728,7 @@ ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, con
   std::vector<int> candidates;
   double widest_margin = 0;
   for(std::size_t i = 0; i < pairs_.size(); ++i) {
+    if(!certified_retreat.empty() && certified_retreat[i]) continue;
     pair_motion[i] = motion[pairs_[i][0]] + motion[pairs_[i][1]];
     if(!std::isfinite(pair_motion[i])) throw std::invalid_argument("Nonfinite collision pair motion");
     widest_margin = std::max(widest_margin, margins_[i]);
@@ -494,7 +739,7 @@ ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, con
     else candidates.push_back(static_cast<int>(i));
   }
   if(candidates.empty()) return worst;  // common small-step path: no FK or distance queries
-  sampled_pairs_ = static_cast<int>(candidates.size());
+  sampled_pairs_ += static_cast<int>(candidates.size());
   // Reserve the QP buffer and numerical slack, then spend only half of the
   // remaining detection band per substep. If there is no usable band, the
   // exhaustive clearance certificate below remains valid without this hint.
@@ -507,7 +752,6 @@ ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, con
   std::vector<Interval> pending;
   pending.push_back({0, 1, 0, std::move(candidates)});
   coal::DistanceResult result;
-  int intervals = 0, pair_visits = 0;
   auto finish = [&](ClearanceResult answer) {
     m.place(q0, false);
     return answer;
@@ -521,14 +765,14 @@ ClearanceResult StationCollisionModel::verifyStep(const Eigen::VectorXd &q0, con
   while(!pending.empty()) {
     Interval interval = std::move(pending.back());
     pending.pop_back();
-    if(++intervals > kMaxSegmentIntervals) return unresolved(interval.pairs.front(), -kMotionSlack);
+    if(++work.intervals > kMaxSegmentIntervals) return unresolved(interval.pairs.front(), -kMotionSlack);
     const double width = interval.hi - interval.lo;
     const double mid = interval.lo + 0.5 * width;
     m.place(q0 + mid * dq, false);
     std::vector<int> unproven;
     double lowest = 0;
     for(int index : interval.pairs) {
-      if(++pair_visits > kMaxSegmentPairVisits) return unresolved(index, -kMotionSlack);
+      if(++work.pair_visits > kMaxSegmentPairVisits) return unresolved(index, -kMotionSlack);
       const auto &p = pairs_[index];
       const double radius = 0.5 * width * pair_motion[index];
       double lower = m.aabbGap(p[0], p[1]) - margins_[index] - radius - kMotionSlack;

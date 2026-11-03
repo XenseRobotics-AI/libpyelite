@@ -67,6 +67,11 @@ class StationCollisionModel {
   // for every pair within the detection distance. Contacts are kept for verifyStep.
   void linearize(const Eigen::VectorXd &q, const std::vector<int> &velocity_indices,
                  Eigen::MatrixXd &rows, Eigen::VectorXd &bounds, ClearanceResult &closest);
+  // The measured-geometry recovery path keeps submargin pairs in the barrier
+  // even outside the normal detection band. Touching geometry returns false;
+  // rows and bounds must not be used in that case.
+  bool linearizeRetreat(const Eigen::VectorXd &q, const std::vector<int> &velocity_indices,
+                        Eigen::MatrixXd &rows, Eigen::VectorXd &bounds, ClearanceResult &closest);
   const std::vector<CollisionContact> &contacts() const { return contacts_; }
 
   // Certify the complete linear joint segment q0 -> q1, starting at exactly
@@ -80,6 +85,12 @@ class StationCollisionModel {
   // a sampling spacing is never a safety certificate.
   ClearanceResult verifyStep(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1, double resolution = 0.002);
 
+  // Approve only a complete path on which every initially submargin pair's
+  // distance is nondecreasing and every other pair retains its normal margin.
+  // Actual touching/overlap and an exhausted proof budget return false.
+  // This approval is distinct from check(q).safe, which still reports margin.
+  bool verifyRetreat(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1);
+
   // World placements (row-major 4x4) of every shape, for viewers.
   std::vector<std::array<double, 16>> placements(const Eigen::VectorXd &q);
 
@@ -89,6 +100,15 @@ class StationCollisionModel {
   int lastSampledPairs() const { return sampled_pairs_; }
 
  private:
+  struct SegmentWork {
+    int intervals{0}, pair_visits{0};
+  };
+  bool linearizeImpl(const Eigen::VectorXd &q, const std::vector<int> &velocity_indices,
+                     Eigen::MatrixXd &rows, Eigen::VectorXd &bounds, ClearanceResult &closest,
+                     bool retreat);
+  ClearanceResult verifySegment(const Eigen::VectorXd &q0, const Eigen::VectorXd &q1,
+                                double resolution, const std::vector<bool> &certified_retreat,
+                                SegmentWork &work);
   struct Impl;
   std::unique_ptr<Impl> impl_;
   std::vector<std::array<int, 2>> pairs_;

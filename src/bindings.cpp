@@ -121,7 +121,15 @@ PYBIND11_MODULE(_native,m) {
       for(const auto &c:self.contacts()) contacts.emplace_back(c.pair,c.distance,c.point1,c.point2);
       return py::make_tuple(rows,bounds,closest,contacts);
     })
+    .def("linearize_retreat",[](StationCollisionModel &self,const Eigen::VectorXd &q,const std::vector<int> &indices) {
+      Eigen::MatrixXd rows; Eigen::VectorXd bounds; ClearanceResult closest;
+      const bool separated=self.linearizeRetreat(q,indices,rows,bounds,closest);
+      std::vector<std::tuple<int,double,Eigen::Vector3d,Eigen::Vector3d>> contacts;
+      for(const auto &c:self.contacts()) contacts.emplace_back(c.pair,c.distance,c.point1,c.point2);
+      return py::make_tuple(separated,rows,bounds,closest,contacts);
+    })
     .def("verify_step",&StationCollisionModel::verifyStep,py::arg("q0"),py::arg("q1"),py::arg("resolution")=0.002)
+    .def("verify_retreat",&StationCollisionModel::verifyRetreat,py::arg("q0"),py::arg("q1"))
     .def("placements",&StationCollisionModel::placements)
     .def_property_readonly("last_narrow_phase_calls",&StationCollisionModel::lastNarrowPhaseCalls)
     .def_property_readonly("last_sampled_pairs",&StationCollisionModel::lastSampledPairs);

@@ -264,6 +264,122 @@ class CollisionSegmentTests(unittest.TestCase):
         self.linearize(c, [])
         self.assertTrue(c.verify_step([], []).safe)
 
+    def test_retreat_approves_outward_motion_without_changing_normal_margin(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0))])
+        separated, rows, bounds, current, _ = c.linearize_retreat([0], [0])
+        self.assertTrue(separated)
+        self.assertFalse(current.safe)
+        self.assertGreater(current.minimum_distance, 0)
+        self.assertEqual(rows.shape, (1, 1))
+        np.testing.assert_array_equal(bounds, [0])
+        self.assertTrue(c.verify_retreat([0], [-0.02]))
+        self.assertFalse(c.verify_step([0], [-0.02]).safe)
+        self.assertFalse(c.check([0]).safe)
+        self.assertFalse(c.verify_retreat([0], [0.001]))
+        # A failed request must not change the next segment's start/cache.
+        self.assertTrue(c.verify_retreat([0], [-0.02]))
+        self.assertLessEqual(c.last_narrow_phase_calls, 4096)
+
+    def test_retreat_cannot_spend_repeated_tiny_clearance_losses(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0))])
+        for _ in range(20):
+            c.linearize_retreat([0], [0])
+            self.assertFalse(c.verify_retreat([0], [1e-10]))
+        self.assertTrue(c.verify_retreat([0], [-1e-10]))
+
+    def test_retreat_rejects_endpoint_improvement_that_first_dips(self):
+        c = self.model(joint("moving", kind="revolute", axis="0 0 1"),
+                       [box("moving", (1, 0, 0), (0.002,) * 3),
+                        box("world", (1.01, 0, 0), (0.002,) * 3)], margin=0.02)
+        start, end = [-0.01], [0.04]
+        initial = c.check(start)
+        self.assertFalse(initial.safe)
+        self.assertGreater(c.check(end).minimum_distance, initial.minimum_distance)
+        self.assertLess(c.check([0]).minimum_distance, initial.minimum_distance)
+        self.assertTrue(c.linearize_retreat(start, [0])[0])
+        self.assertFalse(c.verify_retreat(start, end))
+
+    def test_retreat_must_not_worsen_another_deficient_pair(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0)),
+                                       box("world", (-0.108, 0, 0))])
+        self.assertEqual(len(c.linearize_retreat([0], [0])[4]), 2)
+        self.assertFalse(c.verify_retreat([0], [-0.002]))
+        self.assertFalse(c.verify_retreat([0], [0.002]))
+
+    def test_retreat_keeps_out_of_band_obstacles_protected(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0)),
+                                       box("world", (-0.3, 0, 0))])
+        self.assertEqual(len(c.linearize_retreat([0], [0])[4]), 1)
+        self.assertTrue(c.verify_retreat([0], [-0.05]))
+        self.assertTrue(c.check([-0.6]).safe)
+        self.assertFalse(c.verify_retreat([0], [-0.6]))
+
+    def test_retreat_contact_and_overlap_hold_without_changing_normal_fault(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0))])
+        for start in ([0.008], [0.009]):
+            with self.subTest(start=start):
+                separated, rows, bounds, _, _ = c.linearize_retreat(start, [0])
+                self.assertFalse(separated)
+                self.assertEqual(len(bounds), 0)
+                self.assertFalse(c.verify_retreat(start, [-0.02]))
+                with self.assertRaisesRegex(RuntimeError, "touching/penetrating"):
+                    self.linearize(c, start)
+
+    def test_retreat_finds_deficient_pairs_outside_detection_band(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0))], detection=0.002)
+        self.assertEqual(len(self.linearize(c, [0])[3]), 0)
+        self.assertTrue(c.verify_retreat([0], [-0.02]))
+        self.assertFalse(c.verify_step([0], [-0.02]).safe)
+        self.assertEqual(len(c.linearize_retreat([0], [0])[4]), 1)
+        self.assertTrue(c.verify_retreat([0], [-0.02]))
+
+    def test_retreat_witnesses_cover_all_convex_primitive_types(self):
+        for kind in (0, 1, 2, 3):
+            with self.subTest(kind=kind):
+                shape = box("moving")
+                shape.type, shape.radius, shape.length = kind, 0.05, 0.1
+                if kind == 3:
+                    shape.vertices = [[x, y, z] for x in (-0.05, 0.05)
+                                      for y in (-0.05, 0.05) for z in (-0.05, 0.05)]
+                    shape.faces = [[0, 1, 3], [0, 3, 2], [4, 6, 7], [4, 7, 5],
+                                   [0, 4, 5], [0, 5, 1], [2, 3, 7], [2, 7, 6],
+                                   [0, 2, 6], [0, 6, 4], [1, 5, 7], [1, 7, 3]]
+                c = self.model(joint("moving"), [shape, box("world", (0.108, 0, 0))])
+                self.assertTrue(c.linearize_retreat([0], [0])[0])
+                self.assertTrue(c.verify_retreat([0], [-0.02]))
+                self.assertFalse(c.verify_retreat([0], [0.001]))
+
+    def test_retreat_accounts_for_both_moving_shapes(self):
+        c = self.model(joint("left") + joint("right"), [box("left"), box("right")])
+        c.linearize_retreat([0, 0.108], [0, 1])
+        self.assertTrue(c.verify_retreat([0, 0.108], [-0.01, 0.118]))
+        self.assertFalse(c.verify_retreat([0, 0.108], [-0.01, 0.088]))
+
+    def test_retreat_certifies_rotation_with_downstream_prismatic_motion(self):
+        joints = joint("first", kind="revolute", axis="0 0 1") + joint(
+            "second", parent="first", origin="1 0 0"
+        )
+        c = self.model(joints, [box("second", (0.2, 0, 0), (0.002,) * 3),
+                                box("world", (1.21, 0, 0), (0.002,) * 3)], margin=0.02)
+        start, end = np.array([0.01, 0]), np.array([0.02, -0.002])
+        c.linearize_retreat(start, [0, 1])
+        self.assertTrue(c.verify_retreat(start, end))
+        distances = [c.check(start + t * (end - start)).minimum_distance for t in np.linspace(0, 1, 101)]
+        self.assertTrue(np.all(np.diff(distances) > 0))
+        self.assertFalse(c.verify_step(start, end).safe)
+
+    def test_retreat_requires_finite_inputs_and_exact_linearization_start(self):
+        c = self.model(joint("moving"), [box("moving"), box("world", (0.108, 0, 0))])
+        with self.assertRaises(RuntimeError):
+            c.verify_retreat([0], [-0.02])
+        c.linearize_retreat([0], [0])
+        with self.assertRaises(RuntimeError):
+            c.verify_retreat([1e-13], [-0.02])
+        for start, end in (([np.nan], [0]), ([0], [np.inf]), ([], [0]), ([0], [])):
+            with self.subTest(start=start, end=end), self.assertRaises(ValueError):
+                c.verify_retreat(start, end)
+        self.assertTrue(c.verify_retreat([0], [0]))
+
 
 if __name__ == "__main__":
     unittest.main()
