@@ -139,6 +139,15 @@ with default TCP/seeds and needs neither Qt nor Meshcat; `--urdf` applies only
 to that single-arm check. Dual-arm mapping/independence tests are in
 `tests/test_station_sim.py`.
 
+Bench 08 also packages the DH AG95 model. Select it explicitly with
+`--station diagonal-08 --end-effector dh-ag95 --collision-profile auto`.
+`--list-models` lists installed choices; the existing `diagonal-07` and
+`diagonal-08` names still select TacCap. Python callers can use
+`StationSimulation("diagonal-08", end_effector="dh-ag95", collision_profile="auto")`.
+The DH profile uses the flange as its offline TCP until a DH TCP is supplied.
+See [DH collision testing and fingertip replacement](docs/dh_ag95_collision.md)
+for the viewer command, scoped exclusions and regeneration checks.
+
 The automatic trace checks small streaming motion, an unreachable target, return
 to the original target, and a near-singular wrist seed. These are ideal kinematic
 simulations: they do not model servo lag, collision, dynamics, VR coordinate

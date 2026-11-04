@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "models": [
+    {
+      "id": "diagonal-07-taccap",
+      "station": "diagonal-07",
+      "end_effector": "taccap",
+      "label": "07 · Elite CS66 + TacCap",
+      "directory": "diagonal-07",
+      "aliases": ["diagonal-07"]
+    },
+    {
+      "id": "diagonal-08-taccap",
+      "station": "diagonal-08",
+      "end_effector": "taccap",
+      "label": "08 · Elite CS66 + TacCap",
+      "directory": "diagonal-08",
+      "aliases": ["diagonal-08"]
+    },
+    {
+      "id": "diagonal-08-dh-ag95",
+      "station": "diagonal-08",
+      "end_effector": "dh-ag95",
+      "label": "08 · Elite CS66 + DH AG95",
+      "directory": "diagonal-08-dh-ag95",
+      "aliases": []
+    }
+  ]
+}

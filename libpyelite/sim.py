@@ -19,7 +19,7 @@ from typing import Any
 import numpy as np
 
 from . import PinkIKModel, PinkIKOptions, PlannerConfig, _native, model_path
-from .assembly import Assembly
+from .assembly import Assembly, available_models
 from .control_profile import describe_config, load_recipe, native_config
 
 ARM_DOF = 6
@@ -478,10 +478,13 @@ class StationSimulation:
     )
     left_joint_names = right_joint_names = joint_names
 
-    def __init__(self, station="diagonal-08", initial_q=None, tool=None, settings=None, collision_profile=None):
+    def __init__(self, station=None, initial_q=None, tool=None, settings=None, collision_profile=None, *, end_effector=None):
         import pinocchio as pin
 
-        self.assembly = Assembly(station)
+        requested = (settings or {}).get("native_assembly")
+        self.assembly = Assembly(station or requested or "diagonal-08", end_effector=end_effector)
+        if requested and Assembly(requested).name != self.assembly.name:
+            raise ValueError("Selected model and recipe native_assembly must agree")
         self.urdf_path = self.assembly.urdf
         self.model = pin.buildModelFromUrdf(str(self.urdf_path))
         self.indices = {
@@ -777,7 +780,7 @@ def make_window(qt, model, visualizer=None, xyz_range=0.3):
             self._syncing = False
             # side -> (target, best position error, best orientation error, sim time of last improvement)
             self._progress = {}
-            self.setWindowTitle("Elite CS66 FK / IK — MeshCat sandbox")
+            self.setWindowTitle(model.assembly.model.label + " FK / IK — MeshCat sandbox")
             self.resize(1180, 820)
             self._build_ui(qt)
             self._sync_from_q()
@@ -814,9 +817,11 @@ def make_window(qt, model, visualizer=None, xyz_range=0.3):
         def _build_ui(self, qt_symbols: Mapping[str, Any]) -> None:
             central = qt_symbols["QWidget"]()
             root = qt_symbols["QVBoxLayout"](central)
-            title = qt_symbols["QLabel"]("Elite CS66 双臂 FK / IK 轻量仿真")
+            title = qt_symbols["QLabel"](model.assembly.model.label + " 双臂 FK / IK 仿真")
             title.setStyleSheet("font-size: 20px; font-weight: 600;")
             root.addWidget(title)
+            if model.assembly.metadata.get("simulation_only"):
+                root.addWidget(qt_symbols["QLabel"]("DH 碰撞测试模型 · TCP 位于法兰，尚未提供 DH TCP 标定"))
             root.addWidget(qt_symbols["QLabel"](f"URDF: {model.urdf_path}"))
             profile = describe_config(model.configs["left"])
             root.addWidget(
@@ -1060,7 +1065,11 @@ def main():
     parser.add_argument("--urdf", type=Path)
     parser.add_argument("--initial-q", type=float, nargs=12, metavar="DEG")
     parser.add_argument("--xyz-range", type=float, default=0.3, help="XYZ slider half-range around initial TCP, metres")
-    parser.add_argument("--station", choices=("diagonal-07", "diagonal-08"))
+    models = available_models()
+    parser.add_argument("--station", choices=sorted({name for m in models for name in (m.id, m.station)}))
+    parser.add_argument("--end-effector", choices=sorted({m.end_effector for m in models}),
+                        help="end effector for the selected station; legacy station names default to TacCap")
+    parser.add_argument("--list-models", action="store_true", help="list packaged model IDs and exit")
     parser.add_argument("--recipe", type=Path, help="use the real robot recipe native settings and TCP")
     parser.add_argument(
         "--collision-profile",
@@ -1077,6 +1086,9 @@ def main():
     parser.add_argument("--no-show", action="store_true", help="construct and exercise UI, then exit")
     parser.add_argument("--report", type=Path)
     args = parser.parse_args()
+    if args.list_models:
+        print(json.dumps([vars(model) for model in models], indent=2, ensure_ascii=False))
+        return 0
     if args.headless_check:
         report = run_headless_validation(args.urdf)
         result = json.dumps(report, indent=2)
@@ -1091,14 +1103,15 @@ def main():
     if args.urdf is not None:
         parser.error("--urdf applies only to --headless-check; select the GUI model with --station")
     settings = None if args.recipe is None else load_recipe(args.recipe)
+    selected = Assembly(args.station or (settings or {}).get("native_assembly", "diagonal-08"),
+                        end_effector=args.end_effector)
     if args.safety_config:
         overrides = json.loads(args.safety_config.read_text())
         if settings is None:
-            selected = args.station or "diagonal-08"
-            settings = json.loads((Assembly(selected).root / "simulation_profile.json").read_text())
+            settings = json.loads((selected.root / "simulation_profile.json").read_text())
         settings = settings | overrides
-    station = args.station or (settings or {}).get("native_assembly", "diagonal-08")
-    if settings and settings.get("native_assembly", station) != station:
+    station = selected.name
+    if settings and Assembly(settings.get("native_assembly", station)).name != station:
         parser.error("--station and recipe native_assembly must agree")
     collision_profile = args.collision_profile
     if collision_profile is None:

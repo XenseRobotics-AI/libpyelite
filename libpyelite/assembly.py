@@ -1,8 +1,26 @@
 """Packaged station geometry; controller joint angles remain absolute radians."""
 import json
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+
+
+@dataclass(frozen=True)
+class AssemblyModel:
+    id: str
+    station: str
+    end_effector: str
+    label: str
+    directory: str
+    aliases: tuple[str, ...]
+
+
+def available_models():
+    """Packaged model choices for CLI and viewer selectors; no hardware I/O."""
+    path = Path(__file__).resolve().parent / "assets/stations/catalog.json"
+    return tuple(AssemblyModel(**(entry | {"aliases": tuple(entry["aliases"])}))
+                 for entry in json.loads(path.read_text())["models"])
 
 
 class Assembly:
@@ -13,10 +31,20 @@ class Assembly:
     baked in: the pendant TCP remains the source of truth for each arm.
     """
 
-    def __init__(self, name):
-        if name not in ("diagonal-07", "diagonal-08"):
-            raise ValueError(f"Unsupported Elite assembly: {name!r}")
-        self.root = Path(__file__).resolve().parent / "assets" / "stations" / name
+    def __init__(self, name, *, end_effector=None):
+        choices = available_models()
+        matches = [entry for entry in choices
+                   if (name == entry.id or name in entry.aliases or
+                       (end_effector is not None and name == entry.station))
+                   and (end_effector is None or end_effector == entry.end_effector)]
+        if len(matches) != 1:
+            raise ValueError(f"Unsupported Elite model: {name!r}, end_effector={end_effector!r}; "
+                             f"choose from {[entry.id for entry in choices]}")
+        self.model = matches[0]
+        self.name = self.model.id
+        self.station = self.model.station
+        self.end_effector = self.model.end_effector
+        self.root = Path(__file__).resolve().parent / "assets" / "stations" / self.model.directory
         self.metadata = json.loads((self.root / "control.json").read_text())
         self.urdf = self.root / self.metadata["assembly_urdf"]
 
