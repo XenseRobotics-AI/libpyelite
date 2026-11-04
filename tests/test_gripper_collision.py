@@ -154,6 +154,85 @@ class GripperCollisionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "uninitialized"):
             self.layer.guard.tick(None, None, self.q, self.q, 0)
 
+    def test_endpoint_tolerance_clamps_geometry_and_preserves_raw_samples(self):
+        self.layer.configure_grippers(self.calibration, opening_tolerance=0.002)
+        for seq, opening in enumerate((-0.002, -1e-12, 1.0 + 1e-12, 1.002), 1):
+            samples = {
+                side: SimpleNamespace(position=opening, raw_position=-1.234,
+                                      sampled_at=time.monotonic(), sequence=seq, valid=True)
+                for side in ("left", "right")
+            }
+            self.layer.publish_gripper_snapshots(samples)
+            q = self.station_q()
+            expected = 0.0 if opening < 0 else 0.5
+            for side in ("left", "right"):
+                for suffix, value in (("driver", expected), ("follower", -expected)):
+                    joint = self.layer.model.joints[self.layer.model.getJointId(side + "_" + suffix)]
+                    self.assertAlmostEqual(q[joint.idx_q], value)
+            entry = self.layer.gripper_snapshot_history[-1]
+            self.assertEqual(entry.opening, opening)
+            self.assertEqual(entry.raw_position, -1.234)
+            self.assertTrue(entry.clamped)
+            self.assertEqual(entry.error, "")
+
+    def test_beyond_tolerance_is_rejected_and_failed_frame_survives_recovery(self):
+        self.layer.configure_grippers(self.calibration, opening_tolerance=0.002)
+        for seq, opening in enumerate((np.nextafter(-0.002, -1), np.nextafter(1.002, 2), 1.2), 1):
+            self.publish(opening, seq=seq)
+            with self.assertRaisesRegex(RuntimeError, "gripper collision state is invalid"):
+                self.station_q()
+        self.publish(0.5, seq=4)
+        self.station_q()
+        failed = [s for s in self.layer.gripper_snapshot_history if s.sequence == 3]
+        self.assertEqual(len(failed), 2)
+        self.assertTrue(all(s.opening == 1.2 and "outside calibration" in s.error for s in failed))
+
+    def test_tolerance_never_bypasses_freshness_or_source_validity(self):
+        self.layer.configure_grippers(self.calibration, opening_tolerance=0.002)
+        self.publish(1.001, age=0.2, seq=1)
+        with self.assertRaisesRegex(RuntimeError, "is stale"):
+            self.station_q()
+        self.publish(1.001, valid=False, seq=2)
+        with self.assertRaisesRegex(RuntimeError, "is invalid"):
+            self.station_q()
+        for seq, opening in enumerate((float("nan"), float("inf"), -float("inf")), 3):
+            self.publish(opening, seq=seq)
+            with self.assertRaisesRegex(RuntimeError, "is invalid"):
+                self.station_q()
+
+    def test_tolerance_is_opt_in_and_invalid_tolerances_are_rejected(self):
+        for tolerance in (-0.001, float("nan"), float("inf")):
+            with self.subTest(tolerance=tolerance), self.assertRaisesRegex(ValueError, "tolerance"):
+                self.layer.configure_grippers(self.calibration, opening_tolerance=tolerance)
+        self.configure()
+        self.publish(1.0 + 1e-12)
+        with self.assertRaisesRegex(RuntimeError, "is invalid"):
+            self.station_q()
+
+    def test_tolerance_follows_calibration_endpoints_not_fixed_zero_one(self):
+        calibration = {side: {side + "_driver": [[-0.1, 0], [1.1, 0.5]]}
+                       for side in ("left", "right")}
+        self.layer.configure_grippers(calibration, opening_tolerance=0.002)
+        self.publish(1.101, seq=1)
+        self.station_q()
+        self.publish(1.103, seq=2)
+        with self.assertRaisesRegex(RuntimeError, "is invalid"):
+            self.station_q()
+
+    def test_diagnostics_preserve_source_error_and_have_bounded_history(self):
+        self.configure()
+        for seq in range(1, 100):
+            self.layer.publish_gripper_snapshots({
+                side: SimpleNamespace(position=0.5, raw_position=0.6,
+                                      sampled_at=time.monotonic(), sequence=seq, valid=False,
+                                      error="negative SDK sample age")
+                for side in ("left", "right")
+            })
+        history = self.layer.gripper_snapshot_history
+        self.assertLessEqual(len(history), 64)
+        self.assertEqual(history[-1].sequence, 99)
+        self.assertIn("negative SDK sample age", history[-1].error)
+
     def test_stale_future_nan_and_invalid_data_fail_closed(self):
         self.configure()
         for seq, (kwargs, reason) in enumerate(
