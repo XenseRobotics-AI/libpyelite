@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="worktable_120cm">
+  <link name="worktable_120cm_base">
+    <visual name="part_00">
+      <geometry>
+        <mesh filename="../meshes/part_00.stl" />
+      </geometry>
+      <material name="part_00_color">
+        <color rgba="0.72 0.75 0.78 1" />
+      </material>
+    </visual>
+    <collision name="table_00">
+      <origin xyz="-0.30499999999999999 -0.55499999999999994 0.36499999999999999" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.015000000000000015" length="0.73" />
+      </geometry>
+    </collision>
+    <collision name="table_01">
+      <origin xyz="-0.30499999999999999 0.55499999999999972 0.36499999999999999" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.015000000000000015" length="0.73" />
+      </geometry>
+    </collision>
+    <collision name="table_02">
+      <origin xyz="0.30499999999999999 -0.55499999999999994 0.36499999999999999" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.015000000000000015" length="0.73" />
+      </geometry>
+    </collision>
+    <collision name="table_03">
+      <origin xyz="0.30499999999999999 0.55499999999999972 0.36499999999999999" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.015000000000000513" length="0.73" />
+      </geometry>
+    </collision>
+    <collision name="table_04">
+      <origin xyz="0 0 0.745" rpy="0 0 0" />
+      <geometry>
+        <box size="0.69999999999999996 1.2 0.01" />
+      </geometry>
+    </collision>
+    <collision name="table_05">
+      <origin xyz="-0.30499999999999999 0 0.73499999999999999" rpy="0 0 0" />
+      <geometry>
+        <box size="0.029999999999999999 1.1399999999999999 0.01" />
+      </geometry>
+    </collision>
+    <collision name="table_06">
+      <origin xyz="0.30499999999999999 0 0.73499999999999999" rpy="0 0 0" />
+      <geometry>
+        <box size="0.029999999999999999 1.1399999999999999 0.01" />
+      </geometry>
+    </collision>
+    <collision name="table_07">
+      <origin xyz="0 -0.55500000000000005 0.73499999999999999" rpy="0 0 0" />
+      <geometry>
+        <box size="0.57999999999999996 0.029999999999999999 0.01" />
+      </geometry>
+    </collision>
+    <collision name="table_08">
+      <origin xyz="0 0.55500000000000005 0.73499999999999999" rpy="0 0 0" />
+      <geometry>
+        <box size="0.57999999999999996 0.029999999999999999 0.01" />
+      </geometry>
+    </collision>
+  </link>
+</robot>

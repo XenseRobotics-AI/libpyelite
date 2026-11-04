@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "id": "elite_cs66.a1_stand",
+  "category": "mounts",
+  "display_name": "diagonal-elite",
+  "entrypoints": {
+    "default": "urdf/elite_cs66_a1_stand.urdf",
+    "collision": "urdf/elite_cs66_a1_stand.urdf"
+  },
+  "units": {
+    "length": "m",
+    "angle": "rad",
+    "mass": "kg"
+  },
+  "authoring": {
+    "mode": "step_generated",
+    "authority": "external_hash_locked_step",
+    "generator": "scripts/importers/import_a1_cs66.py",
+    "derivation": "provenance/step_derivation.json",
+    "collision_variant": {
+      "authority": "provenance/collision_recipe.json",
+      "generator": "scripts/generators/generate_diagonal07_collisions.py",
+      "derivation": "provenance/collision_derivation.json",
+      "scope": "Reviewed fixture collisions included in default URDF; collision ID is a compatibility alias; no new fitting or physical parameters."
+    }
+  },
+  "source": {
+    "repository": null,
+    "revision": null,
+    "snapshot": "local_step_file",
+    "license_status": "unconfirmed",
+    "filename": "A1-CS66总装.STEP",
+    "sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+    "notes": [
+      "User-provided SolidWorks AP203 STEP; source length millimetres converted to output metres.",
+      "Original STEP is retained externally and required for regeneration.",
+      "Two catalog elite.cs66 arms and worktable.120cm are reused; their STEP meshes are excluded.",
+      "Stand and controller cabinets are visual only, without estimated mass, inertia, collision or contact parameters.",
+      "2026-10-15: ordinary URDF includes the already-reviewed collision geometry; collision ID remains a compatibility alias. Original visual-only input is provenance/visual_source.xml; no new fitting or physical data."
+    ]
+  },
+  "review": {
+    "visual": "pending_human",
+    "joint_parameters": "fixed_cad_frames_pending_human",
+    "inertial_parameters": "not_provided",
+    "contacts": "not_validated",
+    "collision_geometry": "source_mesh_samples_covered; conservative_approximation; pending_human"
+  },
+  "files": {
+    "meshes/part_00.stl": {
+      "sha256": "b551f496c0ee94f18a87c7bcd6efb6d77aae37d023abe5fecbe53c18c4ceee45",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_01.stl": {
+      "sha256": "cf98ecd22863ceb9f750d3499fe3c28198b0d31721033b3e434ac501d034e0ce",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_02.stl": {
+      "sha256": "4b075dda34292e3bca90ae07ec9c813224f480e9d10142502511af67e2091ea9",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_03.stl": {
+      "sha256": "1b55026c01501f53a1ef60f568719c5d1f6c3e0aba68a912fa396c0588b6d774",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_04.stl": {
+      "sha256": "716d0684d3209df5e778ca511894dc78538eb53e086fc943ff142f09f599473b",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_05.stl": {
+      "sha256": "84abca2f74c6a5f75f835610a7bb97da33317ffddc9dfafe3a63ba9603788d89",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_06.stl": {
+      "sha256": "add84ead6e5f8de0a95b5315fbf45c10c560fde18bc13be03a82e5808d870467",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "meshes/part_07.stl": {
+      "sha256": "8519e7af3ce93ae1d59533072f1a3d596f28de3408ab8ac1944b2e20f8f89eae",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "mesh"
+    },
+    "provenance/step_derivation.json": {
+      "sha256": "632427e6c6887d536eeb2f34fe4d728bed0520baabbc275f671f8380db757687",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "derivation"
+    },
+    "urdf/elite_cs66_a1_stand.urdf": {
+      "sha256": "1a467f25fc7ef3e95a8b7f547451a884108644cf8dc42cf7505163b28d865e5d",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_derivation",
+      "modification": "2026-10-15: existing reviewed fixture collisions promoted into ordinary URDF; visuals, frames and mechanical parameters retained."
+    },
+    "provenance/collision_recipe.json": {
+      "sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_derivation"
+    },
+    "provenance/collision_derivation.json": {
+      "sha256": "7f0e164f9916be0f450970fb9415289f524e19af0e082569681fb7f3fbe9a1fd",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_derivation"
+    },
+    "provenance/collision_cad_measurements.json": {
+      "sha256": "61226a162d8e1ffe71183f486e6d52098d3e8787f0946fe79f89e3091e7072c0",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_derivation"
+    },
+    "meshes/collision/part_00_rib_00.stl": {
+      "sha256": "244376e55d2d2946f51aa09a477d6c95ace4d3a5c79ebc607305f4faa3c82be2",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_mesh"
+    },
+    "meshes/collision/part_00_rib_01.stl": {
+      "sha256": "781e86c0ed7b7afb75a132e4017a40d70023f55ea21295ebc32f7a726ea953fd",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_mesh"
+    },
+    "meshes/collision/part_00_rib_02.stl": {
+      "sha256": "ceed84b7e7d7facf7f50821302f635e4237d4eabae1e7ecd1fd6044ef26153ad",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_mesh"
+    },
+    "meshes/collision/part_00_rib_03.stl": {
+      "sha256": "4dcd4b35f765a781966cfa7ca225f7c5ec941698d3b3ee32c849cdb928f923a6",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_mesh"
+    },
+    "README.md": {
+      "sha256": "9df99bd9f20941fc11a21fbd618a818db336c5986673ac8796b45c5e639251d2",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "2b5d190c36b2495d6a7d69c2378c53f98908d811dc69a43a2336c7d0d63fbb15",
+      "role": "collision_derivation"
+    },
+    "provenance/visual_source.xml": {
+      "sha256": "323b566c27b60e07e801b900f12e3e74448dfc1a1b601331e0967436fd0b237f",
+      "source": "A1-CS66总装.STEP",
+      "source_sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+      "role": "source_urdf"
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "collision_author": "Xense",
+  "generator": "scripts/generators/generate_ag95_collision.py",
+  "generator_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f",
+  "kernel_sha256": "22f32a6ed5f66f4582b90463e24fe7f272255140253e6929a0e31d2ede2d5081",
+  "parts": [
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_base_link",
+      "source_mesh": "meshes/visual/base_link.STL",
+      "source_mesh_sha256": "9957a3139e4b728bfa8377f56f475fbaba0a7455aa350ad265b861ee0ead09f9",
+      "source_triangles": 18316
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger1_knuckle_link",
+      "source_mesh": "meshes/visual/crank_Link.STL",
+      "source_mesh_sha256": "055951d8f431afd252d3d0aa5a5f7e1f9bb00aee3d4719e36a0330c1b0839cb8",
+      "source_triangles": 1344
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger2_knuckle_link",
+      "source_mesh": "meshes/visual/crank_Link.STL",
+      "source_mesh_sha256": "055951d8f431afd252d3d0aa5a5f7e1f9bb00aee3d4719e36a0330c1b0839cb8",
+      "source_triangles": 1344
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger1_finger_link",
+      "source_mesh": "meshes/visual/rod_Link.STL",
+      "source_mesh_sha256": "24b1e14b2c64ce8982b1e216a1576bc2f1f26bb71017997391ce01c5d0fe587e",
+      "source_triangles": 1130
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger2_finger_link",
+      "source_mesh": "meshes/visual/rod_Link.STL",
+      "source_mesh_sha256": "24b1e14b2c64ce8982b1e216a1576bc2f1f26bb71017997391ce01c5d0fe587e",
+      "source_triangles": 1130
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger1_inner_knuckle_link",
+      "source_mesh": "meshes/visual/proximal_phalanx_Link.STL",
+      "source_mesh_sha256": "83ab0bf1cf41a1f5755f4b8b3d4b9306445be15342bb54bbf7356a4d80940aa7",
+      "source_triangles": 1810
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger2_inner_knuckle_link",
+      "source_mesh": "meshes/visual/proximal_phalanx_Link.STL",
+      "source_mesh_sha256": "83ab0bf1cf41a1f5755f4b8b3d4b9306445be15342bb54bbf7356a4d80940aa7",
+      "source_triangles": 1810
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger1_finger_tip_link",
+      "source_mesh": "meshes/visual/distal_phalanx_Link.STL",
+      "source_mesh_sha256": "e684d9bfa5fee1cf6c5c59fa1a69b8bd1d6f8a808b746f1e592cd7b226deebee",
+      "source_triangles": 7666
+    },
+    {
+      "collision_triangles": 68,
+      "convexes": 1,
+      "frame": "gripper_finger2_finger_tip_link",
+      "source_mesh": "meshes/visual/distal_phalanx_Link.STL",
+      "source_mesh_sha256": "e684d9bfa5fee1cf6c5c59fa1a69b8bd1d6f8a808b746f1e592cd7b226deebee",
+      "source_triangles": 7666
+    }
+  ],
+  "recipe_sha256": "35212f41ad2a7d6460d317bdde492ee441b4cc0ad6757c7c868d2030639eb567",
+  "scope": "Xense-authored collision replaces upstream collision in the stable AG95 entry; official visuals/mechanics retained",
+  "versions": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "trimesh": "5.1.0"
+  }
+}

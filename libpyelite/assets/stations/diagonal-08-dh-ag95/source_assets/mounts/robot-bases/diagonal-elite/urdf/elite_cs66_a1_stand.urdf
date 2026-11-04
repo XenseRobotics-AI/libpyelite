@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="elite_cs66_a1_stand">
+  <link name="elite_cs66_a1_stand_base">
+    <visual name="part_00">
+      <geometry>
+        <mesh filename="../meshes/part_00.stl" />
+      </geometry>
+      <material name="part_00_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_01">
+      <geometry>
+        <mesh filename="../meshes/part_01.stl" />
+      </geometry>
+      <material name="part_01_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_02">
+      <geometry>
+        <mesh filename="../meshes/part_02.stl" />
+      </geometry>
+      <material name="part_02_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_03">
+      <geometry>
+        <mesh filename="../meshes/part_03.stl" />
+      </geometry>
+      <material name="part_03_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_04">
+      <geometry>
+        <mesh filename="../meshes/part_04.stl" />
+      </geometry>
+      <material name="part_04_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_05">
+      <geometry>
+        <mesh filename="../meshes/part_05.stl" />
+      </geometry>
+      <material name="part_05_color">
+        <color rgba="0.7 0.73 0.77 1" />
+      </material>
+    </visual>
+    <visual name="part_06">
+      <geometry>
+        <mesh filename="../meshes/part_06.stl" />
+      </geometry>
+      <material name="part_06_color">
+        <color rgba="0.29 0.32 0.36 1" />
+      </material>
+    </visual>
+    <visual name="part_07">
+      <geometry>
+        <mesh filename="../meshes/part_07.stl" />
+      </geometry>
+      <material name="part_07_color">
+        <color rgba="0.29 0.32 0.36 1" />
+      </material>
+    </visual>
+    <collision name="part_00_rib_00">
+      <geometry>
+        <mesh filename="../meshes/collision/part_00_rib_00.stl" />
+      </geometry>
+    </collision>
+    <collision name="part_00_rib_01">
+      <geometry>
+        <mesh filename="../meshes/collision/part_00_rib_01.stl" />
+      </geometry>
+    </collision>
+    <collision name="part_00_rib_02">
+      <geometry>
+        <mesh filename="../meshes/collision/part_00_rib_02.stl" />
+      </geometry>
+    </collision>
+    <collision name="part_00_rib_03">
+      <geometry>
+        <mesh filename="../meshes/collision/part_00_rib_03.stl" />
+      </geometry>
+    </collision>
+    <collision name="part_00_00">
+      <origin xyz="0.079733886578398305 -0.067776960061789931 0.66389548327193171" rpy="0 0 -3.1415926535897931" />
+      <geometry>
+        <cylinder radius="0.044500000000000005" length="1.084" />
+      </geometry>
+    </collision>
+    <collision name="part_00_01">
+      <origin xyz="0.079733886578398305 -0.06777696006178989 1.2058954832719317" rpy="0 1.5707963267948966 1.5707963267948966" />
+      <geometry>
+        <cylinder radius="0.044500000000000005" length="0.5004944423582725" />
+      </geometry>
+    </collision>
+    <collision name="part_00_02">
+      <origin xyz="0.079733886578398305 -0.27858026092068955 1.2111987841308309" rpy="0 2.35619449019234 1.5707963267948966" />
+      <geometry>
+        <cylinder radius="0.075" length="0.014999999999999902" />
+      </geometry>
+    </collision>
+    <collision name="part_00_03">
+      <origin xyz="0.079733886578398305 0.14302634079710852 1.2111987841308309" rpy="0 0.78539816339744295 1.5707963267948966" />
+      <geometry>
+        <cylinder radius="0.07500000000000001" length="0.015000000000000124" />
+      </geometry>
+    </collision>
+    <collision name="part_00_04">
+      <origin xyz="0.079733886578398305 -0.067776960061789931 0.11389548327193166" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.11" length="0.016000000000000014" />
+      </geometry>
+    </collision>
+    <collision name="part_01_00">
+      <origin xyz="0.56525483727455139 -0.40635137259960175 0.055697742849588394" rpy="0 0 0" />
+      <geometry>
+        <box size="0.082228243350982666 0.099349409341812134 0.11139548569917679" />
+      </geometry>
+    </collision>
+    <collision name="part_02_00">
+      <origin xyz="-0.13474516198039055 0.29364863783121109 0.055697742849588394" rpy="0 0 0" />
+      <geometry>
+        <box size="0.082228280603885651 0.099349424242973328 0.11139548569917679" />
+      </geometry>
+    </collision>
+    <collision name="part_03_00">
+      <origin xyz="0.56525483727455139 0.29364863783121109 0.055697742849588394" rpy="0 0 0" />
+      <geometry>
+        <box size="0.082228243350982666 0.099349424242973328 0.11139548569917679" />
+      </geometry>
+    </collision>
+    <collision name="part_04_00">
+      <origin xyz="-0.1346549391746521 -0.40632441639900208 0.055697742849588394" rpy="0 0 0" />
+      <geometry>
+        <box size="0.082063972949981689 0.099496722221374512 0.11139548569917679" />
+      </geometry>
+    </collision>
+    <collision name="part_05_00">
+      <origin xyz="0.22115525603294373 -0.067776963114738464 0.097895484417676926" rpy="0 0 0" />
+      <geometry>
+        <box size="0.80000001192092896 0.79999998211860657 0.015999995172023773" />
+      </geometry>
+    </collision>
+    <collision name="part_06_00">
+      <origin xyz="0.41502665728330612 -0.28857827931642532 0.30889547988772392" rpy="0 0 0" />
+      <geometry>
+        <box size="0.50500001013278961 0.22500000894069672 0.40599999576807022" />
+      </geometry>
+    </collision>
+    <collision name="part_07_00">
+      <origin xyz="0.39710664004087448 0.1866452768445015 0.30889547988772392" rpy="0 0 0" />
+      <geometry>
+        <box size="0.50500001013278961 0.22500000894069672 0.40599999576807022" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="left_arm_mount" />
+  <joint name="left_mount_frame" type="fixed">
+    <parent link="elite_cs66_a1_stand_base" />
+    <child link="left_arm_mount" />
+    <origin xyz="0.0797338865783983 0.148329641656007 1.21650208498973" rpy="-0.785398163397443 2.22044604925031e-16 0" />
+  </joint>
+  <link name="right_arm_mount" />
+  <joint name="right_mount_frame" type="fixed">
+    <parent link="elite_cs66_a1_stand_base" />
+    <child link="right_arm_mount" />
+    <origin xyz="0.0797338865783983 -0.283883561779589 1.21650208498973" rpy="0.785398163397453 0 3.88578058618805e-16" />
+  </joint>
+</robot>

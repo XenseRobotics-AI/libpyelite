@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "id": "worktable.120cm",
+  "category": "objects",
+  "display_name": "Worktable 120 cm × 70 cm",
+  "entrypoints": {
+    "default": "urdf/worktable_120cm.urdf",
+    "collision": "urdf/worktable_120cm.urdf"
+  },
+  "units": {
+    "length": "m",
+    "angle": "rad",
+    "mass": "kg"
+  },
+  "authoring": {
+    "mode": "step_generated",
+    "authority": "external_hash_locked_step",
+    "generator": "scripts/importers/import_diagonal_02.py",
+    "derivation": "provenance/step_derivation.json",
+    "collision_variant": {
+      "authority": "provenance/collision_recipe.json",
+      "generator": "scripts/generators/generate_diagonal07_collisions.py",
+      "derivation": "provenance/collision_derivation.json",
+      "scope": "Reviewed fixture collisions included in default URDF; collision ID is a compatibility alias; no new fitting or physical parameters."
+    }
+  },
+  "source": {
+    "repository": null,
+    "revision": null,
+    "snapshot": "local_step_file",
+    "license_status": "unconfirmed",
+    "filename": "A3-侧向45度-型材-V2.0.STEP",
+    "sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+    "notes": [
+      "User-provided SolidWorks AP203 STEP; millimetres converted once to metres.",
+      "Original STEP retained externally; supply matching hash to regenerate. No CAD arm meshes imported.",
+      "Visual-only fixed structures: no invented mass, inertia, collision or friction.",
+      "Stand includes source casters and both controller boxes as fixed visual geometry.",
+      "2026-10-15: worktable default now includes the existing reviewed CAD-derived collision primitives; no mass/inertia/friction introduced. Original visual-only input retained in provenance/visual_source.xml."
+    ]
+  },
+  "review": {
+    "visual": "pending_human",
+    "joint_parameters": "fixed_cad_frames_pending_human",
+    "inertial_parameters": "not_provided",
+    "contacts": "not_validated",
+    "collision_geometry": "source_mesh_samples_covered; conservative_approximation; pending_human"
+  },
+  "files": {
+    "meshes/part_00.stl": {
+      "sha256": "a85f4460894d80c66ab1f771fb0e95ed4e212940ce61c2d8d17be4b69a72bc8a",
+      "source": "A3-侧向45度-型材-V2.0.STEP",
+      "source_sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+      "role": "mesh"
+    },
+    "provenance/step_derivation.json": {
+      "sha256": "06e71de9df36c1e049f401f00e664123181a435262c411294a5ea56fb4583160",
+      "source": "A3-侧向45度-型材-V2.0.STEP",
+      "source_sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+      "role": "derivation"
+    },
+    "urdf/worktable_120cm.urdf": {
+      "sha256": "15cc9a707775f24bd03cabff71e0957efb19b213bf968e24e577f5185e9fafb0",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "71134cff1e9b999bef8dd3b607bb97ac440709143065c76a3113b16bd8c824a8",
+      "role": "collision_derivation",
+      "modification": "2026-10-15: reviewed nine primitive collisions promoted into canonical URDF; visuals and frames retained; collision variant is a compatibility alias."
+    },
+    "provenance/collision_recipe.json": {
+      "sha256": "71134cff1e9b999bef8dd3b607bb97ac440709143065c76a3113b16bd8c824a8",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "71134cff1e9b999bef8dd3b607bb97ac440709143065c76a3113b16bd8c824a8",
+      "role": "collision_derivation"
+    },
+    "provenance/collision_derivation.json": {
+      "sha256": "e6bca34eb2257f028dd2f02f13d64063c6d5a684d59c430716bc7edb300d27d2",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "71134cff1e9b999bef8dd3b607bb97ac440709143065c76a3113b16bd8c824a8",
+      "role": "collision_derivation"
+    },
+    "provenance/collision_cad_measurements.json": {
+      "sha256": "1ea3e1644f964984f8c7a2cf78ceba5cf89e97e6c5526b5f6ea8213d802ce44b",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "71134cff1e9b999bef8dd3b607bb97ac440709143065c76a3113b16bd8c824a8",
+      "role": "collision_derivation"
+    },
+    "README.md": {
+      "sha256": "a60a5ebf3260b25a03601eefe3339d4bd5b8deb57aa9ed7b451801aefd0d17a3",
+      "source": "provenance/collision_recipe.json",
+      "source_sha256": "71134cff1e9b999bef8dd3b607bb97ac440709143065c76a3113b16bd8c824a8",
+      "role": "collision_derivation"
+    },
+    "provenance/visual_source.xml": {
+      "sha256": "661cedd0f0cf7e8b44205877acec50a6b8c2902f5055978ea49e8471c8ab1d74",
+      "source": "A3-侧向45度-型材-V2.0.STEP",
+      "source_sha256": "49f9b6c8422776874d04c381203b4395eec038734fc239a61df9940d1d28455e",
+      "role": "source_urdf"
+    }
+  }
+}

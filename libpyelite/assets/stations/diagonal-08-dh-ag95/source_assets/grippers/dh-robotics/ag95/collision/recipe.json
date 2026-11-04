@@ -1,0 +1,21 @@
+{
+  "algorithm_lineage": "feat/elite-collision@eb148bb; geometry kernel introduced with TacCap",
+  "asset_id": "dh_robotics.ag95",
+  "axial_slab_m": 0.045,
+  "collision_author": "Xense",
+  "kernel": "scripts/lib/elite_collision_fit.py",
+  "kernel_sha256": "22f32a6ed5f66f4582b90463e24fe7f272255140253e6929a0e31d2ede2d5081",
+  "maximum_support_planes": 20,
+  "method": "Complete visual triangles in metres; one support polytope per existing rigid link by default; optional exact axial/cross cells",
+  "numeric_padding_tolerance_m": 1e-07,
+  "padding_m": 0.002,
+  "schema_version": 1,
+  "source_mesh_scale": [
+    0.001,
+    0.001,
+    0.001
+  ],
+  "source_urdf": "provenance/urdf/ag95.urdf",
+  "source_urdf_sha256": "9fdaab6ac77d44c83184ad97dd488b40eb060784917870cfd12b91bac9416fc7",
+  "split_moving_parts": false
+}

@@ -1,0 +1,32 @@
+{
+  "unit": "radian",
+  "values": {
+    "left_arm": [
+      -1.3963,
+      -0.5236,
+      1.5708,
+      -0.5236,
+      1.5708,
+      -0.7854
+    ],
+    "right_arm": [
+      -1.7453,
+      -2.618,
+      -1.5708,
+      -2.618,
+      -1.5708,
+      -0.7854
+    ]
+  },
+  "source": {
+    "repository": "XenseRobotics-AI/lerobot-xense",
+    "revision": "b3451528c6e0e912b9befb7fdb25429c927b9c4e",
+    "path": "recipes/teleop/bi_elite_cs66_rt/diagonal-07-taccap.yaml",
+    "sha256": "d9c2702c685c59bfa3d6a4d2884d50131900222ba6c87767696a4cbb81c9efc3",
+    "fields": {
+      "left_arm": "robot.left_start_position_rad",
+      "right_arm": "robot.right_start_position_rad"
+    },
+    "note": "Copy the 12 unchanged arm start values from reference_start_pose.taccap.json. AG95 drivers and all source mimic followers remain at source q=0 (no tool tracks). CS66 has six arm joints per side; no extra arm joint7 or baked offset."
+  }
+}

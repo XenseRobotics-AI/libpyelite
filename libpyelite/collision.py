@@ -98,6 +98,11 @@ class StationCollision:
         if any(len(p) != 2 or not set(p) <= frames for p in self.profile["allowed_link_pairs"]):
             raise ValueError("Unknown allowed collision pair")
         allowed = {frozenset(p) for p in self.profile["allowed_link_pairs"]}
+        for certificate in self.profile.get("separation_certificates", []):
+            clearance = float(certificate["clearance_m"])
+            if (not np.isfinite(clearance) or self.self_margin > clearance
+                    or frozenset(certificate["links"]) not in allowed):
+                raise ValueError("Source separation certificate does not cover the configured self margin; regenerate the profile")
         self.pairs = [
             (i, j)
             for i, a in enumerate(self.shapes)
@@ -122,6 +127,22 @@ class StationCollision:
             raise ValueError("Collision URDF does not match the model")
         self._solvers = {}
         self._linearized = None  # (q, velocity_indices) of the last linearize()
+        self._certified_mimics = []
+        self._certified_drivers = []
+        if self.profile.get("separation_certificates"):
+            import xml.etree.ElementTree as ET
+
+            for element in ET.parse(urdf).getroot().findall("joint"):
+                mimic = element.find("mimic")
+                if mimic is None:
+                    continue
+                joint = model.joints[model.getJointId(element.get("name"))]
+                driver = model.joints[model.getJointId(mimic.get("joint"))]
+                if joint.nq != 1 or driver.nq != 1:
+                    raise ValueError("Certified tool separation requires scalar mimic joints")
+                self._certified_mimics.append((joint.idx_q, driver.idx_q, float(mimic.get("multiplier", 1)),
+                                               float(mimic.get("offset", 0))))
+                self._certified_drivers.append(driver.idx_q)
 
     def result(self, native):
         """CollisionResult (with shape names) for a native ClearanceResult."""
@@ -131,11 +152,16 @@ class StationCollision:
             pair = (self.shapes[i]["name"], self.shapes[j]["name"])
         return CollisionResult(bool(native.safe), float(native.minimum_distance), pair, float(native.clearance))
 
-    @staticmethod
-    def _configuration(q, nq):
+    def _configuration(self, q, nq):
         q = np.asarray(q, dtype=float)
         if q.shape != (nq,) or not np.isfinite(q).all():
             raise ValueError("Invalid collision configuration")
+        for index in self._certified_drivers:
+            if not self.model.lowerPositionLimit[index] - 1e-10 <= q[index] <= self.model.upperPositionLimit[index] + 1e-10:
+                raise ValueError("Configuration exceeds certified gripper range")
+        for follower, driver, multiplier, offset in self._certified_mimics:
+            if abs(q[follower] - (q[driver] * multiplier + offset)) > 1e-10:
+                raise ValueError("Configuration violates certified gripper mimic relationship")
         return q
 
     def placements(self, q):

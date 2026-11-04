@@ -1,0 +1,1 @@
+Source: user-provided `A1-CS66总装.STEP` (SHA-256 `eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c`). Original STEP is held externally. Redistribution authorization is unconfirmed; repository MIT license does not cover this CAD geometry.

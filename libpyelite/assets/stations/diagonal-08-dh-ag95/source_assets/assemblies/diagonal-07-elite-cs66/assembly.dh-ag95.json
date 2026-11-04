@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "id": "assembly.diagonal_07_elite_cs66_dh_ag95",
+  "entrypoint": "urdf/diagonal-07-elite-cs66-dh-ag95.urdf",
+  "world": "world",
+  "instances": {
+    "left_arm": {
+      "asset_id": "elite.cs66",
+      "variant": "default",
+      "prefix": "left_"
+    },
+    "right_arm": {
+      "asset_id": "elite.cs66",
+      "variant": "default",
+      "prefix": "right_"
+    },
+    "stand": {
+      "asset_id": "elite_cs66.a1_stand",
+      "variant": "default",
+      "prefix": ""
+    },
+    "table": {
+      "asset_id": "worktable.120cm",
+      "variant": "default",
+      "prefix": ""
+    },
+    "left_gripper": {
+      "asset_id": "dh_robotics.ag95",
+      "variant": "default",
+      "prefix": "left_tool_"
+    },
+    "right_gripper": {
+      "asset_id": "dh_robotics.ag95",
+      "variant": "default",
+      "prefix": "right_tool_"
+    }
+  },
+  "connections": [
+    {
+      "name": "world_to_stand",
+      "parent": "world",
+      "child": "elite_cs66_a1_stand_base",
+      "xyz": "0 0 0",
+      "rpy": "0 0 3.141592653589793"
+    },
+    {
+      "name": "world_to_table",
+      "parent": "world",
+      "child": "worktable_120cm_base",
+      "xyz": "0.700624760246217 0.067776960061789945 0.000895483271931539",
+      "rpy": "0 0 0"
+    },
+    {
+      "name": "left_arm_attachment",
+      "parent": "right_arm_mount",
+      "child": "left_world",
+      "xyz": "0 0 0",
+      "rpy": "0 0 1.5707963267948966"
+    },
+    {
+      "name": "right_arm_attachment",
+      "parent": "left_arm_mount",
+      "child": "right_world",
+      "xyz": "0 0 0",
+      "rpy": "0 0 -1.5707963267948966"
+    },
+    {
+      "name": "left_flange_to_dh_ag95",
+      "parent": "left_flange",
+      "child": "left_tool_gripper_base_link",
+      "xyz": "0 0 0",
+      "rpy": "0 0 1.5707963267948966"
+    },
+    {
+      "name": "right_flange_to_dh_ag95",
+      "parent": "right_flange",
+      "child": "right_tool_gripper_base_link",
+      "xyz": "0 0 0",
+      "rpy": "0 0 0"
+    }
+  ],
+  "inputs": {
+    "left_arm": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+    "right_arm": "2b12bccf330d36944faf57b573a0b44f78c4dedade41c71dd20516892ef2491a",
+    "stand": "1a467f25fc7ef3e95a8b7f547451a884108644cf8dc42cf7505163b28d865e5d",
+    "table": "15cc9a707775f24bd03cabff71e0957efb19b213bf968e24e577f5185e9fafb0",
+    "left_gripper": "6e57fb4955774fbaf4845ab47490d2f438aaf0f13ab8c10aad0486c3bcd6c9d1",
+    "right_gripper": "6e57fb4955774fbaf4845ab47490d2f438aaf0f13ab8c10aad0486c3bcd6c9d1"
+  },
+  "source": {
+    "path": "A1-CS66总装.STEP",
+    "sha256": "eb6ad98ddcd07ab4fc21c494accfa174702927dbb5ee028edfc91e7959a4382c",
+    "derivation": "elite_cs66.a1_stand/provenance/step_derivation.json",
+    "notes": "A1 STEP supplies the stand, CAD arm mount positions and table pose; catalog CS66 arms and worktable are reused. The stand is rotated 180 degrees about world Z The table is later centered laterally on the rotated CAD column per the 2026-10-08 request; see table_centering. After that rotation, the controller left/right arms attach to the CAD right/left mount frames respectively. Local Z corrections of +90/-90 degrees align the assembled base rotations with this bench's LeRobot left/right_world_rotation matrices. The assembly keeps the official CS66 joint coordinates. Recipe start positions are optional states in config/start_pose.json; they are not baked into joint origins or limits. Add two unchanged official DH AG95 grippers directly at CS66 flanges per user-confirmed matching four bolt holes. Rotate AG95 local X opening axis onto the TacCap reference local Y opening axis; no adapter and no copied mechanical parameters.",
+    "table_centering": {
+      "request": "2026-10-08: center table left/right relative to the rotated stand column",
+      "unit": "metre",
+      "evidence": "elite_cs66.a1_stand/provenance/step_derivation.json",
+      "evidence_sha256": "632427e6c6887d536eeb2f34fe4d728bed0520baabbc275f671f8380db757687",
+      "column_occurrence": "B2-支架立柱-侧向安装",
+      "original_xyz": [
+        0.700624760246217,
+        -0.0677769600617899,
+        0.000895483271931539
+      ],
+      "centered_xyz": [
+        0.700624760246217,
+        0.06777696006178995,
+        0.000895483271931539
+      ],
+      "translation_delta": [
+        0.0,
+        0.13555392012357986,
+        0.0
+      ],
+      "method": "Transform the source CAD column origin through cad_to_world and world_to_stand; align the table geometric Y midpoint with that column Y. Table X, Z and orientation are preserved."
+    },
+    "base_assembly": {
+      "snapshot": "provenance/dh-ag95/base_assembly.json",
+      "sha256": "8fb4b46de731fe9db7b1919116ed157bcecc978b52b0cc002266f3e927fceeb9"
+    },
+    "reference_layout": {
+      "snapshot": "provenance/dh-ag95/reference_taccap_assembly.json",
+      "sha256": "02ead7258084fd682ebc2c1b93d5daad7398513b90f9c12694efb623aaaf2217"
+    },
+    "mounting": {
+      "snapshot": "provenance/dh-ag95/mounting_reference.json",
+      "status": "four bolt centres checked in source meshes; pin, boss fit, fasteners and hardware installation unvalidated",
+      "sha256": "d72a8651d5d7e3460ff478c216bc9363939ac16e596767e1ee2af24f47cc95c1"
+    },
+    "start_pose": {
+      "path": "config/start_pose.dh-ag95.json",
+      "sha256": "684378f75ea8f132a1fc5af68e62ba12ffb54cb37c22b4c08f636b3b3398af30",
+      "reference_snapshot": "provenance/dh-ag95/reference_start_pose.taccap.json",
+      "reference_sha256": "73723cdebc5a25aae7f88e5236a5a9603df6a3fee5e69c76ab5f39bbdac11eb8",
+      "policy": "same 12 arm angles; grippers at source q=0; never bake joint origins/limits"
+    },
+    "collision_update": {
+      "collision_author": "Xense",
+      "base_asset": "dh_robotics.ag95",
+      "derived_asset": "dh_robotics.ag95",
+      "base_urdf_sha256": "9fdaab6ac77d44c83184ad97dd488b40eb060784917870cfd12b91bac9416fc7",
+      "derived_urdf_sha256": "6e57fb4955774fbaf4845ab47490d2f438aaf0f13ab8c10aad0486c3bcd6c9d1",
+      "scope": "Collision only; unchanged visuals, source mechanics and flange transforms"
+    }
+  }
+}

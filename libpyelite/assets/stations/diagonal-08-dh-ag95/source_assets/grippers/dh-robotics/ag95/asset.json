@@ -1,0 +1,208 @@
+{
+  "authoring": {
+    "authority": "provenance/urdf/ag95.urdf + collision/recipe.json",
+    "collision_author": "Xense",
+    "derivation_scope": "collision_only",
+    "excluded_subtrees": [],
+    "generator": "scripts/generators/generate_ag95_collision.py",
+    "mode": "urdf_derived",
+    "subtree_root": "gripper_base_link"
+  },
+  "category": "grippers",
+  "display_name": "DH Robotics AG95 (Xense-authored collision)",
+  "entrypoints": {
+    "default": "urdf/ag95.urdf"
+  },
+  "files": {
+    "NOTICE.md": {
+      "role": "collision_derivative",
+      "sha256": "f2d073e9d2ad95d625ff3cac424ff5589f3453fb0f0348f5706d726ad3f98335",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "README.md": {
+      "role": "collision_derivative",
+      "sha256": "7525f448738c8fecdf937a4e28666c706fa4f635a45090c2453b9bf757040308",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "collision/default.json": {
+      "role": "collision_derivative",
+      "sha256": "2ae064e4a843c9149dbc9ca148a5924d83121f699ff5b0d86f232bddb2c88f2f",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "collision/recipe.json": {
+      "role": "collision_derivative",
+      "sha256": "35212f41ad2a7d6460d317bdde492ee441b4cc0ad6757c7c868d2030639eb567",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_base_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "2ceae7dbd278e5be6dd4ffc9005578c5d128faa6c2a7e118f76536cf84fd5faf",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger1_finger_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "5d535a209e812bb13e1fdd75d059d837ec010d23f61f24f5a47d64c8c102c882",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger1_finger_tip_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "95584a3b141a31645c47812c4f92a31c49a347944536ac577c510351052f02a9",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger1_inner_knuckle_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "8ecbc971c308cd487da67a28fb0090ee888fe85d440dc303c77756c5695e97ff",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger1_knuckle_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "52494c383bc97c403d57adfbe27d461811ce963fee65f255d02fdf0e41751c7d",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger2_finger_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "5d535a209e812bb13e1fdd75d059d837ec010d23f61f24f5a47d64c8c102c882",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger2_finger_tip_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "95584a3b141a31645c47812c4f92a31c49a347944536ac577c510351052f02a9",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger2_inner_knuckle_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "8ecbc971c308cd487da67a28fb0090ee888fe85d440dc303c77756c5695e97ff",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/collision/gripper_finger2_knuckle_link_00.stl": {
+      "role": "collision_derivative",
+      "sha256": "52494c383bc97c403d57adfbe27d461811ce963fee65f255d02fdf0e41751c7d",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "meshes/visual/base_link.STL": {
+      "role": "mesh",
+      "sha256": "9957a3139e4b728bfa8377f56f475fbaba0a7455aa350ad265b861ee0ead09f9",
+      "source": "meshes/visual/base_link.STL",
+      "source_sha256": "9957a3139e4b728bfa8377f56f475fbaba0a7455aa350ad265b861ee0ead09f9"
+    },
+    "meshes/visual/crank_Link.STL": {
+      "role": "mesh",
+      "sha256": "055951d8f431afd252d3d0aa5a5f7e1f9bb00aee3d4719e36a0330c1b0839cb8",
+      "source": "meshes/visual/crank_Link.STL",
+      "source_sha256": "055951d8f431afd252d3d0aa5a5f7e1f9bb00aee3d4719e36a0330c1b0839cb8"
+    },
+    "meshes/visual/distal_phalanx_Link.STL": {
+      "role": "mesh",
+      "sha256": "e684d9bfa5fee1cf6c5c59fa1a69b8bd1d6f8a808b746f1e592cd7b226deebee",
+      "source": "meshes/visual/distal_phalanx_Link.STL",
+      "source_sha256": "e684d9bfa5fee1cf6c5c59fa1a69b8bd1d6f8a808b746f1e592cd7b226deebee"
+    },
+    "meshes/visual/proximal_phalanx_Link.STL": {
+      "role": "mesh",
+      "sha256": "83ab0bf1cf41a1f5755f4b8b3d4b9306445be15342bb54bbf7356a4d80940aa7",
+      "source": "meshes/visual/proximal_phalanx_Link.STL",
+      "source_sha256": "83ab0bf1cf41a1f5755f4b8b3d4b9306445be15342bb54bbf7356a4d80940aa7"
+    },
+    "meshes/visual/rod_Link.STL": {
+      "role": "mesh",
+      "sha256": "24b1e14b2c64ce8982b1e216a1576bc2f1f26bb71017997391ce01c5d0fe587e",
+      "source": "meshes/visual/rod_Link.STL",
+      "source_sha256": "24b1e14b2c64ce8982b1e216a1576bc2f1f26bb71017997391ce01c5d0fe587e"
+    },
+    "provenance/base-ag95-NOTICE.md": {
+      "role": "collision_derivative",
+      "sha256": "ba143bd6e0c81d86fdb73c974aa8ebf9bebc86392dc80b888afc2f2345c74734",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "provenance/base-ag95-README.md": {
+      "role": "collision_derivative",
+      "sha256": "7abe73943ba876dfd55a67c54ebb5104ed2c213a0c819da1279e2553bb564ba1",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "provenance/base-ag95-manifest.json": {
+      "role": "collision_derivative",
+      "sha256": "6af35c5f66eef70c71ad1544243d59bd957c4e88cd29ae12147b0d1b65c69943",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "provenance/base-ag95.json": {
+      "role": "collision_derivative",
+      "sha256": "20b391804e36ac753b21751aa5ad4b53ea3057bfd06fac83ca34de0b515253ba",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "provenance/collision-derivation.json": {
+      "role": "collision_derivative",
+      "sha256": "1aeefc7903affde26ea99f90d68f4c4985413b4486f627935bc956f2e374545b",
+      "source": "scripts/generators/generate_ag95_collision.py",
+      "source_sha256": "f71d2c3fb02c00658b172a430856e641bc10aad4f0c6dcb2aa67b6c8e4244a9f"
+    },
+    "provenance/package.xml.txt": {
+      "role": "support",
+      "sha256": "bd211813b298faba646ecb5e9084ffd2a358b4af8446638c134099f768bc580c",
+      "source": "package.xml",
+      "source_sha256": "bd211813b298faba646ecb5e9084ffd2a358b4af8446638c134099f768bc580c"
+    },
+    "provenance/urdf/ag95.urdf": {
+      "role": "source_urdf",
+      "sha256": "9fdaab6ac77d44c83184ad97dd488b40eb060784917870cfd12b91bac9416fc7",
+      "source": "xense-description:pre-collision-ag95-subtree",
+      "source_sha256": "9fdaab6ac77d44c83184ad97dd488b40eb060784917870cfd12b91bac9416fc7"
+    },
+    "provenance/urdf/dh_robotics_ag95.urdf": {
+      "role": "source_urdf",
+      "sha256": "2ed45136cf9c7cc49cf97f1c2b17c1755af8c68fdcac2a70db004688aa37bd5a",
+      "source": "urdf/dh_robotics_ag95.urdf",
+      "source_sha256": "2ed45136cf9c7cc49cf97f1c2b17c1755af8c68fdcac2a70db004688aa37bd5a"
+    },
+    "urdf/ag95.urdf": {
+      "role": "collision_derivative",
+      "sha256": "6e57fb4955774fbaf4845ab47490d2f438aaf0f13ab8c10aad0486c3bcd6c9d1",
+      "source": "urdf/dh_robotics_ag95.urdf",
+      "source_sha256": "2ed45136cf9c7cc49cf97f1c2b17c1755af8c68fdcac2a70db004688aa37bd5a"
+    }
+  },
+  "id": "dh_robotics.ag95",
+  "review": {
+    "collision": "Xense-authored; independent geometry results in reports/ag95-collision",
+    "contacts": "not_validated; conservative_geometry_only",
+    "inertial_parameters": "unreviewed_source",
+    "joint_parameters": "unreviewed_source",
+    "visual": "pending_human"
+  },
+  "schema_version": 1,
+  "source": {
+    "license_status": "unconfirmed",
+    "model_match": "AG95 source; AG-160-95 hardware revision pending confirmation",
+    "notes": [
+      "Official AG95 source; correspondence to requested AG-160-95 hardware revision requires confirmation.",
+      "Removed world, 100 kg demonstration root box, ee_link and bridge; all gripper links/joints preserved.",
+      "Package declares BSD; no scoped full license text found.",
+      "Default collision geometry is authored by Xense and replaces upstream collision; official visual meshes and all noncollision parameters are unchanged."
+    ],
+    "package_license": "BSD",
+    "repository": "https://github.com/DH-Robotics/dh_gripper_ros",
+    "revision": "f59f9c2f4bc8eb116448b1d798791424bf64e337",
+    "snapshot": "git_commit"
+  },
+  "units": {
+    "angle": "rad",
+    "length": "m",
+    "mass": "kg"
+  }
+}

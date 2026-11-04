@@ -1,0 +1,141 @@
+{
+  "schema": 1,
+  "tool_urdf_sha256": "6e57fb4955774fbaf4845ab47490d2f438aaf0f13ab8c10aad0486c3bcd6c9d1",
+  "tool_profile_sha256": "2ae064e4a843c9149dbc9ca148a5924d83121f699ff5b0d86f232bddb2c88f2f",
+  "allowed_link_pairs": [
+    {
+      "links": [
+        "gripper_base_link",
+        "gripper_finger1_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_base_link",
+        "gripper_finger2_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_base_link",
+        "gripper_finger1_finger_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_base_link",
+        "gripper_finger2_finger_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_base_link",
+        "gripper_finger1_inner_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_base_link",
+        "gripper_finger2_inner_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger1_knuckle_link",
+        "gripper_finger1_finger_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger1_knuckle_link",
+        "gripper_finger1_inner_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger2_knuckle_link",
+        "gripper_finger2_finger_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger2_knuckle_link",
+        "gripper_finger2_inner_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger1_finger_link",
+        "gripper_finger1_inner_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger1_finger_link",
+        "gripper_finger1_finger_tip_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger2_finger_link",
+        "gripper_finger2_inner_knuckle_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger2_finger_link",
+        "gripper_finger2_finger_tip_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger1_inner_knuckle_link",
+        "gripper_finger1_finger_tip_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger2_inner_knuckle_link",
+        "gripper_finger2_finger_tip_link"
+      ],
+      "reason": "AG95 linkage joint/root or closed-loop connecting-rod interface"
+    },
+    {
+      "links": [
+        "gripper_finger1_finger_tip_link",
+        "gripper_finger2_finger_tip_link"
+      ],
+      "reason": "User-authorized temporary source fingertip overlap exclusion for bench 08 integration testing; review when fingertips change",
+      "temporary": true
+    }
+  ],
+  "separation_candidates": [
+    [
+      "gripper_finger1_inner_knuckle_link",
+      "gripper_finger2_inner_knuckle_link"
+    ],
+    [
+      "gripper_finger1_inner_knuckle_link",
+      "gripper_finger2_finger_tip_link"
+    ],
+    [
+      "gripper_finger2_inner_knuckle_link",
+      "gripper_finger1_finger_tip_link"
+    ]
+  ]
+}

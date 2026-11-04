@@ -1,0 +1,171 @@
+{
+  "arms": {
+    "left": {
+      "control_sha256": "d172ba340f31665684c092bf33914a850e70486f5d8f030041e4943edd3d5c6c",
+      "control_urdf": "left_control.urdf",
+      "initial_pose": [
+        -1.3963,
+        -0.5236,
+        1.5708,
+        -0.5236,
+        1.5708,
+        -0.7854
+      ],
+      "world_from_base": [
+        [
+          -3.387403027892072e-17,
+          1.0,
+          -1.8817057464611232e-16,
+          -0.07973388657839826
+        ],
+        [
+          -0.7071067811865441,
+          1.0910413283569291e-16,
+          0.7071067811865509,
+          0.283883561779589
+        ],
+        [
+          0.7071067811865509,
+          1.5700924586837826e-16,
+          0.7071067811865441,
+          1.21650208498973
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "right": {
+      "control_sha256": "a6a9e6ee5bb79eb6aad2ac1bd2162348140c296047dba1ea733f5ed545ef07f1",
+      "control_urdf": "right_control.urdf",
+      "initial_pose": [
+        -1.7453,
+        -2.618,
+        -1.5708,
+        -2.618,
+        -1.5708,
+        -0.7854
+      ],
+      "world_from_base": [
+        [
+          -2.9245824516985797e-16,
+          -1.0,
+          -2.4360485149192694e-16,
+          -0.07973388657839832
+        ],
+        [
+          0.7071067811865513,
+          -3.4544565953643034e-17,
+          -0.7071067811865437,
+          -0.148329641656007
+        ],
+        [
+          0.7071067811865437,
+          -3.790538507934076e-16,
+          0.7071067811865513,
+          1.21650208498973
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    }
+  },
+  "assembly_id": "diagonal-08-dh-ag95",
+  "assembly_sha256": "14b2d282ed187a8d5ea7a6cedafc784abe4921133444260b200ef4bf72e195c9",
+  "assembly_urdf": "assembly_dh_ag95.urdf",
+  "continuous_mimic_derivation": [
+    {
+      "joint": "left_tool_gripper_finger1_finger_joint",
+      "lower": 0.0,
+      "upper": 0.29775157608
+    },
+    {
+      "joint": "left_tool_gripper_finger2_finger_joint",
+      "lower": 0.0,
+      "upper": 0.29775157608
+    },
+    {
+      "joint": "left_tool_gripper_finger1_inner_knuckle_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "left_tool_gripper_finger2_inner_knuckle_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "left_tool_gripper_finger1_finger_tip_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "left_tool_gripper_finger2_finger_tip_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "right_tool_gripper_finger1_finger_joint",
+      "lower": 0.0,
+      "upper": 0.29775157608
+    },
+    {
+      "joint": "right_tool_gripper_finger2_finger_joint",
+      "lower": 0.0,
+      "upper": 0.29775157608
+    },
+    {
+      "joint": "right_tool_gripper_finger1_inner_knuckle_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "right_tool_gripper_finger2_inner_knuckle_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "right_tool_gripper_finger1_finger_tip_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    },
+    {
+      "joint": "right_tool_gripper_finger2_finger_tip_joint",
+      "lower": 0.0,
+      "upper": 0.97509631842
+    }
+  ],
+  "end_effector": "dh-ag95",
+  "joint_mapping": "q_assembly = q_controller; DH angles and mimic coefficients retain source convention",
+  "simulation_only": true,
+  "source_assembly_id": "assembly.diagonal_07_elite_cs66_dh_ag95",
+  "source_assembly_sha256": "e0e67e6e6d8d61d9aefa30a2b6988412bb8041e01b787c964b47f9ddb52747a5",
+  "source_assembly_urdf": "source_assets/assemblies/diagonal-07-elite-cs66/urdf/diagonal-07-elite-cs66-dh-ag95.urdf",
+  "station": "diagonal-08",
+  "tcp_reference": "tool0 flange; DH TCP calibration not supplied",
+  "viewer_joint_defaults": {
+    "left_tool_gripper_finger1_finger_joint": 0.0,
+    "left_tool_gripper_finger1_finger_tip_joint": 0.0,
+    "left_tool_gripper_finger1_inner_knuckle_joint": 0.0,
+    "left_tool_gripper_finger1_joint": 0.0,
+    "left_tool_gripper_finger2_finger_joint": 0.0,
+    "left_tool_gripper_finger2_finger_tip_joint": 0.0,
+    "left_tool_gripper_finger2_inner_knuckle_joint": 0.0,
+    "left_tool_gripper_finger2_joint": 0.0,
+    "right_tool_gripper_finger1_finger_joint": 0.0,
+    "right_tool_gripper_finger1_finger_tip_joint": 0.0,
+    "right_tool_gripper_finger1_inner_knuckle_joint": 0.0,
+    "right_tool_gripper_finger1_joint": 0.0,
+    "right_tool_gripper_finger2_finger_joint": 0.0,
+    "right_tool_gripper_finger2_finger_tip_joint": 0.0,
+    "right_tool_gripper_finger2_inner_knuckle_joint": 0.0,
+    "right_tool_gripper_finger2_joint": 0.0
+  }
+}
