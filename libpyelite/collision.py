@@ -6,6 +6,8 @@ run in the native StationCollisionModel (src/station_collision.cpp).
 
 import hashlib
 import json
+import time
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -23,6 +25,19 @@ class CollisionResult:
     minimum_distance: float
     pair: tuple[str, str] | None = None
     clearance: float = float("inf")
+
+
+@dataclass(frozen=True)
+class GripperPublication:
+    side: str
+    sequence: int
+    opening: float
+    raw_position: float | None
+    sampled_at: float
+    published_at: float
+    valid: bool
+    clamped: bool
+    error: str
 
 
 class StationCollision:
@@ -313,6 +328,8 @@ class StationLayer:
         self.collision = StationCollision(self.model, self.path, self.urdf)
         self.guard = station_guard(self.collision, self.urdf, self.defaults, tools)
         self._gripper_maps = []
+        self._gripper_opening_tolerance = 0.0
+        self._gripper_snapshot_history = deque(maxlen=64)
         # Native planning owns collision.native's mutable distance caches.
         # MoveJ preflight owns a separate checker, serialized only with other
         # Python preflights; no whole-path lock can block the 4 ms planner.
@@ -320,7 +337,7 @@ class StationLayer:
         self._path_lock = threading.Lock()
         self._path_collision = None
 
-    def configure_grippers(self, calibration, max_age_s=0.1):
+    def configure_grippers(self, calibration, max_age_s=0.1, *, opening_tolerance=0.0):
         """Require actual gripper samples, with explicitly measured calibration.
 
         ``calibration[side][driver_joint]`` contains ordered pairs of actual
@@ -329,11 +346,19 @@ class StationLayer:
         Mimic joints are expanded from the URDF, including multiplier/offset.
         Call once before a StationCoordinator starts; simulators may retain
         their fixed defaults by leaving this method unused.
+
+        ``opening_tolerance`` is an absolute sensor-opening allowance beyond
+        each calibration endpoint. Accepted excursions use endpoint geometry;
+        callers must budget the resulting position uncertainty within collision
+        margins. The default retains strict calibration bounds.
         """
         import xml.etree.ElementTree as ET
 
         if self._gripper_maps:
             raise ValueError("Gripper calibration is already configured")
+        opening_tolerance = float(opening_tolerance)
+        if not np.isfinite(opening_tolerance) or opening_tolerance < 0:
+            raise ValueError("Gripper opening tolerance must be finite and nonnegative")
         if not isinstance(calibration, dict) or not calibration:
             raise ValueError(
                 "Live collision geometry requires native_collision_gripper_calibration: "
@@ -394,37 +419,68 @@ class StationLayer:
             raise ValueError("Station has no movable gripper joints to calibrate")
         self.guard.configure_grippers([m[0] for m in maps], [m[1] for m in maps], float(max_age_s))
         self._gripper_maps = maps
+        self._gripper_opening_tolerance = opening_tolerance
 
     def publish_gripper_snapshots(self, snapshots):
         """Publish both sides atomically; readers never refresh a sensor's age.
 
         Snapshots expose position, sampled_at (monotonic seconds), sequence and
-        valid. Missing/invalid/out-of-calibration values explicitly invalidate
-        the native guard; they do not leave an old valid snapshot in its place.
+        valid. Missing, invalid or beyond-tolerance values invalidate the native
+        guard. The bounded history retains raw input even after later recovery.
         """
         if not self._gripper_maps:
             raise RuntimeError("Configure gripper calibration before publishing measurements")
         positions, times, sequences, valid = [], [0.0, 0.0], [0, 0], [False, False]
         openings = [float("nan"), float("nan")]
+        raw_positions = [None, None]
+        errors = ["missing sample", "missing sample"]
+        clamped = [False, False]
         for i, side in enumerate(self.SIDES):
             sample = snapshots.get(side)
             if sample is not None:
                 try:
                     openings[i] = float(sample.position)
                     times[i], sequences[i] = float(sample.sampled_at), int(sample.sequence)
+                    raw = getattr(sample, "raw_position", None)
+                    raw_positions[i] = None if raw is None else float(raw)
                     valid[i] = bool(sample.valid) and np.isfinite(openings[i]) and sequences[i] > 0
-                except (AttributeError, TypeError, ValueError, OverflowError):
+                    errors[i] = "" if valid[i] else (
+                        f"invalid source sample: valid={sample.valid}, opening={openings[i]!r}, "
+                        f"sequence={sequences[i]}, error={getattr(sample, 'error', '')!r}"
+                    )
+                except (AttributeError, TypeError, ValueError, OverflowError) as exc:
                     valid[i] = False
+                    errors[i] = f"malformed sample: {exc}"
             if sequences[i] < 0 or sequences[i] > 2**64 - 1:
+                errors[i] = f"sequence outside uint64 range: {sequences[i]}"
                 sequences[i], valid[i] = 0, False
-        for _, side, knots in self._gripper_maps:
+        tolerance = self._gripper_opening_tolerance
+        for name, side, knots in self._gripper_maps:
             opening = openings[side]
-            if not valid[side] or not knots[0, 0] <= opening <= knots[-1, 0]:
+            low, high = knots[0, 0], knots[-1, 0]
+            if valid[side] and not low - tolerance <= opening <= high + tolerance:
+                errors[side] = (
+                    f"opening {opening!r} outside calibration [{low}, {high}] "
+                    f"with tolerance {tolerance} for {name}"
+                )
                 valid[side] = False
+            if not valid[side]:
                 positions.append(0.0)
             else:
+                clamped[side] |= not low <= opening <= high
                 positions.append(float(np.interp(opening, knots[:, 0], knots[:, 1])))
+        published_at = time.monotonic()
+        for i, side in enumerate(self.SIDES):
+            self._gripper_snapshot_history.append(GripperPublication(
+                side, sequences[i], openings[i], raw_positions[i], times[i], published_at,
+                bool(valid[i]), bool(clamped[i]), errors[i],
+            ))
         self.guard.update_grippers(positions, times, sequences, valid)
+
+    @property
+    def gripper_snapshot_history(self):
+        """Recent Python publications, including frames rejected before native validation."""
+        return tuple(self._gripper_snapshot_history)
 
     def station_q(self, left_q, right_q):
         if self._gripper_maps:
